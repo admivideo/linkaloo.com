@@ -14,7 +14,7 @@
 <body>
 <header class="top-menu">
     <nav>
-        <button class="menu-toggle" aria-label="Menú">&#9776;</button>
+        <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
             <li><a href="/panel_de_control.php">Tableros</a></li>
             <?php if(isset($_SESSION['user_id'])): ?>

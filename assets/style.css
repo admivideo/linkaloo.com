@@ -1,15 +1,16 @@
-body {font-family: 'Rambla', sans-serif;margin:0;padding:0;}
+body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;color:#fff;}
 .top-menu {background:#1DA1F2;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;position:relative;}
 .top-menu a {color:#fff;text-decoration:none;margin-right:15px;}
 .top-menu .logo a {font-weight:bold;font-size:20px;margin-right:0;}
 .top-menu .logo img {height:40px;}
 .top-menu ul {list-style:none;display:flex;margin:0;padding:0;}
 .top-menu li {position:relative;}
-.menu-toggle {display:none;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;margin-right:15px;}
+.menu-toggle {display:none;background:none;border:none;cursor:pointer;margin-right:15px;padding:0;}
+.menu-toggle span {display:block;width:25px;height:3px;background:#fff;margin:4px 0;}
 @media (max-width:600px){
   .top-menu ul {flex-direction:column;display:none;background:#1DA1F2;position:absolute;top:60px;left:0;width:100%;padding:10px 0;}
   .top-menu ul.show {display:flex;}
-  .menu-toggle {display:block;}
+  .menu-toggle {display:flex;flex-direction:column;justify-content:center;}
   .top-menu a {margin:10px 15px;}
 }
-.content {padding:20px;}
+.content {background:#fff;color:#000;padding:20px;}
