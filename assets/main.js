@@ -41,4 +41,25 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+
+  document.querySelectorAll('.move-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const id = sel.dataset.id;
+      const categoria = sel.value;
+      fetch('move_link.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'id=' + encodeURIComponent(id) + '&categoria_id=' + encodeURIComponent(categoria)
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          const card = sel.closest('.card');
+          if (card) {
+            card.dataset.cat = categoria;
+            const active = document.querySelector('.board-btn.active');
+            if (active) filter(active.dataset.cat);
+          }
+        }
+      });
+    });
+  });
 });
