@@ -1,5 +1,6 @@
 body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;color:#fff;}
 .top-menu {background:#1DA1F2;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:10px 20px;position:relative;}
+.top-menu nav {display:flex;align-items:center;}
 .top-menu a {color:#fff;text-decoration:none;margin-right:15px;}
 .top-menu .logo a {font-weight:bold;font-size:20px;margin-right:0;}
 .top-menu .logo img {height:40px;}

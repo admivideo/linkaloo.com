@@ -1,4 +1,9 @@
-<?php session_start(); ?>
+<?php
+// Iniciar sesión solo si no se ha hecho ya
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,6 +18,7 @@
 </head>
 <body>
 <header class="top-menu">
+    <div class="logo"><a href="/panel_de_control.php"><img src="/img/linkaloo_white.png" alt="Linkadoo"></a></div>
     <nav>
         <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
@@ -26,6 +32,5 @@
             <?php endif; ?>
         </ul>
     </nav>
-    <div class="logo"><a href="/panel_de_control.php"><img src="/img/linkaloo_white.png" alt="Linkadoo"></a></div>
 </header>
 <div class="content">
