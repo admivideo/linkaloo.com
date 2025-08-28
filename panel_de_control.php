@@ -36,6 +36,23 @@ $links = $stmtL->fetchAll();
 
 include 'header.php';
 ?>
+<div class="control-forms">
+    <form method="post" class="form-categoria">
+        <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
+        <button type="submit">Crear tablero</button>
+    </form>
+    <form method="post" class="form-link">
+        <input type="url" name="link_url" placeholder="URL" required>
+        <input type="text" name="link_title" placeholder="Título">
+        <select name="categoria_id">
+        <?php foreach($categorias as $categoria): ?>
+            <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
+        <?php endforeach; ?>
+        </select>
+        <button type="submit">Guardar link</button>
+    </form>
+</div>
+
 <div class="board-slider">
     <button class="board-btn active" data-cat="all">Todo</button>
 <?php foreach($categorias as $categoria): ?>
@@ -62,21 +79,4 @@ include 'header.php';
 <?php endforeach; ?>
 </div>
 
-<h3>Crear tablero</h3>
-<form method="post">
-    <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
-    <button type="submit">Crear</button>
-</form>
-
-<h3>Guardar link</h3>
-<form method="post">
-    <input type="url" name="link_url" placeholder="URL" required>
-    <input type="text" name="link_title" placeholder="Título">
-    <select name="categoria_id">
-    <?php foreach($categorias as $categoria): ?>
-        <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
-    <?php endforeach; ?>
-    </select>
-    <button type="submit">Guardar</button>
-</form>
 <?php include 'footer.php'; ?>
