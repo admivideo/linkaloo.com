@@ -4,27 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rambla:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
     <script src="/assets/main.js" defer></script>
     <title>Linkadoo</title>
 </head>
 <body>
 <header class="top-menu">
-    <div class="logo"><a href="/panel_de_control.php"><img src="/img/linkaloo_white.png" alt="Linkadoo"></a></div>
     <nav>
-        <ul>
+        <button class="menu-toggle" aria-label="Menú">&#9776;</button>
+        <ul class="menu">
             <li><a href="/panel_de_control.php">Tableros</a></li>
-            <li><a href="#">Usuario</a>
-                <ul class="submenu">
-                    <?php if(isset($_SESSION['user_id'])): ?>
-                    <li><a href="/logout.php">Salir</a></li>
-                    <?php else: ?>
-                    <li><a href="/login.php">Entrar</a></li>
-                    <li><a href="/register.php">Registro</a></li>
-                    <?php endif; ?>
-                </ul>
-            </li>
+            <?php if(isset($_SESSION['user_id'])): ?>
+                <li><a href="#"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></a></li>
+                <li><a href="/logout.php">Salir</a></li>
+            <?php else: ?>
+                <li><a href="/login.php">Login</a></li>
+                <li><a href="/register.php">Registro</a></li>
+            <?php endif; ?>
         </ul>
     </nav>
+    <div class="logo"><a href="/panel_de_control.php"><img src="/img/linkaloo_white.png" alt="Linkadoo"></a></div>
 </header>
 <div class="content">

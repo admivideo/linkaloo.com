@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
             $stmt->execute([$nombre, $email, $hash]);
             $_SESSION['user_id'] = $pdo->lastInsertId();
+            $_SESSION['user_name'] = $nombre;
             header('Location: panel_de_control.php');
             exit;
         }
