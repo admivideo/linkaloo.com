@@ -129,9 +129,9 @@ include 'header.php';
                 ?>
                 <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
+            <?php $domain = parse_url($link['url'], PHP_URL_HOST); ?>
+            <div class="card-domain"><?= htmlspecialchars($domain) ?></div>
         </div>
-        <?php $domain = parse_url($link['url'], PHP_URL_HOST); ?>
-        <div class="card-domain"><?= htmlspecialchars($domain) ?></div>
         <select class="move-select" data-id="<?= $link['id'] ?>">
         <?php foreach($categorias as $categoria): ?>
             <option value="<?= $categoria['id'] ?>" <?= $categoria['id'] == $link['categoria_id'] ? 'selected' : '' ?>>
