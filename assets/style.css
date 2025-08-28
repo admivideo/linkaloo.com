@@ -25,8 +25,9 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-btn.active {background:#0d8ddc;}
 .link-cards {display:flex;flex-wrap:wrap;gap:15px;margin-top:20px;}
 .link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:250px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+.link-cards .card a {display:block;}
 .link-cards .card img {width:100%;height:auto;display:block;}
 .link-cards .card-body {padding:10px;}
 .link-cards .card-body h4 {margin:0 0 10px;font-size:16px;}
 .link-cards .card-body p {margin:0 0 10px;font-size:14px;}
-.link-cards .card-body a {color:#1DA1F2;word-break:break-all;}
+

@@ -111,14 +111,15 @@ include 'header.php';
 <?php foreach($links as $link): ?>
     <div class="card" data-cat="<?= $link['categoria_id'] ?>">
         <?php if(!empty($link['imagen'])): ?>
-            <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
+            <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
+                <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
+            </a>
         <?php endif; ?>
         <div class="card-body">
             <h4><?= htmlspecialchars($link['titulo'] ?: $link['url']) ?></h4>
             <?php if(!empty($link['descripcion'])): ?>
                 <p><?= htmlspecialchars($link['descripcion']) ?></p>
             <?php endif; ?>
-            <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank"><?= htmlspecialchars($link['url']) ?></a>
         </div>
     </div>
 <?php endforeach; ?>
