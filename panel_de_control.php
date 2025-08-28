@@ -112,7 +112,7 @@ include 'header.php';
 
 <div class="link-cards">
 <?php foreach($links as $link): ?>
-    <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
+        <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
         <?php if(!empty($link['imagen'])): ?>
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
                 <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
@@ -130,6 +130,13 @@ include 'header.php';
                 <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
         </div>
+        <select class="move-select" data-id="<?= $link['id'] ?>">
+        <?php foreach($categorias as $categoria): ?>
+            <option value="<?= $categoria['id'] ?>" <?= $categoria['id'] == $link['categoria_id'] ? 'selected' : '' ?>>
+                <?= htmlspecialchars($categoria['nombre']) ?>
+            </option>
+        <?php endforeach; ?>
+        </select>
         <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
     </div>
 <?php endforeach; ?>
