@@ -63,6 +63,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.url;
+      if (navigator.share) {
+        try {
+          await navigator.share({ url });
+        } catch (_) {}
+      } else if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(url);
+          const original = btn.textContent;
+          btn.textContent = '✅';
+          setTimeout(() => { btn.textContent = original; }, 2000);
+        } catch (_) {}
+      }
+    });
+  });
+
   const MAX_DESC = 250;
   document.querySelectorAll('.card-body p').forEach(p => {
     const text = p.textContent.trim();

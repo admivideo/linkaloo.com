@@ -142,6 +142,7 @@ include 'header.php';
             </option>
         <?php endforeach; ?>
         </select>
+        <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir">🔗</button>
         <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
     </div>
 <?php endforeach; ?>
