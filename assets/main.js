@@ -62,4 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+
+  const MAX_DESC = 250;
+  document.querySelectorAll('.card-body p').forEach(p => {
+    const text = p.textContent.trim();
+    if (text.length > MAX_DESC) {
+      p.textContent = text.slice(0, MAX_DESC - 3) + '...';
+    }
+  });
 });
