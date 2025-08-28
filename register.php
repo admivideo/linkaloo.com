@@ -4,17 +4,18 @@ session_start();
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
+    $nombre = trim($_POST['nombre'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    if ($username && $password) {
-        $stmt = $pdo->prepare('SELECT id FROM users WHERE username = ?');
-        $stmt->execute([$username]);
+    if ($nombre && $email && $password) {
+        $stmt = $pdo->prepare('SELECT id FROM usuarios WHERE email = ?');
+        $stmt->execute([$email]);
         if ($stmt->fetch()) {
-            $error = 'El usuario ya existe';
+            $error = 'El email ya existe';
         } else {
             $hash = password_hash($password, PASSWORD_BCRYPT);
-            $stmt = $pdo->prepare('INSERT INTO users (username, password) VALUES (?, ?)');
-            $stmt->execute([$username, $hash]);
+            $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
+            $stmt->execute([$nombre, $email, $hash]);
             $_SESSION['user_id'] = $pdo->lastInsertId();
             header('Location: panel_de_control.php');
             exit;
@@ -28,7 +29,8 @@ include 'header.php';
 <h2>Registro</h2>
 <?php if($error): ?><p style="color:red;"><?= $error ?></p><?php endif; ?>
 <form method="post">
-    <label>Usuario: <input type="text" name="username"></label><br>
+    <label>Nombre: <input type="text" name="nombre"></label><br>
+    <label>Email: <input type="email" name="email"></label><br>
     <label>Contraseña: <input type="password" name="password"></label><br>
     <button type="submit">Registrarse</button>
 </form>

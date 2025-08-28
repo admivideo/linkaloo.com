@@ -8,40 +8,42 @@ if(!isset($_SESSION['user_id'])){
 $user_id = $_SESSION['user_id'];
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    if(isset($_POST['board_name'])){
-        $board_name = trim($_POST['board_name']);
-        if($board_name){
-            $stmt = $pdo->prepare('INSERT INTO boards (user_id, name) VALUES (?, ?)');
-            $stmt->execute([$user_id, $board_name]);
+    if(isset($_POST['categoria_nombre'])){
+        $categoria_nombre = trim($_POST['categoria_nombre']);
+        if($categoria_nombre){
+            $stmt = $pdo->prepare('INSERT INTO categorias (usuario_id, nombre) VALUES (?, ?)');
+            $stmt->execute([$user_id, $categoria_nombre]);
         }
     } elseif(isset($_POST['link_url'])){
         $link_url = trim($_POST['link_url']);
         $link_title = trim($_POST['link_title']);
-        $board_id = (int)$_POST['board_id'];
-        if($link_url && $board_id){
-            $stmt = $pdo->prepare('INSERT INTO links (board_id, url, title) VALUES (?, ?, ?)');
-            $stmt->execute([$board_id, $link_url, $link_title]);
+        $categoria_id = (int)$_POST['categoria_id'];
+        if($link_url && $categoria_id){
+            $hash = sha1($link_url);
+            $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, titulo, hash_url) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([$user_id, $categoria_id, $link_url, $link_title, $hash]);
         }
     }
 }
 
-$stmt = $pdo->prepare('SELECT id, name FROM boards WHERE user_id = ?');
+$stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ?');
 $stmt->execute([$user_id]);
-$boards = $stmt->fetchAll();
+$categorias = $stmt->fetchAll();
 
 include 'header.php';
 ?>
 <h2>Tableros</h2>
 <ul>
-<?php foreach($boards as $board): ?>
+<?php foreach($categorias as $categoria): ?>
     <li>
-        <strong><?= htmlspecialchars($board['name']) ?></strong>
+        <strong><?= htmlspecialchars($categoria['nombre']) ?></strong>
         <ul>
         <?php
-            $stmtL = $pdo->prepare('SELECT url, title FROM links WHERE board_id = ?');
-            $stmtL->execute([$board['id']]);
+            $stmtL = $pdo->prepare('SELECT url, titulo FROM links WHERE categoria_id = ? AND usuario_id = ?');
+            $stmtL->execute([$categoria['id'], $user_id]);
             foreach($stmtL as $link){
-                echo '<li><a href="'.htmlspecialchars($link['url']).'" target="_blank">'.htmlspecialchars($link['title'] ?: $link['url']).'</a></li>';
+                $mostrar = $link['titulo'] ?: $link['url'];
+                echo '<li><a href="'.htmlspecialchars($link['url']).'" target="_blank">'.htmlspecialchars($mostrar).'</a></li>';
             }
         ?>
         </ul>
@@ -51,7 +53,7 @@ include 'header.php';
 
 <h3>Crear tablero</h3>
 <form method="post">
-    <input type="text" name="board_name" placeholder="Nombre del tablero">
+    <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
     <button type="submit">Crear</button>
 </form>
 
@@ -59,9 +61,9 @@ include 'header.php';
 <form method="post">
     <input type="url" name="link_url" placeholder="URL" required>
     <input type="text" name="link_title" placeholder="Título">
-    <select name="board_id">
-    <?php foreach($boards as $board): ?>
-        <option value="<?= $board['id'] ?>"><?= htmlspecialchars($board['name']) ?></option>
+    <select name="categoria_id">
+    <?php foreach($categorias as $categoria): ?>
+        <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
     <?php endforeach; ?>
     </select>
     <button type="submit">Guardar</button>

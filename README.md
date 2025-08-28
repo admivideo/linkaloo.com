@@ -7,6 +7,6 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 - `login.php` y `register.php` – autenticación de usuarios.
 - `logout.php` – cierre de sesión.
 - `panel_de_control.php` – administración de tableros y enlaces.
-- `database.sql` – esquema inicial de la base de datos.
+- `database.sql` – esquema de las tablas `usuarios`, `categorias` y `links`.
 
 El menú superior muestra el logo y las secciones **Tableros** y **Usuario**.

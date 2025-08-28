@@ -4,13 +4,13 @@ session_start();
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
+    $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
-    if ($username && $password) {
-        $stmt = $pdo->prepare('SELECT id, password FROM users WHERE username = ?');
-        $stmt->execute([$username]);
+    if ($email && $password) {
+        $stmt = $pdo->prepare('SELECT id, pass_hash FROM usuarios WHERE email = ?');
+        $stmt->execute([$email]);
         $user = $stmt->fetch();
-        if ($user && password_verify($password, $user['password'])) {
+        if ($user && password_verify($password, $user['pass_hash'])) {
             $_SESSION['user_id'] = $user['id'];
             header('Location: panel_de_control.php');
             exit;
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Usuario o contraseña incorrectos';
         }
     } else {
-        $error = 'Introduce usuario y contraseña';
+        $error = 'Introduce email y contraseña';
     }
 }
 include 'header.php';
@@ -26,7 +26,7 @@ include 'header.php';
 <h2>Iniciar sesión</h2>
 <?php if($error): ?><p style="color:red;"><?= $error ?></p><?php endif; ?>
 <form method="post">
-    <label>Usuario: <input type="text" name="username"></label><br>
+    <label>Email: <input type="email" name="email"></label><br>
     <label>Contraseña: <input type="password" name="password"></label><br>
     <button type="submit">Entrar</button>
 </form>

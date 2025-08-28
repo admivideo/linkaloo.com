@@ -1,23 +1,32 @@
-CREATE TABLE users (
+CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    oauth_provider VARCHAR(20),
-    oauth_id VARCHAR(100)
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    pass_hash VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE boards (
+CREATE TABLE categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    usuario_id INT NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    color VARCHAR(20),
+    share_token VARCHAR(100),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE links (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    board_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    categoria_id INT NOT NULL,
     url TEXT NOT NULL,
-    title VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE
+    url_canonica TEXT,
+    titulo VARCHAR(255),
+    descripcion TEXT,
+    imagen TEXT,
+    favicon TEXT,
+    dominio VARCHAR(255),
+    etiquetas TEXT,
+    hash_url VARCHAR(255),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE CASCADE
 );
