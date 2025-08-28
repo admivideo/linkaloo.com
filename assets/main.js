@@ -25,4 +25,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      fetch('delete_link.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'id=' + encodeURIComponent(id)
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          const card = btn.closest('.card');
+          if (card) card.remove();
+        }
+      });
+    });
+  });
 });

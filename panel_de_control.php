@@ -75,7 +75,7 @@ $stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ?');
 $stmt->execute([$user_id]);
 $categorias = $stmt->fetchAll();
 
-$stmtL = $pdo->prepare('SELECT categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ?');
+$stmtL = $pdo->prepare('SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ?');
 $stmtL->execute([$user_id]);
 $links = $stmtL->fetchAll();
 
@@ -109,7 +109,7 @@ include 'header.php';
 
 <div class="link-cards">
 <?php foreach($links as $link): ?>
-    <div class="card" data-cat="<?= $link['categoria_id'] ?>">
+    <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
         <?php if(!empty($link['imagen'])): ?>
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
                 <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
@@ -121,6 +121,7 @@ include 'header.php';
                 <p><?= htmlspecialchars($link['descripcion']) ?></p>
             <?php endif; ?>
         </div>
+        <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
     </div>
 <?php endforeach; ?>
 </div>
