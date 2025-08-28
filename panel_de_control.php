@@ -37,8 +37,9 @@ $links = $stmtL->fetchAll();
 include 'header.php';
 ?>
 <div class="board-slider">
-<?php foreach($categorias as $index => $categoria): ?>
-    <button class="board-btn<?= $index === 0 ? ' active' : '' ?>" data-cat="<?= $categoria['id'] ?>">
+    <button class="board-btn active" data-cat="all">Todo</button>
+<?php foreach($categorias as $categoria): ?>
+    <button class="board-btn" data-cat="<?= $categoria['id'] ?>">
         <?= htmlspecialchars($categoria['nombre']) ?>
     </button>
 <?php endforeach; ?>

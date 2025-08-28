@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cards = document.querySelectorAll('.link-cards .card');
   const filter = (cat) => {
     cards.forEach(card => {
-      card.style.display = card.dataset.cat === cat ? '' : 'none';
+      card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
     });
   };
 
