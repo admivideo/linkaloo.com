@@ -6,4 +6,23 @@ document.addEventListener('DOMContentLoaded', () => {
       menu.classList.toggle('show');
     });
   }
+
+  const buttons = document.querySelectorAll('.board-btn');
+  const cards = document.querySelectorAll('.link-cards .card');
+  const filter = (cat) => {
+    cards.forEach(card => {
+      card.style.display = card.dataset.cat === cat ? '' : 'none';
+    });
+  };
+
+  if (buttons.length) {
+    filter(buttons[0].dataset.cat);
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filter(btn.dataset.cat);
+      });
+    });
+  }
 });

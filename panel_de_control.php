@@ -30,26 +30,37 @@ $stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ?');
 $stmt->execute([$user_id]);
 $categorias = $stmt->fetchAll();
 
+$stmtL = $pdo->prepare('SELECT categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ?');
+$stmtL->execute([$user_id]);
+$links = $stmtL->fetchAll();
+
 include 'header.php';
 ?>
 <h2>Tableros</h2>
-<ul>
-<?php foreach($categorias as $categoria): ?>
-    <li>
-        <strong><?= htmlspecialchars($categoria['nombre']) ?></strong>
-        <ul>
-        <?php
-            $stmtL = $pdo->prepare('SELECT url, titulo FROM links WHERE categoria_id = ? AND usuario_id = ?');
-            $stmtL->execute([$categoria['id'], $user_id]);
-            foreach($stmtL as $link){
-                $mostrar = $link['titulo'] ?: $link['url'];
-                echo '<li><a href="'.htmlspecialchars($link['url']).'" target="_blank">'.htmlspecialchars($mostrar).'</a></li>';
-            }
-        ?>
-        </ul>
-    </li>
+<div class="board-slider">
+<?php foreach($categorias as $index => $categoria): ?>
+    <button class="board-btn<?= $index === 0 ? ' active' : '' ?>" data-cat="<?= $categoria['id'] ?>">
+        <?= htmlspecialchars($categoria['nombre']) ?>
+    </button>
 <?php endforeach; ?>
-</ul>
+</div>
+
+<div class="link-cards">
+<?php foreach($links as $link): ?>
+    <div class="card" data-cat="<?= $link['categoria_id'] ?>">
+        <?php if(!empty($link['imagen'])): ?>
+            <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
+        <?php endif; ?>
+        <div class="card-body">
+            <h4><?= htmlspecialchars($link['titulo'] ?: $link['url']) ?></h4>
+            <?php if(!empty($link['descripcion'])): ?>
+                <p><?= htmlspecialchars($link['descripcion']) ?></p>
+            <?php endif; ?>
+            <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank"><?= htmlspecialchars($link['url']) ?></a>
+        </div>
+    </div>
+<?php endforeach; ?>
+</div>
 
 <h3>Crear tablero</h3>
 <form method="post">
