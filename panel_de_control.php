@@ -62,6 +62,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if(!$link_title && !empty($meta['title'])){
                 $link_title = $meta['title'];
             }
+            if (mb_strlen($link_title) > 50) {
+                $link_title = mb_substr($link_title, 0, 47) . '...';
+            }
             $descripcion = $meta['description'] ?? '';
             if (mb_strlen($descripcion) > 250) {
                 $descripcion = mb_substr($descripcion, 0, 247) . '...';
@@ -91,7 +94,7 @@ include 'header.php';
     </form>
     <form method="post" class="form-link">
         <input type="url" name="link_url" placeholder="URL" required>
-        <input type="text" name="link_title" placeholder="Título">
+        <input type="text" name="link_title" placeholder="Título" maxlength="50">
         <select name="categoria_id">
         <?php foreach($categorias as $categoria): ?>
             <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
@@ -119,7 +122,13 @@ include 'header.php';
             </a>
         <?php endif; ?>
         <div class="card-body">
-            <h4><?= htmlspecialchars($link['titulo'] ?: $link['url']) ?></h4>
+            <?php
+                $title = $link['titulo'] ?: $link['url'];
+                if (mb_strlen($title) > 50) {
+                    $title = mb_substr($title, 0, 47) . '...';
+                }
+            ?>
+            <h4><?= htmlspecialchars($title) ?></h4>
             <?php if(!empty($link['descripcion'])): ?>
                 <?php
                     $desc = $link['descripcion'];

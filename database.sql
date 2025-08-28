@@ -22,7 +22,7 @@ CREATE TABLE links (
     categoria_id INT NOT NULL,
     url TEXT NOT NULL,
     url_canonica TEXT,
-    titulo VARCHAR(255),
+    titulo VARCHAR(50),
     descripcion TEXT,
     imagen TEXT,
     favicon TEXT,
