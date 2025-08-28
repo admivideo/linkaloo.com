@@ -63,6 +63,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 $link_title = $meta['title'];
             }
             $descripcion = $meta['description'] ?? '';
+            if (mb_strlen($descripcion) > 250) {
+                $descripcion = mb_substr($descripcion, 0, 247) . '...';
+            }
             $imagen = $meta['image'] ?? '';
             $hash = sha1($link_url);
             $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?)');
@@ -118,7 +121,13 @@ include 'header.php';
         <div class="card-body">
             <h4><?= htmlspecialchars($link['titulo'] ?: $link['url']) ?></h4>
             <?php if(!empty($link['descripcion'])): ?>
-                <p><?= htmlspecialchars($link['descripcion']) ?></p>
+                <?php
+                    $desc = $link['descripcion'];
+                    if (mb_strlen($desc) > 250) {
+                        $desc = mb_substr($desc, 0, 247) . '...';
+                    }
+                ?>
+                <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
         </div>
         <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
