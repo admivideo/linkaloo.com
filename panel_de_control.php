@@ -130,7 +130,10 @@ include 'header.php';
                 <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
             <?php $domain = parse_url($link['url'], PHP_URL_HOST); ?>
-            <div class="card-domain"><?= htmlspecialchars($domain) ?></div>
+            <div class="card-domain">
+                <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" alt="">
+                <?= htmlspecialchars($domain) ?>
+            </div>
         </div>
         <select class="move-select" data-id="<?= $link['id'] ?>">
         <?php foreach($categorias as $categoria): ?>
