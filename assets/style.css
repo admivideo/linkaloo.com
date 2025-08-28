@@ -17,8 +17,13 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .content {background:#fff;color:#000;padding:20px;}
 
 .control-forms {display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
-.control-forms form {display:flex;gap:5px;}
-.control-forms input,.control-forms select,.control-forms button {padding:5px;}
+.control-forms form {display:flex;gap:5px;flex-wrap:wrap;align-items:flex-end;}
+.control-forms form input,
+.control-forms form select {flex:1 1 150px;}
+.control-forms form button {flex:0 0 auto;}
+.control-forms input,
+.control-forms select,
+.control-forms button {padding:5px;}
 
 .board-slider {display:flex;overflow-x:auto;gap:10px;padding:10px 0;}
 .board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;}
