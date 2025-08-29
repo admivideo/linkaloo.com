@@ -84,6 +84,7 @@ $links = $stmtL->fetchAll();
 
 include 'header.php';
 ?>
+<button class="toggle-forms" aria-label="Añadir">+</button>
 <div class="control-forms">
     <form method="post" class="form-categoria">
         <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">

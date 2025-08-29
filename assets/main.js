@@ -105,4 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
       p.textContent = text.slice(0, MAX_DESC - 3) + '...';
     }
   });
+
+  const toggleFormsBtn = document.querySelector('.toggle-forms');
+  const controlForms = document.querySelector('.control-forms');
+  if (toggleFormsBtn && controlForms) {
+    toggleFormsBtn.addEventListener('click', () => {
+      controlForms.classList.toggle('show');
+    });
+  }
 });
