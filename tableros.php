@@ -46,11 +46,13 @@ include 'header.php';
     <div class="board-grid">
     <?php foreach($boards as $board): ?>
         <div class="board-item">
+            <a href="panel_de_control.php?cat=<?= $board['id'] ?>" class="board-link">
             <?php if(!empty($board['imagen'])): ?>
                 <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
             <?php endif; ?>
             <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
-            <span class="count"><?= $board['total'] ?></span>
+            <span class="count"><?= $board['total'] ?> links guardados</span>
+            </a>
             <form method="post">
                 <input type="hidden" name="delete_id" value="<?= $board['id'] ?>">
                 <button type="submit" class="delete-board" aria-label="Eliminar">🗑️</button>

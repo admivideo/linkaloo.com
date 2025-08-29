@@ -16,7 +16,15 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   if (buttons.length) {
-    filter(buttons[0].dataset.cat);
+    const params = new URLSearchParams(window.location.search);
+    const initial = params.get('cat');
+    let activeBtn = buttons[0];
+    if (initial) {
+      const found = Array.from(buttons).find(b => b.dataset.cat === initial);
+      if (found) activeBtn = found;
+    }
+    filter(activeBtn.dataset.cat);
+    activeBtn.classList.add('active');
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         buttons.forEach(b => b.classList.remove('active'));

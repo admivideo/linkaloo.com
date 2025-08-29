@@ -77,8 +77,9 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-grid {display:grid;grid-template-columns:repeat(6,1fr);gap:0 15px;list-style:none;margin:0;padding:0;align-items:start;}
 .board-item {position:relative;border:1px solid #eee;padding:10px;text-align:center;}
 .board-item img {width:100%;height:auto;object-fit:contain;margin-bottom:5px;display:block;}
-.board-name {display:block;font-weight:bold;margin-bottom:5px;}
-.board-item .count {color:#1DA1F2;}
+.board-link {display:block;text-decoration:none;color:inherit;}
+.board-name {display:block;font-weight:bold;margin-bottom:5px;color:#1DA1F2;}
+.board-item .count {color:#888;display:block;}
 .board-item form {position:absolute;top:5px;right:5px;margin:0;}
 .board-item .delete-board {background:none;border:none;cursor:pointer;font-size:16px;}
 
