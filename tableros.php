@@ -22,13 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $pdo->prepare('SELECT c.id, c.nombre, COUNT(l.id) AS total
+$stmt = $pdo->prepare('SELECT c.id, c.nombre,
+                              COUNT(l.id) AS total,
+                              COALESCE(c.imagen,
+                                      (SELECT l2.imagen FROM links l2
+                                       WHERE l2.categoria_id = c.id AND l2.usuario_id = ?
+                                       ORDER BY l2.id LIMIT 1)) AS imagen
                          FROM categorias c
                          LEFT JOIN links l ON l.categoria_id = c.id AND l.usuario_id = ?
                          WHERE c.usuario_id = ?
-                         GROUP BY c.id, c.nombre
+                         GROUP BY c.id, c.nombre, c.imagen
                          ORDER BY c.id');
-$stmt->execute([$user_id, $user_id]);
+$stmt->execute([$user_id, $user_id, $user_id]);
 $boards = $stmt->fetchAll();
 
 include 'header.php';
@@ -39,16 +44,20 @@ include 'header.php';
         <input type="text" name="board_name" placeholder="Nombre del tablero">
         <button type="submit">Crear</button>
     </form>
-    <ul class="board-list">
+    <div class="board-grid">
     <?php foreach($boards as $board): ?>
-        <li>
-            <span><?= htmlspecialchars($board['nombre']) ?> (<span class="count"><?= $board['total'] ?></span>)</span>
+        <div class="board-item">
+            <?php if(!empty($board['imagen'])): ?>
+                <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
+            <?php endif; ?>
+            <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
+            <span class="count"><?= $board['total'] ?></span>
             <form method="post">
                 <input type="hidden" name="delete_id" value="<?= $board['id'] ?>">
                 <button type="submit" class="delete-board" aria-label="Eliminar">🗑️</button>
             </form>
-        </li>
+        </div>
     <?php endforeach; ?>
-    </ul>
+    </div>
 </div>
 <?php include 'footer.php'; ?>

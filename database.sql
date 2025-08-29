@@ -12,6 +12,7 @@ CREATE TABLE categorias (
     usuario_id INT NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     color VARCHAR(20),
+    imagen TEXT,
     share_token VARCHAR(100),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
