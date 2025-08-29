@@ -62,6 +62,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if(!$link_title && !empty($meta['title'])){
                 $link_title = $meta['title'];
             }
+            if (mb_strlen($link_title) > 50) {
+                $link_title = mb_substr($link_title, 0, 47) . '...';
+            }
             $descripcion = $meta['description'] ?? '';
             $imagen = $meta['image'] ?? '';
             $hash = sha1($link_url);
@@ -88,7 +91,7 @@ include 'header.php';
     </form>
     <form method="post" class="form-link">
         <input type="url" name="link_url" placeholder="URL" required>
-        <input type="text" name="link_title" placeholder="Título">
+        <input type="text" name="link_title" placeholder="Título" maxlength="50">
         <select name="categoria_id">
         <?php foreach($categorias as $categoria): ?>
             <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
@@ -98,29 +101,52 @@ include 'header.php';
     </form>
 </div>
 
-<div class="board-slider">
-    <button class="board-btn active" data-cat="all">Todo</button>
-<?php foreach($categorias as $categoria): ?>
-    <button class="board-btn" data-cat="<?= $categoria['id'] ?>">
-        <?= htmlspecialchars($categoria['nombre']) ?>
-    </button>
-<?php endforeach; ?>
+<div class="board-nav">
+    <button class="board-scroll left" aria-label="Anterior">&lt;</button>
+    <div class="board-slider">
+        <button class="board-btn active" data-cat="all">Todo</button>
+    <?php foreach($categorias as $categoria): ?>
+        <button class="board-btn" data-cat="<?= $categoria['id'] ?>">
+            <?= htmlspecialchars($categoria['nombre']) ?>
+        </button>
+    <?php endforeach; ?>
+    </div>
+    <button class="board-scroll right" aria-label="Siguiente">&gt;</button>
 </div>
 
 <div class="link-cards">
 <?php foreach($links as $link): ?>
-    <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
+        <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
         <?php if(!empty($link['imagen'])): ?>
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
                 <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
             </a>
         <?php endif; ?>
         <div class="card-body">
-            <h4><?= htmlspecialchars($link['titulo'] ?: $link['url']) ?></h4>
+            <?php
+                $title = $link['titulo'] ?: $link['url'];
+                if (mb_strlen($title) > 50) {
+                    $title = mb_substr($title, 0, 47) . '...';
+                }
+            ?>
+            <h4><?= htmlspecialchars($title) ?></h4>
             <?php if(!empty($link['descripcion'])): ?>
                 <p><?= htmlspecialchars($link['descripcion']) ?></p>
             <?php endif; ?>
+            <?php $domain = parse_url($link['url'], PHP_URL_HOST); ?>
+            <div class="card-domain">
+                <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" alt="">
+                <?= htmlspecialchars($domain) ?>
+            </div>
         </div>
+        <select class="move-select" data-id="<?= $link['id'] ?>">
+        <?php foreach($categorias as $categoria): ?>
+            <option value="<?= $categoria['id'] ?>" <?= $categoria['id'] == $link['categoria_id'] ? 'selected' : '' ?>>
+                <?= htmlspecialchars($categoria['nombre']) ?>
+            </option>
+        <?php endforeach; ?>
+        </select>
+        <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir">🔗</button>
         <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
     </div>
 <?php endforeach; ?>
