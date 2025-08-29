@@ -44,7 +44,7 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .link-cards .card-actions {margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:5px;}
 .link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
 .link-cards .card-actions .action-btns {display:flex;gap:5px;}
-.link-cards .card-actions button {background:#1DA1F2;color:#fff;border:none;border-radius:4px;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
+.link-cards .card-actions button {/*background:#1DA1F2;*/color:#fff;border:none;border-radius:4px;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
 
 @media (max-width:1024px){
   .link-cards {grid-template-columns:repeat(4,1fr);}
