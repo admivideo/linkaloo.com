@@ -42,11 +42,13 @@ include 'header.php';
             <a href="#">¿Olvidaste tu contraseña?</a>
         </div>
     </div>
+    <!--
     <div class="social-block">
         <h3>O registrarte con</h3>
         <a class="social-btn instagram" href="oauth.php?provider=instagram">Instagram</a>
         <a class="social-btn google" href="oauth.php?provider=google">Google</a>
         <a class="social-btn facebook" href="oauth.php?provider=facebook">Facebook</a>
     </div>
+    -->
 </div>
 <?php include 'footer.php'; ?>
