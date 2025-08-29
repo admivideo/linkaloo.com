@@ -101,6 +101,12 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-detail-form input[type=text],.board-detail-form textarea{width:100%;padding:5px;}
 .board-detail-form textarea{min-height:80px;}
 .board-detail-form p{margin:5px 0;}
+.board-detail-form button,
+.links-link{background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-block;}
+.board-links{list-style:none;padding:0;margin:0 0 10px;}
+.board-links li{margin-bottom:5px;}
+.board-links a{color:#1DA1F2;text-decoration:none;}
+.board-links a:hover{text-decoration:underline;}
 @media (max-width:600px){
   .board-detail{flex-direction:column;}
 }
