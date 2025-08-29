@@ -26,6 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const slider = document.querySelector('.board-slider');
+  const left = document.querySelector('.board-scroll.left');
+  const right = document.querySelector('.board-scroll.right');
+  if (slider && left && right) {
+    const step = 100;
+    left.addEventListener('click', () => slider.scrollBy({left: -step, behavior: 'smooth'}));
+    right.addEventListener('click', () => slider.scrollBy({left: step, behavior: 'smooth'}));
+  }
+
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
@@ -40,5 +49,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  });
+
+  document.querySelectorAll('.move-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const id = sel.dataset.id;
+      const categoria = sel.value;
+      fetch('move_link.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'id=' + encodeURIComponent(id) + '&categoria_id=' + encodeURIComponent(categoria)
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          const card = sel.closest('.card');
+          if (card) {
+            card.dataset.cat = categoria;
+            const active = document.querySelector('.board-btn.active');
+            if (active) filter(active.dataset.cat);
+          }
+        }
+      });
+    });
+  });
+
+  document.querySelectorAll('.share-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.url;
+      if (navigator.share) {
+        try {
+          await navigator.share({ url });
+        } catch (_) {}
+      } else if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(url);
+          const original = btn.textContent;
+          btn.textContent = '✅';
+          setTimeout(() => { btn.textContent = original; }, 2000);
+        } catch (_) {}
+      }
+    });
+  });
+
+  const MAX_DESC = 250;
+  document.querySelectorAll('.card-body p').forEach(p => {
+    const text = p.textContent.trim();
+    if (text.length > MAX_DESC) {
+      p.textContent = text.slice(0, MAX_DESC - 3) + '...';
+    }
   });
 });
