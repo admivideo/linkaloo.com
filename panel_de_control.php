@@ -131,7 +131,7 @@ include 'header.php';
                 $domain = parse_url($link['url'], PHP_URL_HOST);
             ?>
             <div class="card-title">
-                <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" alt="">
+                <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="20" height="20" alt="">
                 <h4><?= htmlspecialchars($title) ?></h4>
             </div>
             <?php if(!empty($link['descripcion'])): ?>

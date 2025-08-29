@@ -39,7 +39,7 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .link-cards .card-body {padding:10px;display:flex;flex-direction:column;}
 .link-cards .card-title {display:flex;align-items:center;gap:5px;margin-bottom:10px;}
 .link-cards .card-title img {width:20px;height:20px;}
-.link-cards .card-title h4 {margin:0;font-size:16px;}
+.link-cards .card-title h4 {margin:0;font-size:16px;display:inline;}
 .link-cards .card-body p {margin:0 0 10px;font-size:14px;}
 .link-cards .card-actions {margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:5px;}
 .link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
