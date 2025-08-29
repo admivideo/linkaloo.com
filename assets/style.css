@@ -33,18 +33,18 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;}
 .board-btn.active {background:#0d8ddc;}
 .link-cards {display:grid;grid-template-columns:repeat(6,1fr);gap:0 15px;margin-top:20px;align-items:start;}
-.link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);position:relative;padding-bottom:50px;}
+.link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
 .link-cards .card a {display:block;}
 .link-cards .card img {width:100%;height:auto;display:block;}
-.link-cards .card-body {padding:10px;}
-.link-cards .card-body h4 {margin:0 0 10px;font-size:16px;}
+.link-cards .card-body {padding:10px;display:flex;flex-direction:column;}
+.link-cards .card-title {display:flex;align-items:center;gap:5px;margin-bottom:10px;}
+.link-cards .card-title img {width:20px;height:20px;}
+.link-cards .card-title h4 {margin:0;font-size:16px;}
 .link-cards .card-body p {margin:0 0 10px;font-size:14px;}
-
-.link-cards .card .delete-btn {position:absolute;bottom:5px;right:5px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
-.link-cards .card .share-btn {position:absolute;bottom:5px;right:35px;background:rgba(255,255,255,0.9);border:none;border-radius:50%;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
-.link-cards .card .move-select {position:absolute;bottom:5px;left:5px;padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
-.link-cards .card .card-domain {margin-top:5px;text-align:center;font-size:16px;color:#1DA1F2;display:flex;align-items:center;justify-content:center;gap:4px;}
-.link-cards .card .card-domain img {width:16px;height:16px;}
+.link-cards .card-actions {margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:5px;}
+.link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
+.link-cards .card-actions .action-btns {display:flex;gap:5px;}
+.link-cards .card-actions button {background:#1DA1F2;color:#fff;border:none;border-radius:4px;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
 
 @media (max-width:1024px){
   .link-cards {grid-template-columns:repeat(4,1fr);}

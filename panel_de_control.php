@@ -128,26 +128,29 @@ include 'header.php';
                 if (mb_strlen($title) > 50) {
                     $title = mb_substr($title, 0, 47) . '...';
                 }
+                $domain = parse_url($link['url'], PHP_URL_HOST);
             ?>
-            <h4><?= htmlspecialchars($title) ?></h4>
+            <div class="card-title">
+                <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" alt="">
+                <h4><?= htmlspecialchars($title) ?></h4>
+            </div>
             <?php if(!empty($link['descripcion'])): ?>
                 <p><?= htmlspecialchars($link['descripcion']) ?></p>
             <?php endif; ?>
-            <?php $domain = parse_url($link['url'], PHP_URL_HOST); ?>
-            <div class="card-domain">
-                <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" alt="">
-                <?= htmlspecialchars($domain) ?>
+            <div class="card-actions">
+                <select class="move-select" data-id="<?= $link['id'] ?>">
+                <?php foreach($categorias as $categoria): ?>
+                    <option value="<?= $categoria['id'] ?>" <?= $categoria['id'] == $link['categoria_id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($categoria['nombre']) ?>
+                    </option>
+                <?php endforeach; ?>
+                </select>
+                <div class="action-btns">
+                    <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir">🔗</button>
+                    <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
+                </div>
             </div>
         </div>
-        <select class="move-select" data-id="<?= $link['id'] ?>">
-        <?php foreach($categorias as $categoria): ?>
-            <option value="<?= $categoria['id'] ?>" <?= $categoria['id'] == $link['categoria_id'] ? 'selected' : '' ?>>
-                <?= htmlspecialchars($categoria['nombre']) ?>
-            </option>
-        <?php endforeach; ?>
-        </select>
-        <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir">🔗</button>
-        <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
     </div>
 <?php endforeach; ?>
 </div>
