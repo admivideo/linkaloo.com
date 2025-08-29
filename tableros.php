@@ -53,6 +53,7 @@ include 'header.php';
             <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             <span class="count"><?= $board['total'] ?> links guardados</span>
             </a>
+            <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar">✏️</a>
             <form method="post">
                 <input type="hidden" name="delete_id" value="<?= $board['id'] ?>">
                 <button type="submit" class="delete-board" aria-label="Eliminar">🗑️</button>

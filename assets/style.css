@@ -80,6 +80,7 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-link {display:block;text-decoration:none;color:inherit;}
 .board-name {display:block;font-weight:bold;margin-bottom:5px;color:#1DA1F2;}
 .board-item .count {color:#888;display:block;}
+.board-item .edit-board {position:absolute;top:5px;left:5px;text-decoration:none;font-size:16px;}
 .board-item form {position:absolute;top:5px;right:5px;margin:0;}
 .board-item .delete-board {background:none;border:none;cursor:pointer;font-size:16px;}
 
@@ -90,4 +91,11 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 @media (max-width:600px){
   .board-grid {grid-template-columns:repeat(2,1fr);}
 }
+
+/* Board detail */
+.board-detail {max-width:600px;margin:20px auto;}
+.board-detail-form label {display:block;margin-bottom:10px;}
+.board-detail-form input[type=text],.board-detail-form textarea {width:100%;padding:5px;}
+.board-detail-form textarea {min-height:80px;}
+.board-detail-form p {margin:5px 0;}
 
