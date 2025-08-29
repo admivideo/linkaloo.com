@@ -101,13 +101,17 @@ include 'header.php';
     </form>
 </div>
 
-<div class="board-slider">
-    <button class="board-btn active" data-cat="all">Todo</button>
-<?php foreach($categorias as $categoria): ?>
-    <button class="board-btn" data-cat="<?= $categoria['id'] ?>">
-        <?= htmlspecialchars($categoria['nombre']) ?>
-    </button>
-<?php endforeach; ?>
+<div class="board-nav">
+    <button class="board-scroll left" aria-label="Anterior">&lt;</button>
+    <div class="board-slider">
+        <button class="board-btn active" data-cat="all">Todo</button>
+    <?php foreach($categorias as $categoria): ?>
+        <button class="board-btn" data-cat="<?= $categoria['id'] ?>">
+            <?= htmlspecialchars($categoria['nombre']) ?>
+        </button>
+    <?php endforeach; ?>
+    </div>
+    <button class="board-scroll right" aria-label="Siguiente">&gt;</button>
 </div>
 
 <div class="link-cards">
