@@ -10,11 +10,13 @@ $user_id = $_SESSION['user_id'];
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $stmt = $pdo->prepare(
-    'SELECT c.*, COUNT(l.id) AS total_links FROM categorias c ' .
+    'SELECT c.*, COUNT(l.id) AS total_links, ' .
+    '       (SELECT l2.imagen FROM links l2 WHERE l2.categoria_id = c.id AND l2.usuario_id = ? ORDER BY l2.id LIMIT 1) AS imagen ' .
+    'FROM categorias c ' .
     'LEFT JOIN links l ON l.categoria_id = c.id AND l.usuario_id = ? ' .
     'WHERE c.id = ? AND c.usuario_id = ?'
 );
-$stmt->execute([$user_id, $id, $user_id]);
+$stmt->execute([$user_id, $user_id, $id, $user_id]);
 $board = $stmt->fetch(PDO::FETCH_ASSOC);
 if(!$board){
     header('Location: tableros.php');
@@ -26,25 +28,32 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $nota = trim($_POST['nota'] ?? '');
     $upd = $pdo->prepare('UPDATE categorias SET nombre = ?, nota = ? WHERE id = ? AND usuario_id = ?');
     $upd->execute([$nombre, $nota, $id, $user_id]);
-    $stmt->execute([$user_id, $id, $user_id]);
+    $stmt->execute([$user_id, $user_id, $id, $user_id]);
     $board = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 include 'header.php';
 ?>
 <div class="board-detail">
-    <h2>Administrar tablero</h2>
-    <form method="post" class="board-detail-form">
-        <label>Nombre<br>
-            <input type="text" name="nombre" value="<?= htmlspecialchars($board['nombre']) ?>">
-        </label>
-        <label>Nota<br>
-            <textarea name="nota"><?= htmlspecialchars($board['nota'] ?? '') ?></textarea>
-        </label>
-        <p>Links guardados: <?= $board['total_links'] ?></p>
-        <p>Creado: <?= htmlspecialchars($board['created_at']) ?></p>
-        <p>Modificado: <?= htmlspecialchars($board['updated_at']) ?></p>
-        <button type="submit">Guardar</button>
-    </form>
+    <div class="board-detail-image">
+        <?php if(!empty($board['imagen'])): ?>
+            <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
+        <?php endif; ?>
+    </div>
+    <div class="board-detail-info">
+        <h2>Administrar tablero</h2>
+        <form method="post" class="board-detail-form">
+            <label>Nombre<br>
+                <input type="text" name="nombre" value="<?= htmlspecialchars($board['nombre']) ?>">
+            </label>
+            <label>Nota<br>
+                <textarea name="nota"><?= htmlspecialchars($board['nota'] ?? '') ?></textarea>
+            </label>
+            <p>Links guardados: <?= $board['total_links'] ?></p>
+            <p>Creado: <?= htmlspecialchars($board['creado_en']) ?></p>
+            <p>Modificado: <?= htmlspecialchars($board['modificado_en']) ?></p>
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
 </div>
 <?php include 'footer.php'; ?>
