@@ -50,3 +50,18 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
   .board-scroll {display:none;}
 }
 
+/* Login page */
+.login-wrapper {display:flex;gap:20px;max-width:800px;margin:40px auto;flex-wrap:wrap;}
+.login-block,.social-block {flex:1 1 350px;background:#f5f8fa;color:#000;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+.login-form {display:flex;flex-direction:column;gap:10px;}
+.login-form input {padding:8px;}
+.login-form button {background:#1DA1F2;color:#fff;border:none;padding:10px;border-radius:4px;cursor:pointer;}
+.login-links {display:flex;justify-content:space-between;margin-top:10px;}
+.login-links a {color:#1DA1F2;text-decoration:none;font-size:14px;}
+.social-block {text-align:center;}
+.social-btn {display:block;margin:10px 0;padding:10px;border-radius:4px;color:#fff;text-decoration:none;}
+.social-btn.instagram {background:#E1306C;}
+.social-btn.google {background:#DB4437;}
+.social-btn.facebook {background:#4267B2;}
+@media (max-width:600px){.login-wrapper{flex-direction:column;}}
+
