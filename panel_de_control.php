@@ -84,7 +84,20 @@ $links = $stmtL->fetchAll();
 
 include 'header.php';
 ?>
-<button class="toggle-forms" aria-label="Añadir">+</button>
+<div class="board-nav">
+    <button class="board-scroll left" aria-label="Anterior">&lt;</button>
+    <div class="board-slider">
+        <button class="board-btn active" data-cat="all">Todo</button>
+    <?php foreach($categorias as $categoria): ?>
+        <button class="board-btn" data-cat="<?= $categoria['id'] ?>">
+            <?= htmlspecialchars($categoria['nombre']) ?>
+        </button>
+    <?php endforeach; ?>
+    </div>
+    <button class="board-scroll right" aria-label="Siguiente">&gt;</button>
+    <button class="toggle-forms" aria-label="Añadir">+</button>
+</div>
+
 <div class="control-forms">
     <form method="post" class="form-categoria">
         <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
@@ -100,19 +113,6 @@ include 'header.php';
         </select>
         <button type="submit">Guardar link</button>
     </form>
-</div>
-
-<div class="board-nav">
-    <button class="board-scroll left" aria-label="Anterior">&lt;</button>
-    <div class="board-slider">
-        <button class="board-btn active" data-cat="all">Todo</button>
-    <?php foreach($categorias as $categoria): ?>
-        <button class="board-btn" data-cat="<?= $categoria['id'] ?>">
-            <?= htmlspecialchars($categoria['nombre']) ?>
-        </button>
-    <?php endforeach; ?>
-    </div>
-    <button class="board-scroll right" aria-label="Siguiente">&gt;</button>
 </div>
 
 <div class="link-cards">
