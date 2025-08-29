@@ -32,10 +32,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $board = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-$linksStmt = $pdo->prepare('SELECT url, titulo FROM links WHERE categoria_id = ? AND usuario_id = ?');
-$linksStmt->execute([$id, $user_id]);
-$links = $linksStmt->fetchAll(PDO::FETCH_ASSOC);
-
 $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : '';
 $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado_en'])) : '';
 
@@ -48,7 +44,7 @@ include 'header.php';
         <?php endif; ?>
     </div>
     <div class="board-detail-info">
-        <h2>Administrar tablero</h2>
+        <h2><?= htmlspecialchars($board['nombre']) ?></h2>
         <form method="post" class="board-detail-form">
             <label>Nombre<br>
                 <input type="text" name="nombre" value="<?= htmlspecialchars($board['nombre']) ?>">
@@ -56,13 +52,7 @@ include 'header.php';
             <label>Nota<br>
                 <textarea name="nota"><?= htmlspecialchars($board['nota'] ?? '') ?></textarea>
             </label>
-            <p>Links guardados: <a class="links-link" href="panel_de_control.php?cat=<?= $id ?>"><?= count($links) ?></a></p>
-            <ul class="board-links">
-            <?php foreach($links as $link): ?>
-                <?php $title = $link['titulo'] ?: $link['url']; ?>
-                <li><a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($title) ?></a></li>
-            <?php endforeach; ?>
-            </ul>
+            <p>Links guardados: <a class="links-link" href="panel_de_control.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
             <p>Creado: <?= htmlspecialchars($creado) ?></p>
             <p>Modificado: <?= htmlspecialchars($modificado) ?></p>
             <button type="submit">Guardar</button>
