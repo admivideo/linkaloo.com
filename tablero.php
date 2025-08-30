@@ -24,12 +24,19 @@ if(!$board){
 }
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $nombre = trim($_POST['nombre'] ?? '');
-    $nota = trim($_POST['nota'] ?? '');
-    $upd = $pdo->prepare('UPDATE categorias SET nombre = ?, nota = ? WHERE id = ? AND usuario_id = ?');
-    $upd->execute([$nombre, $nota, $id, $user_id]);
-    $stmt->execute([$user_id, $user_id, $id, $user_id]);
-    $board = $stmt->fetch(PDO::FETCH_ASSOC);
+    if(isset($_POST['delete_board'])){
+        $pdo->prepare('DELETE FROM links WHERE categoria_id = ? AND usuario_id = ?')->execute([$id, $user_id]);
+        $pdo->prepare('DELETE FROM categorias WHERE id = ? AND usuario_id = ?')->execute([$id, $user_id]);
+        header('Location: tableros.php');
+        exit;
+    } else {
+        $nombre = trim($_POST['nombre'] ?? '');
+        $nota = trim($_POST['nota'] ?? '');
+        $upd = $pdo->prepare('UPDATE categorias SET nombre = ?, nota = ? WHERE id = ? AND usuario_id = ?');
+        $upd->execute([$nombre, $nota, $id, $user_id]);
+        $stmt->execute([$user_id, $user_id, $id, $user_id]);
+        $board = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
 
 $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : '';
@@ -56,6 +63,7 @@ include 'header.php';
             <p>Creado: <?= htmlspecialchars($creado) ?></p>
             <p>Modificado: <?= htmlspecialchars($modificado) ?></p>
             <button type="submit">Guardar</button>
+            <button type="submit" name="delete_board" onclick="return confirm('¿Eliminar este tablero?');">Eliminar tablero</button>
         </form>
     </div>
 </div>
