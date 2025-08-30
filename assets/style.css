@@ -101,9 +101,6 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-item .count {color:#888;display:block;}
 .board-item .edit-board {position:absolute;top:5px;left:5px;text-decoration:none;font-size:20px;background:#fff;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
 .board-item .edit-board svg{width:24px;height:24px;}
-.board-item form {position:absolute;top:5px;right:5px;margin:0;}
-.board-item .delete-board {background:#fff;border:none;cursor:pointer;font-size:20px;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
-.board-item .delete-board svg{width:24px;height:24px;}
 
 @media (max-width:1024px){
   .board-grid {grid-template-columns:repeat(4,1fr);}

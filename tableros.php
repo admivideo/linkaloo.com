@@ -15,10 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare('INSERT INTO categorias (usuario_id, nombre) VALUES (?, ?)');
             $stmt->execute([$user_id, $name]);
         }
-    } elseif (isset($_POST['delete_id'])) {
-        $id = (int)$_POST['delete_id'];
-        $stmt = $pdo->prepare('DELETE FROM categorias WHERE id = ? AND usuario_id = ?');
-        $stmt->execute([$id, $user_id]);
     }
 }
 
@@ -53,11 +49,7 @@ include 'header.php';
             <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             <span class="count"><?= $board['total'] ?> links guardados</span>
             </a>
-              <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar"><i data-feather="edit-2"></i></a>
-            <form method="post">
-                <input type="hidden" name="delete_id" value="<?= $board['id'] ?>">
-                <button type="submit" class="delete-board" aria-label="Eliminar"><i data-feather="trash-2"></i></button>
-            </form>
+            <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar"><i data-feather="edit-2"></i></a>
         </div>
     <?php endforeach; ?>
     </div>
