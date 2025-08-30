@@ -90,16 +90,16 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-create input {flex:1;padding:5px;}
 .board-create button {padding:5px 10px;}
 .board-grid {display:grid;grid-template-columns:repeat(6,1fr);gap:0 15px;list-style:none;margin:0;padding:0;align-items:start;}
-.board-item {position:relative;border:1px solid #eee;padding:10px;text-align:center;}
+.board-item {position:relative;padding:10px;text-align:center;}
 .board-item img {width:100%;aspect-ratio:1/1;object-fit:cover;margin-bottom:5px;display:block;}
 .board-link {display:block;text-decoration:none;color:inherit;}
 .board-name {display:block;font-weight:bold;margin-bottom:5px;color:#1DA1F2;}
 .board-item .count {color:#888;display:block;}
-.board-item .edit-board {position:absolute;top:5px;left:5px;text-decoration:none;font-size:16px;background:#fff;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
-.board-item .edit-board svg{width:16px;height:16px;}
+.board-item .edit-board {position:absolute;top:5px;left:5px;text-decoration:none;font-size:20px;background:#fff;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
+.board-item .edit-board svg{width:24px;height:24px;}
 .board-item form {position:absolute;top:5px;right:5px;margin:0;}
-.board-item .delete-board {background:#fff;border:none;cursor:pointer;font-size:16px;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
-.board-item .delete-board svg{width:16px;height:16px;}
+.board-item .delete-board {background:#fff;border:none;cursor:pointer;font-size:20px;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
+.board-item .delete-board svg{width:24px;height:24px;}
 
 @media (max-width:1024px){
   .board-grid {grid-template-columns:repeat(4,1fr);}
