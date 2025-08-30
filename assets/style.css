@@ -13,8 +13,12 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
   .top-menu ul {flex-direction:column;display:none;background:#1DA1F2;position:absolute;top:60px;left:0;width:100%;padding:10px 0;}
   .top-menu ul.show {display:flex;}
   .menu-toggle {display:flex;flex-direction:column;justify-content:center;}
+<<<<<<< HEAD
   .menu-toggle span {width:35px;height:5px;margin:6px 0;}
   .top-menu a {margin:20px 25px;font-size:20px;}
+=======
+  .top-menu a {margin:10px 15px;}
+>>>>>>> parent of e6ff5c6 (Ampliar elementos del menú móvil)
 }
 .content {background:#fff;color:#000;padding:20px;}
 
