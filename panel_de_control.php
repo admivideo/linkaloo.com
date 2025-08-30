@@ -125,9 +125,12 @@ include 'header.php';
 <?php foreach($links as $link): ?>
         <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
         <?php if(!empty($link['imagen'])): ?>
-            <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
-                <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
-            </a>
+            <div class="card-image">
+                <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
+                    <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
+                </a>
+                <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+            </div>
         <?php endif; ?>
         <div class="card-body">
             <?php
@@ -159,7 +162,9 @@ include 'header.php';
                 <?php endforeach; ?>
                 </select>
                 <div class="action-btns">
+                    <?php if(empty($link['imagen'])): ?>
                     <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+                    <?php endif; ?>
                     <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar"><i data-feather="trash-2"></i></button>
                 </div>
             </div>
