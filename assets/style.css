@@ -20,8 +20,8 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .control-forms{display:none;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
 .control-forms.show{display:flex;}
 .control-forms form {display:flex;gap:5px;flex-wrap:nowrap;align-items:flex-end;}
-.control-forms form input,
-.control-forms form select {flex:1 1 150px;}
+.control-forms form input {flex:1 1 150px;}
+.control-forms form select {flex:0 0 auto;width:fit-content;}
 .control-forms form button {flex:0 0 auto;}
 .control-forms input,
 .control-forms select,
@@ -48,7 +48,7 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .link-cards .card-title h4 {margin:0;font-size:16px;display:inline;}
 .link-cards .card-body p {margin:0 0 10px;font-size:14px;}
 .link-cards .card-actions {margin-top:auto;display:flex;align-items:center;gap:5px;}
-.link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;width:auto;flex:0 0 auto;}
+.link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;width:fit-content;flex:0 0 auto;}
 .link-cards .card-actions .action-btns {display:flex;gap:5px;}
 .link-cards .card-actions button {/*background:#1DA1F2;*/color:#fff;border:none;border-radius:4px;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
 
