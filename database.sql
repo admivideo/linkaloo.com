@@ -31,6 +31,7 @@ CREATE TABLE links (
     imagen TEXT,
     favicon TEXT,
     dominio VARCHAR(255),
+    nota_link TEXT,
     etiquetas TEXT,
     hash_url VARCHAR(255),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,

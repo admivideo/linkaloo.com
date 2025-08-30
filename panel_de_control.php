@@ -162,6 +162,7 @@ include 'header.php';
                 <?php endforeach; ?>
                 </select>
                 <div class="action-btns">
+                    <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
                     <?php if(empty($link['imagen'])): ?>
                     <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
                     <?php endif; ?>
