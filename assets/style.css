@@ -16,9 +16,9 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 }
 .content {background:#fff;color:#000;padding:20px;}
 
-.toggle-forms{background:#888;color:#fff;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;margin-left:5px;flex-shrink:0;}
+.toggle-forms{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;margin-left:5px;flex-shrink:0;}
 .toggle-forms svg{width:24px;height:24px;}
-.search-toggle{background:#888;color:#fff;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
+.search-toggle{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
 .search-toggle svg{width:20px;height:20px;}
 .control-forms{display:none;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
 .control-forms.show{display:flex;}
@@ -57,7 +57,7 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .link-cards .card-actions {margin-top:auto;display:flex;align-items:center;gap:5px;}
 .link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;width:fit-content;flex:0 0 auto;}
 .link-cards .card-actions .action-btns {display:flex;gap:5px;}
-.link-cards .card-actions button {background:#888;color:#1DA1F2;border:none;border-radius:4px;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
+.link-cards .card-actions button {background:#fff;color:#1DA1F2;border:none;border-radius:4px;padding:5px;cursor:pointer;font-size:16px;line-height:1;}
 .link-cards .card-actions button svg{width:16px;height:16px;}
 
 @media (max-width:1024px){
@@ -95,10 +95,10 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-link {display:block;text-decoration:none;color:inherit;}
 .board-name {display:block;font-weight:bold;margin-bottom:5px;color:#1DA1F2;}
 .board-item .count {color:#888;display:block;}
-.board-item .edit-board {position:absolute;top:5px;left:5px;text-decoration:none;font-size:16px;background:#888;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
+.board-item .edit-board {position:absolute;top:5px;left:5px;text-decoration:none;font-size:16px;background:#fff;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
 .board-item .edit-board svg{width:16px;height:16px;}
 .board-item form {position:absolute;top:5px;right:5px;margin:0;}
-.board-item .delete-board {background:#888;border:none;cursor:pointer;font-size:16px;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
+.board-item .delete-board {background:#fff;border:none;cursor:pointer;font-size:16px;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
 .board-item .delete-board svg{width:16px;height:16px;}
 
 @media (max-width:1024px){
