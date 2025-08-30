@@ -13,6 +13,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rambla:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/style.css">
+    <script src="https://unpkg.com/feather-icons" defer></script>
     <script src="/assets/main.js" defer></script>
     <title>Linkadoo</title>
 </head>

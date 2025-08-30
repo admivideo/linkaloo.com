@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+  if (window.feather) {
+    feather.replace();
+  }
   const toggle = document.querySelector('.menu-toggle');
   const menu = document.querySelector('.top-menu ul');
   if (toggle && menu) {
@@ -90,9 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (navigator.clipboard) {
         try {
           await navigator.clipboard.writeText(url);
-          const original = btn.textContent;
-          btn.textContent = '✅';
-          setTimeout(() => { btn.textContent = original; }, 2000);
+          const original = btn.innerHTML;
+          btn.innerHTML = feather.icons['check'].toSvg();
+          setTimeout(() => { btn.innerHTML = original; }, 2000);
         } catch (_) {}
       }
     });

@@ -88,7 +88,7 @@ $links = $stmtL->fetchAll();
 include 'header.php';
 ?>
 <div class="board-nav">
-    <button class="board-scroll left" aria-label="Anterior">&lt;</button>
+    <button class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
         <button class="board-btn active" data-cat="all">Todo</button>
     <?php foreach($categorias as $categoria): ?>
@@ -97,8 +97,8 @@ include 'header.php';
         </button>
     <?php endforeach; ?>
     </div>
-    <button class="board-scroll right" aria-label="Siguiente">&gt;</button>
-    <button class="toggle-forms" aria-label="Añadir">+</button>
+    <button class="board-scroll right" aria-label="Siguiente"><i data-feather="chevron-right"></i></button>
+    <button class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
 </div>
 
 <div class="control-forms">
@@ -156,8 +156,8 @@ include 'header.php';
                 <?php endforeach; ?>
                 </select>
                 <div class="action-btns">
-                    <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir">🔗</button>
-                    <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar">🗑️</button>
+                    <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+                    <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar"><i data-feather="trash-2"></i></button>
                 </div>
             </div>
         </div>

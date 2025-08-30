@@ -53,10 +53,10 @@ include 'header.php';
             <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             <span class="count"><?= $board['total'] ?> links guardados</span>
             </a>
-            <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar">✏️</a>
+              <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar"><i data-feather="edit-2"></i></a>
             <form method="post">
                 <input type="hidden" name="delete_id" value="<?= $board['id'] ?>">
-                <button type="submit" class="delete-board" aria-label="Eliminar">🗑️</button>
+                <button type="submit" class="delete-board" aria-label="Eliminar"><i data-feather="trash-2"></i></button>
             </form>
         </div>
     <?php endforeach; ?>
