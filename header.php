@@ -19,11 +19,11 @@ if (session_status() === PHP_SESSION_NONE) {
 </head>
 <body>
 <header class="top-menu">
-    <div class="logo"><a href="/panel_de_control.php"><img src="/img/linkaloo_white.png" alt="Linkadoo"></a></div>
+    <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="Linkadoo"></a></div>
     <nav>
         <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
-            <li><a href="/panel_de_control.php">Inicio</a></li>
+            <li><a href="/panel.php">Inicio</a></li>
             <?php if(isset($_SESSION['user_id'])): ?>
                 <li><a href="/tableros.php">Tableros</a></li>
                 <li><a href="#"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></a></li>

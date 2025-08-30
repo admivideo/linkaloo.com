@@ -42,7 +42,7 @@ include 'header.php';
     <div class="board-grid">
     <?php foreach($boards as $board): ?>
         <div class="board-item">
-            <a href="panel_de_control.php?cat=<?= $board['id'] ?>" class="board-link">
+            <a href="panel.php?cat=<?= $board['id'] ?>" class="board-link">
             <?php if(!empty($board['imagen'])): ?>
                 <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
             <?php endif; ?>

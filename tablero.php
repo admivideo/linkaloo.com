@@ -59,7 +59,7 @@ include 'header.php';
             <label>Nota<br>
                 <textarea name="nota"><?= htmlspecialchars($board['nota'] ?? '') ?></textarea>
             </label>
-            <p>Links guardados: <a class="links-link" href="panel_de_control.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
+            <p>Links guardados: <a class="links-link" href="panel.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
             <p>Creado: <?= htmlspecialchars($creado) ?></p>
             <p>Modificado: <?= htmlspecialchars($modificado) ?></p>
             <button type="submit">Guardar</button>

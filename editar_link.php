@@ -13,7 +13,7 @@ $stmt = $pdo->prepare('SELECT * FROM links WHERE id = ? AND usuario_id = ?');
 $stmt->execute([$id, $user_id]);
 $link = $stmt->fetch(PDO::FETCH_ASSOC);
 if(!$link){
-    header('Location: panel_de_control.php');
+    header('Location: panel.php');
     exit;
 }
 
