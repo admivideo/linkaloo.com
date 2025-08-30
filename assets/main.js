@@ -12,9 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const buttons = document.querySelectorAll('.board-btn');
   const cards = document.querySelectorAll('.link-cards .card');
-  const filter = (cat) => {
+  const searchInput = document.querySelector('.search-input');
+  let currentCat = 'all';
+  const filter = (cat, query = '') => {
     cards.forEach(card => {
-      card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+      const inCat = (cat === 'all' || card.dataset.cat === cat);
+      const matches = card.textContent.toLowerCase().includes(query);
+      card.style.display = (inCat && matches) ? '' : 'none';
     });
   };
 
@@ -26,13 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const found = Array.from(buttons).find(b => b.dataset.cat === initial);
       if (found) activeBtn = found;
     }
-    filter(activeBtn.dataset.cat);
+    currentCat = activeBtn.dataset.cat;
+    filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
     activeBtn.classList.add('active');
     buttons.forEach(btn => {
       btn.addEventListener('click', () => {
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        filter(btn.dataset.cat);
+        currentCat = btn.dataset.cat;
+        filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
       });
     });
   }
@@ -44,6 +50,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const step = 100;
     left.addEventListener('click', () => slider.scrollBy({left: -step, behavior: 'smooth'}));
     right.addEventListener('click', () => slider.scrollBy({left: step, behavior: 'smooth'}));
+  }
+
+  const searchToggle = document.querySelector('.search-toggle');
+  if (searchToggle && searchInput) {
+    searchToggle.addEventListener('click', () => {
+      searchInput.classList.toggle('show');
+      if (searchInput.classList.contains('show')) {
+        searchInput.focus();
+      } else {
+        searchInput.value = '';
+        filter(currentCat, '');
+      }
+    });
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase();
+      filter(currentCat, q);
+    });
   }
 
   document.querySelectorAll('.delete-btn').forEach(btn => {

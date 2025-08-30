@@ -98,8 +98,11 @@ include 'header.php';
     <?php endforeach; ?>
     </div>
     <button class="board-scroll right" aria-label="Siguiente"><i data-feather="chevron-right"></i></button>
+    <button class="search-toggle" aria-label="Buscar"><i data-feather="search"></i></button>
     <button class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
 </div>
+
+<input type="text" class="search-input" placeholder="Buscar links...">
 
 <div class="control-forms">
     <form method="post" class="form-categoria">

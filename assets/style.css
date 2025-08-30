@@ -18,6 +18,8 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 
 .toggle-forms{background:#888;color:#fff;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;margin-left:5px;flex-shrink:0;}
 .toggle-forms svg{width:24px;height:24px;}
+.search-toggle{background:#888;color:#fff;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
+.search-toggle svg{width:20px;height:20px;}
 .control-forms{display:none;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
 .control-forms.show{display:flex;}
 .control-forms form {display:flex;gap:5px;flex-wrap:nowrap;align-items:flex-end;}
@@ -28,6 +30,9 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .control-forms select,
 .control-forms button {padding:5px;}
 .control-forms select {background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
+
+.search-input{display:none;padding:5px;border:1px solid #ccc;border-radius:4px;margin-bottom:10px;width:100%;}
+.search-input.show{display:block;}
 
 @media (max-width:600px){
   .control-forms form{flex-wrap:wrap;}
