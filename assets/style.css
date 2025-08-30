@@ -73,7 +73,7 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 }
 
 @media (max-width:600px){
-  .link-cards {grid-template-columns:1fr;}
+  .link-cards {grid-template-columns:repeat(2,1fr);}
   .link-cards .card {margin-bottom:10px;}
   .board-scroll {display:none;}
 }
