@@ -36,7 +36,13 @@ $domain = parse_url($link['url'], PHP_URL_HOST);
         <?php endif; ?>
     </div>
     <div class="board-detail-info">
-        <h2><?= htmlspecialchars($title) ?></h2>
+        <div class="link-header">
+            <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="20" height="20" alt="">
+            <h2><?= htmlspecialchars($title) ?></h2>
+        </div>
+        <?php if(!empty($link['creado_en'])): ?>
+            <p class="created-at">Creado el <?= date('Y-m-d', strtotime($link['creado_en'])) ?></p>
+        <?php endif; ?>
         <form method="post" class="board-detail-form">
             <p><a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($link['url']) ?></a></p>
             <?php if(!empty($link['descripcion'])): ?>
@@ -45,7 +51,6 @@ $domain = parse_url($link['url'], PHP_URL_HOST);
             <label>Nota<br>
                 <textarea name="nota_link"><?= htmlspecialchars($link['nota_link'] ?? '') ?></textarea>
             </label>
-            <p>Dominio: <?= htmlspecialchars($domain) ?></p>
             <button type="submit">Guardar</button>
         </form>
     </div>

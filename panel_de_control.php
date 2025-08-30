@@ -130,6 +130,7 @@ include 'header.php';
                     <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
                 </a>
                 <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+                <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
             </div>
         <?php endif; ?>
         <div class="card-body">
@@ -162,9 +163,9 @@ include 'header.php';
                 <?php endforeach; ?>
                 </select>
                 <div class="action-btns">
-                    <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
                     <?php if(empty($link['imagen'])): ?>
-                    <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+                        <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
+                        <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
                     <?php endif; ?>
                     <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar"><i data-feather="trash-2"></i></button>
                 </div>
