@@ -26,7 +26,7 @@ if (session_status() === PHP_SESSION_NONE) {
             <li><a href="/panel.php">Inicio</a></li>
             <?php if(isset($_SESSION['user_id'])): ?>
                 <li><a href="/tableros.php">Tableros</a></li>
-                <li><a href="#"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></a></li>
+                <li><a href="/cpanel.php"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></a></li>
                 <li><a href="/logout.php">Salir</a></li>
             <?php else: ?>
                 <li><a href="/login.php">Login</a></li>
