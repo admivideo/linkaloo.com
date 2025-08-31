@@ -27,7 +27,7 @@ $stmt = $pdo->prepare('SELECT c.id, c.nombre,
                          LEFT JOIN links l ON l.categoria_id = c.id AND l.usuario_id = ?
                          WHERE c.usuario_id = ?
                          GROUP BY c.id, c.nombre
-                         ORDER BY c.id');
+                         ORDER BY c.creado_en DESC');
 $stmt->execute([$user_id, $user_id, $user_id]);
 $boards = $stmt->fetchAll();
 

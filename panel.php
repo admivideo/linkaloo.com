@@ -77,11 +77,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     }
 }
 
-$stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ?');
+$stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ? ORDER BY creado_en DESC');
 $stmt->execute([$user_id]);
 $categorias = $stmt->fetchAll();
 
-$stmtL = $pdo->prepare('SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ?');
+$stmtL = $pdo->prepare('SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? ORDER BY creado_en DESC');
 $stmtL->execute([$user_id]);
 $links = $stmtL->fetchAll();
 
