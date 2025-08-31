@@ -123,23 +123,24 @@ include 'header.php';
 
 <div class="link-cards">
 <?php foreach($links as $link): ?>
-        <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
-        <?php if(!empty($link['imagen'])): ?>
-            <div class="card-image">
-                <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
-                    <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="">
-                </a>
-                <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
-                <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
-            </div>
-        <?php endif; ?>
+    <?php
+        $domain = parse_url($link['url'], PHP_URL_HOST);
+        $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+    ?>
+    <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
+        <div class="card-image <?= empty($link['imagen']) ? 'no-image' : '' ?>">
+            <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
+                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="">
+            </a>
+            <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+            <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
+        </div>
         <div class="card-body">
             <?php
                 $title = $link['titulo'] ?: $link['url'];
                 if (mb_strlen($title) > 50) {
                     $title = mb_substr($title, 0, 47) . '...';
                 }
-                $domain = parse_url($link['url'], PHP_URL_HOST);
             ?>
             <div class="card-title">
                 <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="20" height="20" alt="">
@@ -163,10 +164,6 @@ include 'header.php';
                 <?php endforeach; ?>
                 </select>
                 <div class="action-btns">
-                    <?php if(empty($link['imagen'])): ?>
-                        <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
-                        <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
-                    <?php endif; ?>
                     <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar"><i data-feather="trash-2"></i></button>
                 </div>
             </div>
