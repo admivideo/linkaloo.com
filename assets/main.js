@@ -54,6 +54,22 @@ document.addEventListener('DOMContentLoaded', () => {
     right.addEventListener('click', () => slider.scrollBy({left: step, behavior: 'smooth'}));
   }
 
+  document.querySelectorAll('.share-board').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.url;
+      if (navigator.share) {
+        try { await navigator.share({ url }); } catch (_) {}
+      } else if (navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(url);
+          const original = btn.innerHTML;
+          btn.innerHTML = feather.icons['check'].toSvg();
+          setTimeout(() => { btn.innerHTML = original; }, 2000);
+        } catch (_) {}
+      }
+    });
+  });
+
   const searchToggle = document.querySelector('.search-toggle');
   if (searchToggle && searchInput) {
     searchToggle.addEventListener('click', () => {

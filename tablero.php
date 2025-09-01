@@ -42,6 +42,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : '';
 $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado_en'])) : '';
 
+$baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
+
 include 'header.php';
 ?>
 <div class="board-detail">
@@ -51,7 +53,10 @@ include 'header.php';
         <?php endif; ?>
     </div>
     <div class="board-detail-info">
-        <h2><?= htmlspecialchars($board['nombre']) ?></h2>
+        <div class="detail-header">
+            <h2><?= htmlspecialchars($board['nombre']) ?></h2>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $id) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+        </div>
         <form method="post" class="board-detail-form">
             <label>Nombre<br>
                 <input type="text" name="nombre" value="<?= htmlspecialchars($board['nombre']) ?>">

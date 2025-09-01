@@ -31,6 +31,8 @@ $stmt = $pdo->prepare('SELECT c.id, c.nombre,
 $stmt->execute([$user_id, $user_id, $user_id]);
 $boards = $stmt->fetchAll();
 
+$baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
+
 include 'header.php';
 ?>
 <div class="board-admin">
@@ -51,6 +53,9 @@ include 'header.php';
                 </div>
                 <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             </a>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $board['id']) ?>" aria-label="Compartir">
+                <i data-feather="share-2"></i>
+            </button>
             <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar">
                 <i data-feather="edit-2"></i>
             </a>
