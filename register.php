@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$nombre, $email, $hash]);
             $_SESSION['user_id'] = $pdo->lastInsertId();
             $_SESSION['user_name'] = $nombre;
-            header('Location: panel_de_control.php');
+            header('Location: panel.php');
             exit;
         }
     } else {
@@ -27,12 +27,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 include 'header.php';
 ?>
-<h2>Registro</h2>
-<?php if($error): ?><p style="color:red;"><?= $error ?></p><?php endif; ?>
-<form method="post">
-    <label>Nombre: <input type="text" name="nombre"></label><br>
-    <label>Email: <input type="email" name="email"></label><br>
-    <label>Contraseña: <input type="password" name="password"></label><br>
-    <button type="submit">Registrarse</button>
-</form>
-<?php include 'footer.php'; ?>
+<div class="login-wrapper">
+    <div class="login-block">
+        <h2>Registro</h2>
+        <?php if($error): ?><p class="error"><?= $error ?></p><?php endif; ?>
+        <form method="post" class="login-form">
+            <input type="text" name="nombre" placeholder="Nombre">
+            <input type="email" name="email" placeholder="Email">
+            <input type="password" name="password" placeholder="Contraseña">
+            <button type="submit">Registrarse</button>
+        </form>
+        <div class="login-links">
+            <a href="login.php">Iniciar sesión</a>
+            <a href="#">¿Olvidaste tu contraseña?</a>
+        </div>
+    </div>
+    <!--
+    <div class="social-block">
+        <h3>O registrarte con</h3>
+        <a class="social-btn instagram" href="oauth.php?provider=instagram">Instagram</a>
+        <a class="social-btn google" href="oauth.php?provider=google">Google</a>
+        <a class="social-btn facebook" href="oauth.php?provider=facebook">Facebook</a>
+    </div>
+    -->
+</div>
+</div>
+</body>
+</html>
