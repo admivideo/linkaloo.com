@@ -38,8 +38,6 @@ textarea {
 .toggle-forms svg{width:24px;height:24px;}
 .search-toggle{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
 .search-toggle svg{width:20px;height:20px;}
-.scroll-btn{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-.scroll-btn svg{width:20px;height:20px;}
 .control-forms{display:none;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
 .control-forms.show{display:flex;}
 .control-forms form{display:flex;gap:5px;flex-wrap:nowrap;align-items:flex-end;}
@@ -71,10 +69,6 @@ textarea {
 .board-slider::-webkit-scrollbar {display:none;}
 .board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;}
 .board-btn.active {background:#0d8ddc;}
-
-@media (max-width:600px){
-  .scroll-btn{display:none;}
-}
 .link-cards {display:grid;grid-template-columns:repeat(6,1fr);gap:0 15px;margin-top:20px;align-items:start;}
 .link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
 .link-cards .card a {display:block;}
@@ -82,10 +76,6 @@ textarea {
 .link-cards .card-image{position:relative;}
 .link-cards .card-image .share-btn{position:absolute;top:10px;right:10px;z-index:1;background:#fff;color:#1DA1F2;border:none;border-radius:4px;padding:5px;cursor:pointer;}
 .link-cards .card-image .share-btn svg{width:16px;height:16px;}
-.link-cards .card-image .share-menu{display:none;position:absolute;top:10px;right:45px;z-index:1;background:#fff;border-radius:4px;padding:5px;}
-.link-cards .card-image .share-menu.show{display:flex;}
-.link-cards .card-image .share-menu a{color:#25D366;display:flex;align-items:center;justify-content:center;}
-.link-cards .card-image .share-menu svg{width:16px;height:16px;}
 .link-cards .card-image .edit-btn{position:absolute;top:40px;right:10px;z-index:1;background:#fff;color:#1DA1F2;border:none;border-radius:4px;padding:5px;display:flex;align-items:center;justify-content:center;}
 .link-cards .card-image .edit-btn svg{width:16px;height:16px;}
 .link-cards .card-image.no-image{display:flex;align-items:center;justify-content:center;background:#f5f8fa;height:150px;}

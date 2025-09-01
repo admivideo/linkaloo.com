@@ -1,11 +1,10 @@
 <?php
 // Database configuration for linkaloo
-// Values are read from environment variables so no credentials live in VCS.
-$host     = getenv('DB_HOST') ?: 'localhost';
-$dbname   = getenv('DB_NAME') ?: 'linkaloo';
-$username = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASS') ?: '';
-$charset  = getenv('DB_CHARSET') ?: 'utf8mb4';
+$host     = '82.223.84.165';
+$dbname   = 'smartlinks';
+$username = 'smartuserIOn0s';
+$password = 'WMCuxq@ts8s8g8^w';
+$charset  = 'utf8mb4';
 
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
