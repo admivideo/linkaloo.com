@@ -24,6 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const linkContainer = document.querySelector('.link-cards');
   const categoryOptions = document.querySelector('.form-link select') ? document.querySelector('.form-link select').innerHTML : '';
   let currentCat = 'all';
+  const offsets = { all: cards.length };
+  cards.forEach(c => {
+    const cat = c.dataset.cat;
+    offsets[cat] = (offsets[cat] || 0) + 1;
+  });
   const filter = (cat, query = '') => {
     cards.forEach(card => {
       const inCat = (cat === 'all' || card.dataset.cat === cat);
@@ -44,11 +49,15 @@ document.addEventListener('DOMContentLoaded', () => {
     filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
     activeBtn.classList.add('active');
     buttons.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentCat = btn.dataset.cat;
         filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
+        if (currentCat !== 'all' && !cards.some(c => c.dataset.cat === currentCat)) {
+          await loadMore();
+          filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
+        }
       });
     });
   }
@@ -191,26 +200,31 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   };
 
-  let offset = cards.length;
+  const loadMore = async () => {
+    const off = offsets[currentCat] || 0;
+    const res = await fetch(`load_links.php?offset=${off}&cat=${currentCat}`);
+    const data = await res.json();
+    if (!data.length) return false;
+    data.forEach(link => {
+      const card = createCard(link);
+      linkContainer.appendChild(card);
+      cards.push(card);
+      attachCardEvents(card);
+      const cat = String(link.categoria_id);
+      offsets[cat] = (offsets[cat] || 0) + 1;
+    });
+    feather.replace();
+    offsets[currentCat] = off + data.length;
+    return true;
+  };
+
   const sentinel = document.getElementById('sentinel');
   if (sentinel && linkContainer) {
     const observer = new IntersectionObserver(async (entries) => {
       if (entries[0].isIntersecting) {
-        const res = await fetch('load_links.php?offset=' + offset);
-        const data = await res.json();
-        if (!data.length) {
-          observer.disconnect();
-          return;
-        }
-        data.forEach(link => {
-          const card = createCard(link);
-          linkContainer.appendChild(card);
-          cards.push(card);
-          attachCardEvents(card);
-        });
-        feather.replace();
+        const got = await loadMore();
+        if (!got) observer.disconnect();
         filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
-        offset += data.length;
       }
     });
     observer.observe(sentinel);
