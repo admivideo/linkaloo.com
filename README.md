@@ -27,4 +27,4 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 - Para comprobar el código:
   - `php -l config.php panel_de_control.php move_link.php`
   - `node --check assets/main.js`
-  - `npx --yes stylelint assets/style.css` *(requiere configuración)*
+  - `npm run lint:css`

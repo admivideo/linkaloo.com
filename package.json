@@ -1,0 +1,18 @@
+{
+  "name": "linkaloo.com",
+  "version": "1.0.0",
+  "description": "Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP 8 y MySQL.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:css": "npx stylelint assets/style.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard": "^39.0.0"
+  }
+}
