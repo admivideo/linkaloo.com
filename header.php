@@ -3,6 +3,11 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+// Evitar caché de contenido dinámico
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+$cssVersion = filemtime(__DIR__ . '/assets/style.css');
+$jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -14,9 +19,9 @@ if (session_status() === PHP_SESSION_NONE) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rambla:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/assets/style.css?v=<?= $cssVersion ?>">
     <script src="https://unpkg.com/feather-icons" defer></script>
-    <script src="/assets/main.js" defer></script>
+    <script src="/assets/main.js?v=<?= $jsVersion ?>" defer></script>
     <title>Linkadoo</title>
 </head>
 <body>
