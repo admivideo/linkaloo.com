@@ -32,6 +32,11 @@ if (session_status() === PHP_SESSION_NONE) {
                 <li><a href="/login.php">Login</a></li>
                 <li><a href="/register.php">Registro</a></li>
             <?php endif; ?>
+            <li><a href="/cookies.php">Cookies</a></li>
+            <li><a href="/politica_cookies.php">Política de cookies</a></li>
+            <li><a href="/condiciones_servicio.php">Condiciones de servicio</a></li>
+            <li><a href="/politica_privacidad.php">Política de privacidad</a></li>
+            <li><a href="/quienes_somos.php">Quiénes somos</a></li>
         </ul>
     </nav>
 </header>
