@@ -20,7 +20,16 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 
 1. Clona el repositorio.
 2. Crea una base de datos MySQL y ejecuta `database.sql`.
-3. Ajusta las credenciales en `config.php`.
+3. Define las credenciales de la base de datos mediante variables de entorno:
+
+   ```bash
+   export DB_HOST=localhost
+   export DB_NAME=linkaloo
+   export DB_USER=usuario
+   export DB_PASS=secreto
+   ```
+
+   (o utiliza un fichero `.env`, que está ignorado por Git).
 4. Coloca el logo `img/linkaloo_white.png` (y los favicons en el servidor).
 5. Inicia un servidor PHP en la raíz del proyecto (`php -S localhost:8000`).
 
