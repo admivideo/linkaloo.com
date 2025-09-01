@@ -19,6 +19,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const buttons = document.querySelectorAll('.board-btn');
+  const slider = document.querySelector('.board-slider');
+  const leftArrow = document.querySelector('.scroll-left');
+  const rightArrow = document.querySelector('.scroll-right');
+  if (slider && leftArrow && rightArrow) {
+    const scrollAmount = 150;
+    leftArrow.addEventListener('click', () => {
+      slider.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    });
+    rightArrow.addEventListener('click', () => {
+      slider.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    });
+  }
   let cards = Array.from(document.querySelectorAll('.link-cards .card'));
   const searchInput = document.querySelector('.search-input');
   const linkContainer = document.querySelector('.link-cards');
