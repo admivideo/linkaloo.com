@@ -55,4 +55,6 @@ $domain = parse_url($link['url'], PHP_URL_HOST);
         </form>
     </div>
 </div>
-<?php include 'footer.php'; ?>
+</div>
+</body>
+</html>

@@ -173,4 +173,6 @@ include 'header.php';
 </div>
 <div id="sentinel"></div>
 
-<?php include 'footer.php'; ?>
+</div>
+</body>
+</html>

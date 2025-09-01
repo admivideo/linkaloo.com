@@ -63,4 +63,6 @@ include 'header.php';
     <?php endforeach; ?>
     </div>
 </div>
-<?php include 'footer.php'; ?>
+</div>
+</body>
+</html>

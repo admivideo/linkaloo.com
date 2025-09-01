@@ -45,4 +45,6 @@ include 'header.php';
         <a class="social-btn facebook" href="oauth.php?provider=facebook">Facebook</a>
     </div>
 </div>
-<?php include 'footer.php'; ?>
+</div>
+</body>
+</html>
