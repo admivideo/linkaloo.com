@@ -20,12 +20,18 @@ $sql .= " ORDER BY creado_en DESC LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $links = $stmt->fetchAll();
-foreach($links as &$link){
-    if(mb_strlen($link['titulo']) > 50){
-        $link['titulo'] = mb_substr($link['titulo'], 0, 47) . '...';
+
+function truncateText($text, $limit) {
+    if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+        return mb_strlen($text) > $limit ? mb_substr($text, 0, $limit - 3) . '...' : $text;
     }
-    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 250){
-        $link['descripcion'] = mb_substr($link['descripcion'], 0, 247) . '...';
+    return strlen($text) > $limit ? substr($text, 0, $limit - 3) . '...' : $text;
+}
+
+foreach($links as &$link){
+    $link['titulo'] = truncateText($link['titulo'], 50);
+    if(!empty($link['descripcion'])){
+        $link['descripcion'] = truncateText($link['descripcion'], 250);
     }
 }
 unset($link);

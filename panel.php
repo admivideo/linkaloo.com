@@ -47,6 +47,13 @@ function scrapeMetadata($url){
     return $meta;
 }
 
+function truncateText($text, $limit) {
+    if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+        return mb_strlen($text) > $limit ? mb_substr($text, 0, $limit - 3) . '...' : $text;
+    }
+    return strlen($text) > $limit ? substr($text, 0, $limit - 3) . '...' : $text;
+}
+
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if(isset($_POST['categoria_nombre'])){
         $categoria_nombre = trim($_POST['categoria_nombre']);
@@ -63,13 +70,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if(!$link_title && !empty($meta['title'])){
                 $link_title = $meta['title'];
             }
-            if (mb_strlen($link_title) > 50) {
-                $link_title = mb_substr($link_title, 0, 47) . '...';
-            }
-            $descripcion = $meta['description'] ?? '';
-            if (mb_strlen($descripcion) > 250) {
-                $descripcion = mb_substr($descripcion, 0, 247) . '...';
-            }
+            $link_title = truncateText($link_title, 50);
+            $descripcion = truncateText($meta['description'] ?? '', 250);
             $imagen = $meta['image'] ?? '';
             $hash = sha1($link_url);
             $check = $pdo->prepare('SELECT id FROM links WHERE usuario_id = ? AND hash_url = ?');
@@ -154,23 +156,13 @@ include 'header.php';
             <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
         </div>
         <div class="card-body">
-            <?php
-                $title = $link['titulo'] ?: $link['url'];
-                if (mb_strlen($title) > 50) {
-                    $title = mb_substr($title, 0, 47) . '...';
-                }
-            ?>
+            <?php $title = truncateText($link['titulo'] ?: $link['url'], 50); ?>
             <div class="card-title">
                 <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="20" height="20" alt="">
                 <h4><?= htmlspecialchars($title) ?></h4>
             </div>
             <?php if(!empty($link['descripcion'])): ?>
-                <?php
-                    $desc = $link['descripcion'];
-                    if (mb_strlen($desc) > 250) {
-                        $desc = mb_substr($desc, 0, 247) . '...';
-                    }
-                ?>
+                <?php $desc = truncateText($link['descripcion'], 250); ?>
                 <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
             <div class="card-actions">
