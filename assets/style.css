@@ -65,8 +65,6 @@ textarea {
 }
 
 .board-nav {display:flex;align-items:center;gap:5px;margin-bottom:10px;}
-.board-scroll {background:none;border:none;color:#1DA1F2;font-size:20px;cursor:pointer;padding:0 5px;}
-.board-scroll svg{width:20px;height:20px;}
 .board-slider {display:flex;overflow-x:auto;gap:10px;padding:10px 0;flex:1;scrollbar-width:none;-ms-overflow-style:none;}
 .board-slider::-webkit-scrollbar {display:none;}
 .board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;}
@@ -103,7 +101,6 @@ textarea {
 @media (max-width:600px){
   .link-cards {grid-template-columns:repeat(2,1fr);}
   .link-cards .card {margin-bottom:10px;}
-  .board-scroll {display:none;}
 }
 
 /* Login page */

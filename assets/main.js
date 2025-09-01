@@ -63,14 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const slider = document.querySelector('.board-slider');
-  const left = document.querySelector('.board-scroll.left');
-  const right = document.querySelector('.board-scroll.right');
-  if (slider && left && right) {
-    const step = 100;
-    left.addEventListener('click', () => slider.scrollBy({left: -step, behavior: 'smooth'}));
-    right.addEventListener('click', () => slider.scrollBy({left: step, behavior: 'smooth'}));
-  }
 
   document.querySelectorAll('.share-board').forEach(btn => {
     btn.addEventListener('click', async () => {
