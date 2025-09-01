@@ -1,4 +1,4 @@
-# Linkadoo
+# linkaloo
 
 Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP 8 y MySQL.
 
