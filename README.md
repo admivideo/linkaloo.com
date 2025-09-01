@@ -1,4 +1,4 @@
-# Linkadoo
+# linkaloo
 
 Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP 8 y MySQL.
 
@@ -37,4 +37,5 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 - Para comprobar el código:
   - `php -l config.php panel.php move_link.php load_links.php`
   - `node --check assets/main.js`
-  - `npx --yes stylelint assets/style.css` *(requiere configuración)*
+  - `npm run lint:css`
+

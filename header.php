@@ -22,11 +22,11 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
     <link rel="stylesheet" href="/assets/style.css?v=<?= $cssVersion ?>">
     <script src="https://unpkg.com/feather-icons" defer></script>
     <script src="/assets/main.js?v=<?= $jsVersion ?>" defer></script>
-    <title>Linkadoo</title>
+    <title>linkaloo</title>
 </head>
 <body>
 <header class="top-menu">
-    <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="Linkadoo"></a></div>
+    <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="linkaloo"></a></div>
     <nav>
         <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">

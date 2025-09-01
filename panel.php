@@ -13,7 +13,7 @@ function scrapeMetadata($url){
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; LinkadooBot/1.0)',
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; linkalooBot/1.0)',
         CURLOPT_TIMEOUT => 5,
     ]);
     $html = curl_exec($ch);
