@@ -32,14 +32,19 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .search-toggle svg{width:20px;height:20px;}
 .control-forms{display:none;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
 .control-forms.show{display:flex;}
-.control-forms form {display:flex;gap:5px;flex-wrap:nowrap;align-items:flex-end;}
-.control-forms form input {flex:1 1 150px;}
-.control-forms form select {flex:0 0 auto;width:fit-content;}
-.control-forms form button {flex:0 0 auto;}
+.control-forms form{display:flex;gap:5px;flex-wrap:nowrap;align-items:flex-end;}
+.control-forms .form-categoria{flex:0 0 auto;}
+.control-forms .form-link{flex:1 1 auto;}
+.control-forms form input{flex:0 0 150px;}
+.control-forms .form-categoria input,
+.control-forms .form-link input[name="link_url"]{flex:1 1 auto;}
+.control-forms form select{flex:0 0 auto;width:fit-content;}
+.control-forms form button{flex:0 0 auto;}
 .control-forms input,
 .control-forms select,
-.control-forms button {padding:5px;}
-.control-forms select {background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
+.control-forms button{padding:5px;border:1px solid #ccc;border-radius:4px;font-family:'Rambla',sans-serif;}
+.control-forms button{background:#1DA1F2;color:#fff;border:none;}
+.control-forms select{background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
 
 .search-input{display:none;padding:5px;border:1px solid #ccc;border-radius:4px;margin-bottom:10px;width:100%;}
 .search-input.show{display:block;}
