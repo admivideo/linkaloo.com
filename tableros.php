@@ -43,13 +43,17 @@ include 'header.php';
     <?php foreach($boards as $board): ?>
         <div class="board-item">
             <a href="panel.php?cat=<?= $board['id'] ?>" class="board-link">
-            <?php if(!empty($board['imagen'])): ?>
-                <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
-            <?php endif; ?>
-            <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
-            <span class="count"><?= $board['total'] ?> links guardados</span>
+                <div class="board-thumb">
+                <?php if(!empty($board['imagen'])): ?>
+                    <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
+                <?php endif; ?>
+                    <span class="link-count"><i data-feather="link"></i><?= $board['total'] ?></span>
+                </div>
+                <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             </a>
-            <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar"><i data-feather="edit-2"></i></a>
+            <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar">
+                <i data-feather="edit-2"></i>
+            </a>
         </div>
     <?php endforeach; ?>
     </div>
