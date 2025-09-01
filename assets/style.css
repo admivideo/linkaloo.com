@@ -111,8 +111,8 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .board-link .link-count {position:absolute;bottom:5px;right:5px;background:#fff;color:#1DA1F2;border-radius:4px;padding:2px 4px;display:flex;align-items:center;gap:3px;font-size:12px;}
 .board-link .link-count svg{width:16px;height:16px;}
 .board-name {display:block;font-weight:bold;margin-top:5px;color:#1DA1F2;}
-.board-item .edit-board {position:absolute;top:5px;left:5px;text-decoration:none;font-size:20px;background:#fff;color:#1DA1F2;border-radius:4px;padding:4px;display:inline-flex;}
-.board-item .edit-board svg{width:24px;height:24px;}
+.board-item .edit-board {position:absolute;top:20px;right:20px;text-decoration:none;background:#fff;color:#1DA1F2;border:none;border-radius:4px;padding:5px;display:flex;align-items:center;justify-content:center;z-index:1;}
+.board-item .edit-board svg{width:16px;height:16px;}
 
 @media (max-width:1024px){
   .board-grid {grid-template-columns:repeat(4,1fr);}
