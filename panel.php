@@ -81,7 +81,7 @@ $stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ? OR
 $stmt->execute([$user_id]);
 $categorias = $stmt->fetchAll();
 
-$stmtL = $pdo->prepare('SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? ORDER BY creado_en DESC');
+$stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? ORDER BY creado_en DESC LIMIT 18");
 $stmtL->execute([$user_id]);
 $links = $stmtL->fetchAll();
 
@@ -171,5 +171,6 @@ include 'header.php';
     </div>
 <?php endforeach; ?>
 </div>
+<div id="sentinel"></div>
 
 <?php include 'footer.php'; ?>
