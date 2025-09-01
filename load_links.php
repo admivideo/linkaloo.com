@@ -20,6 +20,15 @@ $sql .= " ORDER BY creado_en DESC LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $links = $stmt->fetchAll();
+foreach($links as &$link){
+    if(mb_strlen($link['titulo']) > 50){
+        $link['titulo'] = mb_substr($link['titulo'], 0, 47) . '...';
+    }
+    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 250){
+        $link['descripcion'] = mb_substr($link['descripcion'], 0, 247) . '...';
+    }
+}
+unset($link);
 header('Content-Type: application/json');
 echo json_encode($links);
 ?>
