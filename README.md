@@ -6,6 +6,7 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 
 - Autenticación de usuarios (`login.php`, `register.php`, `logout.php`).
 - Gestión completa de tableros: creación, renombrado, notas y eliminación.
+- Recuperación de contraseña mediante enlace temporal.
 - Cada ficha muestra título (máx. 50 caracteres), descripción (máx. 250 con `...`) y favicon.
 - Buscador de enlaces y filtros por tablero.
 - Menú inferior para mover rápidamente un enlace a otro tablero.

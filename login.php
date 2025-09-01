@@ -35,7 +35,7 @@ include 'header.php';
         </form>
         <div class="login-links">
             <a href="register.php">Registrarse</a>
-            <a href="#">¿Olvidaste tu contraseña?</a>
+            <a href="recuperar_password.php">¿Olvidaste tu contraseña?</a>
         </div>
     </div>
     <div class="social-block">
