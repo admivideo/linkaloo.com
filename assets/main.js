@@ -10,6 +10,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const settingsToggle = document.querySelector('.settings-toggle');
+  const settingsSub = document.querySelector('.settings-submenu');
+  if (settingsToggle && settingsSub) {
+    settingsToggle.addEventListener('click', () => {
+      settingsSub.classList.toggle('show');
+    });
+  }
+
   const buttons = document.querySelectorAll('.board-btn');
   let cards = Array.from(document.querySelectorAll('.link-cards .card'));
   const searchInput = document.querySelector('.search-input');

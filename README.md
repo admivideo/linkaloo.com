@@ -9,6 +9,7 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 - Cada ficha muestra título (máx. 50 caracteres), descripción (máx. 250 con `...`), favicon y dominio.
 - Menú inferior para mover rápidamente un enlace a otro tablero.
 - Botón para compartir por ficha que usa la Web Share API o copia al portapapeles.
+- Icono de configuración con acceso a Cookies, Política de cookies, Condiciones de servicio, Política de privacidad y Quiénes somos.
 - Diseño responsivo: dos columnas en móvil y altura adaptable sin separación vertical.
 - Todas las tablas y la conexión MySQL usan `utf8mb4` para soportar caracteres especiales.
 
