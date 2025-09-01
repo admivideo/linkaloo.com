@@ -6,6 +6,7 @@ if(!isset($_SESSION['user_id'])){
     exit;
 }
 $user_id = $_SESSION['user_id'];
+$error = '';
 
 function scrapeMetadata($url){
     $ch = curl_init($url);
@@ -71,8 +72,14 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             }
             $imagen = $meta['image'] ?? '';
             $hash = sha1($link_url);
-            $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$user_id, $categoria_id, $link_url, $link_title, $descripcion, $imagen, $hash]);
+            $check = $pdo->prepare('SELECT id FROM links WHERE usuario_id = ? AND hash_url = ?');
+            $check->execute([$user_id, $hash]);
+            if($check->fetch()){
+                $error = 'Este link ya está guardado.';
+            } else {
+                $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$user_id, $categoria_id, $link_url, $link_title, $descripcion, $imagen, $hash]);
+            }
         }
     }
 }
@@ -87,6 +94,12 @@ $links = $stmtL->fetchAll();
 
 include 'header.php';
 ?>
+<?php if(!empty($error)): ?>
+<div class="alert">
+    <span><?= htmlspecialchars($error) ?></span>
+    <button class="alert-close" aria-label="Cerrar">&times;</button>
+</div>
+<?php endif; ?>
 <div class="board-nav">
     <button class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">

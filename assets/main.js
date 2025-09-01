@@ -231,4 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
       controlForms.classList.toggle('show');
     });
   }
+
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('alert-close')) {
+      const alert = e.target.parentElement;
+      alert.remove();
+    }
+  });
 });

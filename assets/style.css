@@ -44,6 +44,9 @@ body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;co
 .search-input{display:none;padding:5px;border:1px solid #ccc;border-radius:4px;margin-bottom:10px;width:100%;}
 .search-input.show{display:block;}
 
+.alert{background:#f8d7da;color:#721c24;padding:10px;border-radius:4px;position:relative;margin-bottom:10px;}
+.alert button{position:absolute;top:5px;right:5px;background:none;border:none;color:#721c24;cursor:pointer;font-size:16px;line-height:1;}
+
 @media (max-width:600px){
   .control-forms form{flex-wrap:wrap;}
 }
