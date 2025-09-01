@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const categoryOptions = document.querySelector('.form-link select') ? document.querySelector('.form-link select').innerHTML : '';
   let currentCat = 'all';
   const offsets = { all: cards.length };
+  let loading = false;
   cards.forEach(c => {
     const cat = c.dataset.cat;
     offsets[cat] = (offsets[cat] || 0) + 1;
@@ -201,10 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const loadMore = async () => {
+    if (loading) return false;
+    loading = true;
     const off = offsets[currentCat] || 0;
     const res = await fetch(`load_links.php?offset=${off}&cat=${currentCat}`);
     const data = await res.json();
-    if (!data.length) return false;
+    if (!data.length) {
+      loading = false;
+      return false;
+    }
     data.forEach(link => {
       const card = createCard(link);
       linkContainer.appendChild(card);
@@ -215,13 +221,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     feather.replace();
     offsets[currentCat] = off + data.length;
+    loading = false;
     return true;
   };
 
   const sentinel = document.getElementById('sentinel');
   if (sentinel && linkContainer) {
     const observer = new IntersectionObserver(async (entries) => {
-      if (entries[0].isIntersecting) {
+      if (entries[0].isIntersecting && !loading) {
         const got = await loadMore();
         if (!got) observer.disconnect();
         filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
