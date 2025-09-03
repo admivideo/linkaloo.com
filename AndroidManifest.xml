@@ -1,0 +1,32 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.linkaloo">
+
+    <application>
+         <activity android:name=".ShareReceiverActivity" android:exported="true">
+             <!-- Un único enlace / texto -->
+             <intent-filter>
+                 <action android:name="android.intent.action.SEND" />
+                 <category android:name="android.intent.category.DEFAULT" />
+                 <data android:mimeType="text/plain" />
+                 <data android:mimeType="*/*" />
+             </intent-filter>
+
+             <!-- Varios elementos (opcional) -->
+             <intent-filter>
+                 <action android:name="android.intent.action.SEND_MULTIPLE" />
+                 <category android:name="android.intent.category.DEFAULT" />
+                 <data android:mimeType="text/plain" />
+                 <data android:mimeType="*/*" />
+             </intent-filter>
+
+             <!-- Abrir enlaces directamente -->
+             <intent-filter android:autoVerify="true">
+                 <action android:name="android.intent.action.VIEW" />
+                 <category android:name="android.intent.category.DEFAULT" />
+                 <category android:name="android.intent.category.BROWSABLE" />
+                 <data android:scheme="https" android:host="linkaloo.com" />
+                 <data android:scheme="http" android:host="linkaloo.com" />
+             </intent-filter>
+         </activity>
+     </application>
+  </manifest>
