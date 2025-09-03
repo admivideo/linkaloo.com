@@ -101,6 +101,7 @@ include 'header.php';
 </div>
 <?php endif; ?>
 <div class="board-nav">
+    <button class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
         <button class="board-btn active" data-cat="all">Todo</button>
     <?php foreach($categorias as $categoria): ?>
@@ -109,6 +110,7 @@ include 'header.php';
         </button>
     <?php endforeach; ?>
     </div>
+    <button class="board-scroll right" aria-label="Siguiente"><i data-feather="chevron-right"></i></button>
     <button class="search-toggle" aria-label="Buscar"><i data-feather="search"></i></button>
     <button class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
 </div>
