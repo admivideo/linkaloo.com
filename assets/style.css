@@ -145,6 +145,7 @@ textarea {
 
 @media (max-width:600px){
   .board-grid {grid-template-columns:repeat(2,1fr);}
+  .board-item {padding:5px;}
 }
 
 /* Board detail */
