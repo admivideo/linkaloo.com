@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let cards = Array.from(document.querySelectorAll('.link-cards .card'));
   const searchInput = document.querySelector('.search-input');
   const linkContainer = document.querySelector('.link-cards');
+  const boardSlider = document.querySelector('.board-slider');
+  const scrollLeft = document.querySelector('.board-scroll.left');
+  const scrollRight = document.querySelector('.board-scroll.right');
   const categoryOptions = document.querySelector('.form-link select') ? document.querySelector('.form-link select').innerHTML : '';
   let currentCat = 'all';
   const offsets = { all: cards.length };
@@ -37,6 +40,17 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.display = (inCat && matches) ? '' : 'none';
     });
   };
+
+  if (boardSlider && scrollLeft) {
+    scrollLeft.addEventListener('click', () => {
+      boardSlider.scrollBy({ left: -200, behavior: 'smooth' });
+    });
+  }
+  if (boardSlider && scrollRight) {
+    scrollRight.addEventListener('click', () => {
+      boardSlider.scrollBy({ left: 200, behavior: 'smooth' });
+    });
+  }
 
   if (buttons.length) {
     const params = new URLSearchParams(window.location.search);

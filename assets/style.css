@@ -38,6 +38,8 @@ textarea {
 .toggle-forms svg{width:24px;height:24px;}
 .search-toggle{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
 .search-toggle svg{width:20px;height:20px;}
+.board-scroll{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;flex-shrink:0;}
+.board-scroll svg{width:20px;height:20px;}
 .control-forms{display:none;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;}
 .control-forms.show{display:flex;}
 .control-forms form{display:flex;gap:5px;flex-wrap:nowrap;align-items:flex-end;}
