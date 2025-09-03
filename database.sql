@@ -14,6 +14,9 @@ CREATE TABLE categorias (
     color VARCHAR(20),
     imagen TEXT,
     share_token VARCHAR(100),
+    nota TEXT,
+    creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modificado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -28,8 +31,10 @@ CREATE TABLE links (
     imagen TEXT,
     favicon TEXT,
     dominio VARCHAR(255),
+    nota_link TEXT,
     etiquetas TEXT,
     hash_url VARCHAR(255),
+    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

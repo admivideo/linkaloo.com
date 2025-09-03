@@ -1,5 +1,5 @@
 <?php
-// Database configuration for Linkadoo
+// Database configuration for linkaloo
 $host     = '82.223.84.165';
 $dbname   = 'smartlinks';
 $username = 'smartuserIOn0s';

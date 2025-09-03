@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$nombre, $email, $hash]);
             $_SESSION['user_id'] = $pdo->lastInsertId();
             $_SESSION['user_name'] = $nombre;
-            header('Location: panel_de_control.php');
+            header('Location: panel.php');
             exit;
         }
     } else {
@@ -51,4 +51,6 @@ include 'header.php';
     </div>
     -->
 </div>
-<?php include 'footer.php'; ?>
+</div>
+</body>
+</html>
