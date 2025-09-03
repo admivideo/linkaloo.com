@@ -25,13 +25,13 @@ textarea {
  .settings-menu .settings-submenu a{color:#fff;text-decoration:none;display:block;}
     @media (max-width:600px){.settings-menu {flex-direction:column;align-items:flex-start;}.settings-menu .settings-toggle{margin:0;}.settings-menu .settings-submenu{position:static;width:100%;}}
   @media (max-width:600px){
-    .top-menu ul {flex-direction:column;display:none;background:#1DA1F2;position:absolute;top:60px;left:0;width:100%;padding:10px 0;}
+    .top-menu ul {flex-direction:column;display:none;background:#1DA1F2;position:absolute;top:60px;left:0;width:100%;padding:10px 0;align-items:flex-start;}
     .top-menu ul.show {display:flex;}
     .menu-toggle {display:flex;flex-direction:column;justify-content:center;}
     /* Restore default hamburger bar size on mobile */
     .menu-toggle span {width:25px;height:3px;margin:4px 0;}
-    .top-menu li {padding:10px 25px;}
-    .top-menu nav a {margin:0;font-size:20px;display:flex;align-items:center;justify-content:flex-start;}
+    .top-menu li {padding:10px 25px;justify-content:flex-start;width:100%;}
+    .top-menu nav a {margin:0;font-size:20px;display:flex;align-items:center;justify-content:flex-start;width:100%;}
     .top-menu nav a svg,
     .top-menu nav a img {margin-right:8px;}
     .top-menu .logo {margin-left:-15px;}
