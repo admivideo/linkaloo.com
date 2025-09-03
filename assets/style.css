@@ -31,8 +31,10 @@ textarea {
     /* Restore default hamburger bar size on mobile */
     .menu-toggle span {width:25px;height:3px;margin:4px 0;}
     .top-menu li {padding:10px 25px;}
-    .top-menu a {margin:0;font-size:20px;}
-      .top-menu .logo {margin-left:-25px;}
+    .top-menu nav a {margin:0;font-size:20px;display:flex;align-items:center;justify-content:flex-start;}
+    .top-menu nav a svg,
+    .top-menu nav a img {margin-right:8px;}
+    .top-menu .logo {margin-left:-15px;}
   }
 .content {background:#fff;color:#000;padding:20px;}
 
