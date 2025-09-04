@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const del = card.querySelector('.delete-btn');
     if (del) {
       del.addEventListener('click', () => {
+        if (!confirm('¿Eliminar este enlace?')) return;
         const id = del.dataset.id;
         fetch('delete_link.php', {
           method: 'POST',
