@@ -26,7 +26,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 </head>
 <body>
 <header class="top-menu">
-    <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="linkaloo"></a></div>
+    <div class="logo"><a href="/panel.php"><img src="/img/logo_linkaloo_blue.png" alt="linkaloo"><!-- Logo file already on server --></a></div>
     <nav>
         <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
