@@ -84,8 +84,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 $link_title = mb_substr($link_title, 0, 47) . '...';
             }
             $descripcion = ensureUtf8($meta['description'] ?? '');
-            if (mb_strlen($descripcion) > 250) {
-                $descripcion = mb_substr($descripcion, 0, 247) . '...';
+            if (mb_strlen($descripcion) > 75) {
+                $descripcion = mb_substr($descripcion, 0, 72) . '...';
             }
             $imagen = $meta['image'] ?? '';
             if (empty($imagen)) {
@@ -186,8 +186,8 @@ include 'header.php';
             <?php if(!empty($link['descripcion'])): ?>
                 <?php
                     $desc = $link['descripcion'];
-                    if (mb_strlen($desc) > 250) {
-                        $desc = mb_substr($desc, 0, 247) . '...';
+                    if (mb_strlen($desc) > 75) {
+                        $desc = mb_substr($desc, 0, 72) . '...';
                     }
                 ?>
                 <p><?= htmlspecialchars($desc) ?></p>

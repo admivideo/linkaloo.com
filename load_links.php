@@ -24,8 +24,8 @@ foreach($links as &$link){
     if(mb_strlen($link['titulo']) > 50){
         $link['titulo'] = mb_substr($link['titulo'], 0, 47) . '...';
     }
-    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 250){
-        $link['descripcion'] = mb_substr($link['descripcion'], 0, 247) . '...';
+    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 75){
+        $link['descripcion'] = mb_substr($link['descripcion'], 0, 72) . '...';
     }
 }
 unset($link);
