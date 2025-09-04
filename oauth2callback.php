@@ -23,6 +23,8 @@ $tokenResponse = file_get_contents('https://oauth2.googleapis.com/token', false,
     ]
 ]));
 
+error_log($tokenResponse);
+
 $tokenData = json_decode($tokenResponse, true);
 
 if (!isset($tokenData['access_token'])) {
