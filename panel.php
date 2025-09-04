@@ -8,6 +8,14 @@ if(!isset($_SESSION['user_id'])){
 $user_id = $_SESSION['user_id'];
 $error = '';
 
+function ensureUtf8($string){
+    $encoding = mb_detect_encoding($string, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if($encoding && $encoding !== 'UTF-8'){
+        $string = mb_convert_encoding($string, 'UTF-8', $encoding);
+    }
+    return $string;
+}
+
 function scrapeMetadata($url){
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -20,6 +28,10 @@ function scrapeMetadata($url){
     curl_close($ch);
     if(!$html){
         return [];
+    }
+    $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if($enc){
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
     }
     libxml_use_internal_errors(true);
     $doc = new DOMDocument();
@@ -44,6 +56,10 @@ function scrapeMetadata($url){
         }
         $meta['image'] = rtrim($base,'/').'/'.ltrim($meta['image'],'/');
     }
+    foreach($meta as &$value){
+        $value = ensureUtf8($value);
+    }
+    unset($value);
     return $meta;
 }
 
@@ -63,10 +79,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if(!$link_title && !empty($meta['title'])){
                 $link_title = $meta['title'];
             }
+            $link_title = ensureUtf8($link_title);
             if (mb_strlen($link_title) > 50) {
                 $link_title = mb_substr($link_title, 0, 47) . '...';
             }
-            $descripcion = $meta['description'] ?? '';
+            $descripcion = ensureUtf8($meta['description'] ?? '');
             if (mb_strlen($descripcion) > 250) {
                 $descripcion = mb_substr($descripcion, 0, 247) . '...';
             }
