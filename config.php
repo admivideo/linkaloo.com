@@ -16,6 +16,7 @@ $options = [
 try {
     $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
     $pdo = new PDO($dsn, $username, $password, $options);
+    $pdo->exec("SET NAMES 'utf8mb4'");
 } catch (PDOException $e) {
     throw new PDOException($e->getMessage(), (int)$e->getCode());
 }
