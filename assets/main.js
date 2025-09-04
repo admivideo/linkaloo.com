@@ -178,12 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const createCard = (link) => {
     const domain = new URL(link.url).hostname;
     const imgSrc = link.imagen ? link.imagen : 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=128';
+    const isDefault = !link.imagen || link.imagen.includes('google.com/s2/favicons');
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.cat = link.categoria_id;
     card.dataset.id = link.id;
     card.innerHTML = `
-      <div class="card-image ${link.imagen ? '' : 'no-image'}">
+      <div class="card-image ${isDefault ? 'no-image' : ''}">
         <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">
           <img src="${escapeHtml(imgSrc)}" alt="">
         </a>
