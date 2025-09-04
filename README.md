@@ -2,6 +2,10 @@
 
 Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP 8 y MySQL.
 
+## Documentación
+
+Consulta [docs/estructura.md](docs/estructura.md) para una visión general de la arquitectura del proyecto y de la base de datos.
+
 ## Características
 
 - Autenticación de usuarios (`login.php`, `register.php`, `logout.php`).
@@ -56,8 +60,8 @@ Cualquier texto puede adaptarse editando los archivos correspondientes.
 1. Ve a [Google Cloud Console](https://console.cloud.google.com/) y crea un proyecto.
 2. Configura la pantalla de consentimiento en **APIs & Services → OAuth consent screen**.
 3. En **Credentials** crea un **OAuth client ID** de tipo "Web application".
-4. Añade `http://localhost:8000/oauth.php?provider=google` y la URL de producción en **Authorized redirect URIs**.
+4. Añade `http://localhost:8000/oauth2callback.php` (el endpoint de backend que maneja el callback OAuth) y `https://linkaloo.com/oauth2callback` en **Authorized redirect URIs**.
 5. Copia el *Client ID* y el *Client Secret*.
-6. Define `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI` como variables de entorno o edita `config.php` con esos valores.
+6. Define `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` como variables de entorno (no hay fallback en `config.php`).
 7. Usa el enlace "Google" en `login.php` para autenticarte.
 
