@@ -24,5 +24,5 @@ try {
 // Google OAuth configuration
 $googleClientId     = getenv('GOOGLE_CLIENT_ID') ?: '731706222639-293qjq63nfog07qge78no9v34tkjapec.apps.googleusercontent.com';
 $googleClientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: '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';
-$googleRedirectUri  = getenv('GOOGLE_REDIRECT_URI') ?: 'https://linkaloo.com/oauth2callback';
+$googleRedirectUri  = 'https://linkaloo.com/oauth2callback';
 ?>
