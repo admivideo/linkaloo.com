@@ -26,6 +26,7 @@ include 'header.php';
 ?>
 <div class="login-wrapper">
     <div class="login-block">
+        <div class="login-icon"><i data-feather="log-in"></i></div>
         <h2>Iniciar sesión</h2>
         <?php if($error): ?><p class="error"><?= $error ?></p><?php endif; ?>
         <form method="post" class="login-form">
