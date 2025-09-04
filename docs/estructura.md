@@ -34,5 +34,5 @@ La base de datos se define en `database.sql` y utiliza codificación `utf8mb4`.
 - Crea la base de datos ejecutando `database.sql`.
 - Define las credenciales en `config.php`.
 - Para el login con Google, configura las variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
-- Registra `http://localhost:8000/oauth2callback.php` (o `https://linkaloo.com/oauth2callback`) como URI de redirección autorizada; corresponde al endpoint de backend que procesa el callback OAuth.
+- Registra `http://localhost:8000/oauth2callback.php` (o `https://linkaloo.com/oauth2callback.php`) como URI de redirección autorizada; corresponde al endpoint de backend que procesa el callback OAuth.
 
