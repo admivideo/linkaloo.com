@@ -50,3 +50,14 @@ Cualquier texto puede adaptarse editando los archivos correspondientes.
   - `node --check assets/main.js`
   - `npm run lint:css`
 
+
+## Login con Google
+
+1. Ve a [Google Cloud Console](https://console.cloud.google.com/) y crea un proyecto.
+2. Configura la pantalla de consentimiento en **APIs & Services → OAuth consent screen**.
+3. En **Credentials** crea un **OAuth client ID** de tipo "Web application".
+4. Añade `http://localhost:8000/oauth.php?provider=google` y la URL de producción en **Authorized redirect URIs**.
+5. Copia el *Client ID* y el *Client Secret*.
+6. Define `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI` como variables de entorno o edita `config.php` con esos valores.
+7. Usa el enlace "Google" en `login.php` para autenticarte.
+

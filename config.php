@@ -20,4 +20,9 @@ try {
 } catch (PDOException $e) {
     throw new PDOException($e->getMessage(), (int)$e->getCode());
 }
+
+// Google OAuth configuration
+$googleClientId     = getenv('GOOGLE_CLIENT_ID') ?: 'YOUR_GOOGLE_CLIENT_ID';
+$googleClientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: 'YOUR_GOOGLE_CLIENT_SECRET';
+$googleRedirectUri  = getenv('GOOGLE_REDIRECT_URI') ?: 'http://localhost:8000/oauth.php?provider=google';
 ?>
