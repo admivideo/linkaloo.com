@@ -2,6 +2,10 @@
 
 Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP 8 y MySQL.
 
+## Documentación
+
+Consulta [docs/estructura.md](docs/estructura.md) para una visión general de la arquitectura del proyecto y de la base de datos.
+
 ## Características
 
 - Autenticación de usuarios (`login.php`, `register.php`, `logout.php`).
