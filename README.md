@@ -10,7 +10,7 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 - Buscador de enlaces y filtros por tablero.
 - Menú inferior para mover rápidamente un enlace a otro tablero.
 - Botón para compartir por ficha que usa la Web Share API o copia al portapapeles.
-- Icono de configuración con acceso a Cookies, Política de cookies, Condiciones de servicio, Política de privacidad y Quiénes somos.
+- Icono de configuración con acceso a Cookies, Política de cookies, Condiciones de servicio, Política de privacidad y Quiénes somos, todas con contenido estándar.
 - Diseño responsivo: dos columnas en móvil y altura adaptable sin separación vertical.
 - Carga progresiva de enlaces (scroll infinito) a partir de la ficha 18.
 - Todas las tablas y la conexión MySQL usan `utf8mb4` para soportar caracteres especiales.
@@ -29,6 +29,17 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 2. Crea uno o más tableros.
 3. Guarda enlaces mediante el formulario “+”.
 4. Busca, filtra, mueve, comparte o elimina cada enlace desde su tarjeta.
+
+## Páginas legales
+
+El proyecto incluye contenido legal listo para usar y enlazado desde el icono de configuración:
+
+- `cookies.php` y `politica_cookies.php`
+- `politica_privacidad.php`
+- `condiciones_servicio.php`
+- `quienes_somos.php`
+
+Cualquier texto puede adaptarse editando los archivos correspondientes.
 
 ## Desarrollo
 
