@@ -29,6 +29,6 @@ foreach($links as &$link){
     }
 }
 unset($link);
-header('Content-Type: application/json');
-echo json_encode($links);
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode($links, JSON_UNESCAPED_UNICODE);
 ?>
