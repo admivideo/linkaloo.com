@@ -34,4 +34,5 @@ La base de datos se define en `database.sql` y utiliza codificación `utf8mb4`.
 - Crea la base de datos ejecutando `database.sql`.
 - Define las credenciales en `config.php`.
 - Para el login con Google, configura las variables `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI`.
+- Registra `http://localhost:8000/oauth.php?provider=google` (o su URL de producción) como URI de redirección autorizada; corresponde al endpoint de backend que procesa el callback OAuth.
 
