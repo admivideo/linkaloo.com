@@ -88,6 +88,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 $descripcion = mb_substr($descripcion, 0, 247) . '...';
             }
             $imagen = $meta['image'] ?? '';
+            if (empty($imagen)) {
+                $domain = parse_url($link_url, PHP_URL_HOST);
+                if ($domain) {
+                    $imagen = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+                }
+            }
             $hash = sha1($link_url);
             $check = $pdo->prepare('SELECT id FROM links WHERE usuario_id = ? AND hash_url = ?');
             $check->execute([$user_id, $hash]);
@@ -156,9 +162,10 @@ include 'header.php';
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
         $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+        $isDefault = empty($link['imagen']) || strpos($link['imagen'], 'google.com/s2/favicons') !== false;
     ?>
     <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
-        <div class="card-image <?= empty($link['imagen']) ? 'no-image' : '' ?>">
+        <div class="card-image <?= $isDefault ? 'no-image' : '' ?>">
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
                 <img src="<?= htmlspecialchars($imgSrc) ?>" alt="">
             </a>
