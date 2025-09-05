@@ -83,13 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = btn.dataset.url;
       if (navigator.share) {
         try { await navigator.share({ url }); } catch (_) {}
-      } else if (navigator.clipboard) {
-        try {
-          await navigator.clipboard.writeText(url);
-          const original = btn.innerHTML;
-          btn.innerHTML = feather.icons['check'].toSvg();
-          setTimeout(() => { btn.innerHTML = original; }, 2000);
-        } catch (_) {}
+      } else {
+        const shareUrl = 'https://www.addtoany.com/share#url=' + encodeURIComponent(url);
+        window.open(shareUrl, '_blank', 'noopener');
       }
     });
   });
@@ -141,13 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
             await navigator.share({ url });
           } catch (_) {}
-        } else if (navigator.clipboard) {
-          try {
-            await navigator.clipboard.writeText(url);
-            const original = share.innerHTML;
-            share.innerHTML = feather.icons['check'].toSvg();
-            setTimeout(() => { share.innerHTML = original; }, 2000);
-          } catch (_) {}
+        } else {
+          const shareUrl = 'https://www.addtoany.com/share#url=' + encodeURIComponent(url);
+          window.open(shareUrl, '_blank', 'noopener');
         }
       });
     }
