@@ -172,7 +172,7 @@ include 'header.php';
 </div>
 
 <div class="link-cards">
-<?php foreach($links as $link): ?>
+<?php foreach($links as $index => $link): ?>
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
         $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
@@ -217,6 +217,14 @@ include 'header.php';
             </div>
         </div>
     </div>
+    <?php if(($index + 1) % 16 === 0): ?>
+    <div class="card ad-card" data-cat="ad">
+        <div class="card-body">
+            <ins data-revive-zoneid="52" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
+            <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
+        </div>
+    </div>
+    <?php endif; ?>
 <?php endforeach; ?>
 </div>
 <div id="sentinel"></div>
