@@ -27,16 +27,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const scrollRight = document.querySelector('.board-scroll.right');
   const categoryOptions = document.querySelector('.form-link select') ? document.querySelector('.form-link select').innerHTML : '';
   let currentCat = 'all';
-  const offsets = { all: cards.length };
   let loading = false;
+  let linkCount = cards.filter(c => !c.classList.contains('ad-card')).length;
+  const offsets = { all: linkCount };
   cards.forEach(c => {
-    const cat = c.dataset.cat;
-    offsets[cat] = (offsets[cat] || 0) + 1;
+    if (!c.classList.contains('ad-card')) {
+      const cat = c.dataset.cat;
+      offsets[cat] = (offsets[cat] || 0) + 1;
+    }
   });
   const filter = (cat, query = '') => {
     cards.forEach(card => {
-      const inCat = (cat === 'all' || card.dataset.cat === cat);
-      const matches = card.textContent.toLowerCase().includes(query);
+      const inCat = (cat === 'all' || card.dataset.cat === cat || card.classList.contains('ad-card'));
+      const matches = card.classList.contains('ad-card') || card.textContent.toLowerCase().includes(query);
       card.style.display = (inCat && matches) ? '' : 'none';
     });
   };
@@ -197,6 +200,24 @@ document.addEventListener('DOMContentLoaded', () => {
     return card;
   };
 
+  const createAdCard = () => {
+    const ad = document.createElement('div');
+    ad.className = 'card ad-card';
+    ad.dataset.cat = 'ad';
+    const body = document.createElement('div');
+    body.className = 'card-body';
+    const ins = document.createElement('ins');
+    ins.setAttribute('data-revive-zoneid', '52');
+    ins.setAttribute('data-revive-id', 'cabd7431fd9e40f440e6d6f0c0dc8623');
+    body.appendChild(ins);
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = '//4bes.es/adserver/www/delivery/asyncjs.php';
+    body.appendChild(script);
+    ad.appendChild(body);
+    return ad;
+  };
+
   const loadMore = async () => {
     if (loading) return false;
     loading = true;
@@ -214,8 +235,16 @@ document.addEventListener('DOMContentLoaded', () => {
       attachCardEvents(card);
       const cat = String(link.categoria_id);
       offsets[cat] = (offsets[cat] || 0) + 1;
+      linkCount++;
+      if (linkCount % 16 === 0) {
+        const adCard = createAdCard();
+        linkContainer.appendChild(adCard);
+        cards.push(adCard);
+        attachCardEvents(adCard);
+      }
     });
     feather.replace();
+    offsets.all = linkCount;
     offsets[currentCat] = off + data.length;
     loading = false;
     return true;
