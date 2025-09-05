@@ -112,26 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const attachCardEvents = (card) => {
-    const del = card.querySelector('.delete-btn');
-    if (del) {
-      del.addEventListener('click', () => {
-        if (!confirm('¿Eliminar este enlace?')) return;
-        const id = del.dataset.id;
-        fetch('delete_link.php', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: 'id=' + encodeURIComponent(id)
-        }).then(res => res.json()).then(data => {
-          if (data.success) {
-            const c = del.closest('.card');
-            if (c) {
-              c.remove();
-              cards = cards.filter(x => x !== c);
-            }
-          }
-        });
-      });
-    }
     const sel = card.querySelector('.move-select');
     if (sel) {
       sel.addEventListener('change', () => {
@@ -175,6 +155,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cards.forEach(attachCardEvents);
 
+  const detailDelete = document.querySelector('.board-detail-image .delete-btn');
+  if (detailDelete) {
+    detailDelete.addEventListener('click', () => {
+      if (!confirm('¿Eliminar este enlace?')) return;
+      const id = detailDelete.dataset.id;
+      fetch('delete_link.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'id=' + encodeURIComponent(id)
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          window.location.href = 'panel.php';
+        }
+      });
+    });
+  }
+
   const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   const createCard = (link) => {
     const domain = new URL(link.url).hostname;
@@ -202,9 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ${desc ? `<p>${escapeHtml(shortDesc)}</p>` : ''}
         <div class="card-actions">
           <select class="move-select" data-id="${link.id}">${categoryOptions}</select>
-          <div class="action-btns">
-            <button class="delete-btn" data-id="${link.id}" aria-label="Borrar"><i data-feather="trash-2"></i></button>
-          </div>
         </div>
       </div>`;
     card.querySelector('.move-select').value = link.categoria_id;

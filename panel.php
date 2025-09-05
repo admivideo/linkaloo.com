@@ -200,9 +200,6 @@ include 'header.php';
                     </option>
                 <?php endforeach; ?>
                 </select>
-                <div class="action-btns">
-                    <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar"><i data-feather="trash-2"></i></button>
-                </div>
             </div>
         </div>
     </div>
