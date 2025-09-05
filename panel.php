@@ -16,6 +16,19 @@ function ensureUtf8($string){
     return $string;
 }
 
+function canonicalizeUrl($url){
+    $parts = parse_url(trim($url));
+    if(!$parts || empty($parts['host'])){
+        return $url;
+    }
+    $scheme = strtolower($parts['scheme'] ?? 'http');
+    $host = strtolower($parts['host']);
+    $path = isset($parts['path']) ? rtrim($parts['path'], '/') : '';
+    $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+    $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+    return $scheme . '://' . $host . $port . $path . $query;
+}
+
 function scrapeMetadata($url){
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -94,14 +107,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                     $imagen = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
                 }
             }
-            $hash = sha1($link_url);
+            $canon = canonicalizeUrl($link_url);
+            $hash = sha1($canon);
             $check = $pdo->prepare('SELECT id FROM links WHERE usuario_id = ? AND hash_url = ?');
             $check->execute([$user_id, $hash]);
             if($check->fetch()){
                 $error = 'Este link ya está guardado.';
             } else {
-                $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$user_id, $categoria_id, $link_url, $link_title, $descripcion, $imagen, $hash]);
+                $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, url_canonica, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$user_id, $categoria_id, $link_url, $canon, $link_title, $descripcion, $imagen, $hash]);
             }
         }
     }
