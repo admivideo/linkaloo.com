@@ -22,7 +22,7 @@ try {
 }
 
 // Google OAuth configuration
-$googleClientId     = getenv('GOOGLE_CLIENT_ID') ?: '731706222639-293qjq63nfog07qge78no9v34tkjapec.apps.googleusercontent.com';
-$googleClientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: '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';
+$googleClientId     = getenv('GOOGLE_CLIENT_ID') ?: '731706222639-8ise1fcsud3mv3552bt7hrck3o7o6n31.apps.googleusercontent.com';
+$googleClientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: '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';
 $googleRedirectUri  = getenv('GOOGLE_REDIRECT_URI') ?: 'https://linkaloo.com/oauth2callback.php';
 ?>
