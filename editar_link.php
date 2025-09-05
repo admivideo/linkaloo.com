@@ -34,6 +34,7 @@ $domain = parse_url($link['url'], PHP_URL_HOST);
         <?php if(!empty($link['imagen'])): ?>
             <img src="<?= htmlspecialchars($link['imagen']) ?>" alt="<?= htmlspecialchars($title) ?>">
         <?php endif; ?>
+        <button class="delete-btn" data-id="<?= $link['id'] ?>" aria-label="Borrar"><i data-feather="trash-2"></i></button>
     </div>
     <div class="board-detail-info">
         <div class="link-header">
