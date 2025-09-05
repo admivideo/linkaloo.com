@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const del = card.querySelector('.delete-btn');
     if (del) {
       del.addEventListener('click', () => {
+        if (!confirm('¿Eliminar este enlace?')) return;
         const id = del.dataset.id;
         fetch('delete_link.php', {
           method: 'POST',
@@ -183,6 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
     card.className = 'card';
     card.dataset.cat = link.categoria_id;
     card.dataset.id = link.id;
+    const desc = link.descripcion ? link.descripcion : '';
+    const shortDesc = desc.length > 75 ? desc.substring(0, 72) + '...' : desc;
     card.innerHTML = `
       <div class="card-image ${isDefault ? 'no-image' : ''}">
         <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">
@@ -196,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" width="20" height="20" alt="">
           <h4>${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
         </div>
-        ${link.descripcion ? `<p>${escapeHtml(link.descripcion)}</p>` : ''}
+        ${desc ? `<p>${escapeHtml(shortDesc)}</p>` : ''}
         <div class="card-actions">
           <select class="move-select" data-id="${link.id}">${categoryOptions}</select>
           <div class="action-btns">
