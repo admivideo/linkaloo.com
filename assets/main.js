@@ -193,10 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <a href="editar_link.php?id=${link.id}" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
       </div>
       <div class="card-body">
-        <div class="card-title">
-          <img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" width="20" height="20" alt="">
-          <h4>${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
-        </div>
+      <div class="card-title">
+        <h4><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" width="20" height="20" alt="">${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
+      </div>
         ${desc ? `<p>${escapeHtml(shortDesc)}</p>` : ''}
         <div class="card-actions">
           <select class="move-select" data-id="${link.id}">${categoryOptions}</select>
