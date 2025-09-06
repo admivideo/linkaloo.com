@@ -2,6 +2,7 @@
   box-sizing:border-box;
 }
 body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;color:#fff;}
+h1 {font-size:1.6em;}
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -129,7 +130,7 @@ textarea {
 }
 
 .login-block h2{text-align:center;}
-.app-info{text-align:center;margin-bottom:20px;font-size:1.1em;}
+.app-info{text-align:center;margin-bottom:20px;}
 
 /* Board management */
 .board-admin {margin:0 auto;}
