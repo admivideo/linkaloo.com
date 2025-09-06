@@ -77,7 +77,7 @@ textarea {
 .board-nav {display:flex;align-items:center;gap:5px;margin-bottom:10px;}
 .board-slider {display:flex;overflow-x:auto;gap:10px;padding:10px 0;flex:1;scrollbar-width:none;-ms-overflow-style:none;}
 .board-slider::-webkit-scrollbar {display:none;}
-.board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;}
+.board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;text-decoration:none;display:inline-block;}
 .board-btn.active {background:#0d8ddc;}
 .link-cards {column-count:6;column-gap:15px;margin-top:20px;}
 .link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);break-inside:avoid;margin-bottom:15px;}
