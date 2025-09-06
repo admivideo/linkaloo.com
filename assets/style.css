@@ -138,7 +138,7 @@ textarea {
   .social-block{
     width:100%;
     height:auto;
-    max-height:none;
+    max-height:280px;
   }
 }
 
