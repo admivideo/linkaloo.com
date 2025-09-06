@@ -109,8 +109,8 @@ textarea {
 }
 
 /* Login page */
-.login-wrapper {display:flex;gap:20px;max-width:800px;margin:0 auto;flex-wrap:wrap;min-height:calc(100vh - 80px);align-items:center;justify-content:center;}
-.login-block,.social-block {flex:1 1 350px;background:#f5f8fa;color:#000;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+.login-wrapper {display:flex;gap:20px;max-width:800px;margin:0 auto;flex-wrap:wrap;min-height:calc(100vh - 80px);align-items:stretch;justify-content:center;}
+.login-block,.social-block {flex:1 1 350px;background:#f5f8fa;color:#000;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:center;}
 .login-icon{text-align:center;margin-bottom:10px;}
 .login-icon img{height:85px;width:auto;}
 .login-icon svg{width:48px;height:48px;}
@@ -128,6 +128,9 @@ textarea {
   .login-wrapper{flex-direction:column;}
   .login-block,.social-block{width:100%;}
 }
+
+.login-block h2{text-align:center;}
+.app-info{text-align:center;margin-bottom:20px;font-size:1.1em;}
 
 /* Board management */
 .board-admin {margin:0 auto;}
