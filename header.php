@@ -3,8 +3,8 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-// Evitar caché de contenido dinámico
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+// Evitar caché persistente, pero permitir que el navegador recargue al volver atrás
+header('Cache-Control: no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 $cssVersion = filemtime(__DIR__ . '/assets/style.css');
 $jsVersion  = filemtime(__DIR__ . '/assets/main.js');

@@ -6,7 +6,9 @@ if(!isset($_SESSION['user_id'])){
     exit;
 }
 $user_id = $_SESSION['user_id'];
-$error = '';
+// Recuperar mensajes de error tras un posible redirect
+$error = $_SESSION['panel_error'] ?? '';
+unset($_SESSION['panel_error']);
 
 function ensureUtf8($string){
     $encoding = mb_detect_encoding($string, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
@@ -112,13 +114,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             $check = $pdo->prepare('SELECT id FROM links WHERE usuario_id = ? AND hash_url = ?');
             $check->execute([$user_id, $hash]);
             if($check->fetch()){
-                $error = 'Este link ya está guardado.';
+                $_SESSION['panel_error'] = 'Este link ya está guardado.';
             } else {
                 $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, url_canonica, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$user_id, $categoria_id, $link_url, $canon, $link_title, $descripcion, $imagen, $hash]);
             }
         }
     }
+    header('Location: panel.php');
+    exit;
 }
 
 $stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ? ORDER BY creado_en DESC');
