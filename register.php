@@ -16,7 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hash = password_hash($password, PASSWORD_BCRYPT);
             $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
             $stmt->execute([$nombre, $email, $hash]);
-            $_SESSION['user_id'] = $pdo->lastInsertId();
+            $userId = $pdo->lastInsertId();
+            $catStmt = $pdo->prepare('INSERT INTO categorias (usuario_id, nombre) VALUES (?, ?)');
+            $catStmt->execute([$userId, 'Sin Categoria']);
+            $_SESSION['user_id'] = $userId;
             $_SESSION['user_name'] = $nombre;
             header('Location: panel.php');
             exit;

@@ -70,6 +70,8 @@ if ($user) {
     $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
     $stmt->execute([$name ?: $email, $email, $passHash]);
     $userId   = $pdo->lastInsertId();
+    $catStmt = $pdo->prepare('INSERT INTO categorias (usuario_id, nombre) VALUES (?, ?)');
+    $catStmt->execute([$userId, 'Sin Categoria']);
     $userName = $name ?: $email;
 }
 

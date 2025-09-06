@@ -32,6 +32,9 @@ class ShareReceiverActivity : AppCompatActivity() {
 
     private fun handleLink(link: String) {
         Log.d("ShareReceiver", "Received link: $link")
-        // TODO: procesar el enlace (link)
+        // Abre Linkaloo con el enlace compartido como parámetro
+        val encoded = Uri.encode(link)
+        val uri = Uri.parse("https://linkaloo.com/?shared=" + encoded)
+        startActivity(Intent(Intent.ACTION_VIEW, uri))
     }
 }
