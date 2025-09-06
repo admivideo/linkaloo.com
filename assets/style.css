@@ -3,6 +3,11 @@
 }
 body {font-family: 'Rambla', sans-serif;margin:0;padding:0;background:#1DA1F2;color:#fff;}
 h1 {font-size:1.6em;}
+@media (max-width:600px){
+  h1 {font-size:1.4em;}
+  h2 {font-size:1.3em;}
+  h3 {font-size:1.3em;}
+}
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -126,7 +131,7 @@ textarea {
 .social-btn.facebook {background:#4267B2;}
 @media (max-width:600px){
   .login-wrapper{flex-direction:column;}
-  .login-block,.social-block{width:100%;}
+  .login-block,.social-block{width:100%;height:auto;max-height:60vh;}
 }
 
 .login-block h2{text-align:center;}
