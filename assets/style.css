@@ -112,6 +112,9 @@ textarea {
 @media (max-width:600px){
   .link-cards {column-count:2;}
   .link-cards .card {margin-bottom:10px;}
+  .link-cards .card-image.no-image{
+    height:auto;
+  }
 }
 
 /* Login page */
@@ -131,7 +134,12 @@ textarea {
 .social-btn.facebook {background:#4267B2;}
 @media (max-width:600px){
   .login-wrapper{flex-direction:column;}
-  .login-block,.social-block{width:100%;height:auto;max-height:60vh;}
+  .login-block,
+  .social-block{
+    width:100%;
+    height:auto;
+    max-height:none;
+  }
 }
 
 .login-block h2{text-align:center;}
