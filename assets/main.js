@@ -114,20 +114,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const sel = card.querySelector('.move-select');
     if (sel) {
       sel.addEventListener('change', () => {
+        const cardEl = sel.closest('.card');
+        if (!cardEl) return;
         const id = sel.dataset.id;
-        const categoria = sel.value;
+        const nuevaCat = sel.value;
+        const antiguaCat = cardEl.dataset.cat;
         fetch('move_link.php', {
           method: 'POST',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: 'id=' + encodeURIComponent(id) + '&categoria_id=' + encodeURIComponent(categoria)
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'id=' + encodeURIComponent(id) + '&categoria_id=' + encodeURIComponent(nuevaCat)
         }).then(res => res.json()).then(data => {
           if (data.success) {
-            const cardEl = sel.closest('.card');
-            if (cardEl) {
-              cardEl.dataset.cat = categoria;
-              const active = document.querySelector('.board-btn.active');
-              if (active) filter(active.dataset.cat, searchInput ? searchInput.value.toLowerCase() : '');
+            cardEl.dataset.cat = nuevaCat;
+            if (antiguaCat !== nuevaCat) {
+              offsets[antiguaCat] = Math.max((offsets[antiguaCat] || 1) - 1, 0);
+              offsets[nuevaCat] = (offsets[nuevaCat] || 0) + 1;
             }
+            const active = document.querySelector('.board-btn.active');
+            if (active) filter(active.dataset.cat, searchInput ? searchInput.value.toLowerCase() : '');
+          } else {
+            sel.value = antiguaCat;
           }
         });
       });
