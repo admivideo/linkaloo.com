@@ -110,10 +110,9 @@ textarea {
 
 /* Login page */
 .login-wrapper {display:flex;gap:20px;max-width:800px;margin:0 auto;flex-wrap:wrap;min-height:calc(100vh - 80px);align-items:stretch;justify-content:center;}
-.login-block,.social-block {flex:1 1 350px;background:#f5f8fa;color:#000;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:center;}
-.login-icon{text-align:center;margin-bottom:10px;}
-.login-icon img{height:85px;width:auto;}
-.login-icon svg{width:48px;height:48px;}
+.login-block,.social-block {flex:1 1 350px;background:#f5f8fa;color:#000;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:center;max-height:400px;height:400px;overflow:auto;}
+.app-logo{text-align:center;margin-bottom:10px;}
+.app-logo img{height:85px;width:auto;}
 .login-form {display:flex;flex-direction:column;gap:10px;}
 .login-form input {padding:8px;}
 .login-form button {background:#1DA1F2;color:#fff;border:none;padding:10px;border-radius:4px;cursor:pointer;}
