@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.linkaloo">
 
-    <application>
-         <activity android:name=".ShareReceiverActivity" android:exported="true">
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="Linkaloo">
+         <activity
+             android:name=".ShareReceiverActivity"
+             android:exported="true"
+             android:label="Guardar en Linkaloo">
              <!-- Un único enlace / texto -->
              <intent-filter>
                  <action android:name="android.intent.action.SEND" />
