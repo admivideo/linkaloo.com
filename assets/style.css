@@ -133,7 +133,7 @@ textarea {
 .social-btn.google {background:#DB4437;}
 .social-btn.facebook {background:#4267B2;}
 @media (max-width:600px){
-  .login-wrapper{flex-direction:column;}
+  .login-wrapper{flex-direction:column;min-height:auto;max-height:600px;}
   .login-block,
   .social-block{
     width:100%;
