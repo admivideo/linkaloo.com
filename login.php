@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 include 'header.php';
 ?>
+<p class="app-info">Linkaloo, ordena el caos, links a lo que te gusta</p>
 <div class="login-wrapper">
     <div class="login-block">
         <div class="login-icon"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"><!-- Logo file already on server --></div>
