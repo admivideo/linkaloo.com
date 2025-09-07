@@ -1,5 +1,6 @@
 <?php
 require 'config.php';
+require_once 'image_utils.php';
 session_start();
 if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
@@ -78,6 +79,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                     $newImage = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
                 }
             }
+            if(!empty($newImage)){
+                $localImg = saveImageFromUrl($newImage, $user_id);
+                if($localImg){
+                    $newImage = $localImg;
+                }
+            }
             if($newImage && $newImage !== $link['imagen']){
                 $updImg = $pdo->prepare('UPDATE links SET imagen = ? WHERE id = ? AND usuario_id = ?');
                 $updImg->execute([$newImage, $link['id'], $user_id]);
@@ -140,8 +147,8 @@ include 'header.php';
 <?php foreach($links as $link): ?>
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
-        $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
-        $isDefault = empty($link['imagen']) || strpos($link['imagen'], 'google.com/s2/favicons') !== false;
+    $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+    $isDefault = empty($link['imagen']);
     ?>
     <div class="card">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?>">

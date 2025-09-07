@@ -1,5 +1,6 @@
 <?php
 require 'config.php';
+require_once 'image_utils.php';
 session_start();
 if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
@@ -109,6 +110,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                     $imagen = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
                 }
             }
+            if(!empty($imagen)){
+                $localImg = saveImageFromUrl($imagen, $user_id);
+                if($localImg){
+                    $imagen = $localImg;
+                }
+            }
             $canon = canonicalizeUrl($link_url);
             $hash = sha1($canon);
             $check = $pdo->prepare('SELECT id FROM links WHERE usuario_id = ? AND hash_url = ?');
@@ -180,7 +187,7 @@ include 'header.php';
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
         $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
-        $isDefault = empty($link['imagen']) || strpos($link['imagen'], 'google.com/s2/favicons') !== false;
+        $isDefault = empty($link['imagen']);
     ?>
     <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?>">

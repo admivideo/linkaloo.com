@@ -2,3 +2,5 @@ favicon.ico
 img/favicon.png
 
 node_modules
+fichas/*
+!fichas/.gitkeep
