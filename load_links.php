@@ -1,5 +1,6 @@
 <?php
 require 'config.php';
+require 'favicon_utils.php';
 session_start();
 if(!isset($_SESSION['user_id'])){
     http_response_code(401);
@@ -27,6 +28,8 @@ foreach($links as &$link){
     if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 75){
         $link['descripcion'] = mb_substr($link['descripcion'], 0, 72) . '...';
     }
+    $domain = parse_url($link['url'], PHP_URL_HOST);
+    $link['favicon'] = $domain ? getLocalFavicon($domain) : '';
 }
 unset($link);
 header('Content-Type: application/json; charset=utf-8');

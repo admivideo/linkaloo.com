@@ -1,5 +1,6 @@
 <?php
 require 'config.php';
+require 'favicon_utils.php';
 session_start();
 if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
@@ -28,6 +29,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 include 'header.php';
 $title = $link['titulo'] ?: $link['url'];
 $domain = parse_url($link['url'], PHP_URL_HOST);
+$favicon = $domain ? getLocalFavicon($domain) : '';
 ?>
 <div class="board-detail">
     <div class="board-detail-image">
@@ -38,7 +40,7 @@ $domain = parse_url($link['url'], PHP_URL_HOST);
     </div>
     <div class="board-detail-info">
         <div class="link-header">
-            <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="25" height="25" alt="">
+            <img src="<?= htmlspecialchars($favicon) ?>" width="18" height="18" alt="">
             <h2><?= htmlspecialchars($title) ?></h2>
         </div>
         <?php if(!empty($link['creado_en'])): ?>
