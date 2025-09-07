@@ -96,6 +96,8 @@ textarea {
 .link-cards .card-image .edit-btn svg{width:16px;height:16px;}
 .link-cards .card-image.no-image{display:flex;align-items:center;justify-content:center;background:#f5f8fa;height:150px;}
 .link-cards .card-image.no-image a{display:flex;}
+.link-cards .card-image.local-favicon{display:flex;align-items:center;justify-content:center;background:#f5f8fa;height:80px;}
+.link-cards .card-image.local-favicon img{width:25px;height:25px;}
 
 .link-cards .card-body {padding:10px;display:flex;flex-direction:column;}
 .link-cards .card-title {margin-bottom:10px;overflow:hidden;}

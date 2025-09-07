@@ -190,9 +190,10 @@ include 'header.php';
         $favicon = $domain ? getLocalFavicon($domain) : '';
         $imgSrc = !empty($link['imagen']) ? $link['imagen'] : $favicon;
         $isDefault = empty($link['imagen']);
+        $isLocalFavicon = str_starts_with($imgSrc, '/local_favicons/');
     ?>
     <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
-        <div class="card-image <?= $isDefault ? 'no-image' : '' ?>">
+        <div class="card-image <?= $isDefault ? 'no-image' : '' ?> <?= $isLocalFavicon ? 'local-favicon' : '' ?>">
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
                 <img src="<?= htmlspecialchars($imgSrc) ?>" alt="">
             </a>
