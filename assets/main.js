@@ -175,9 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   const createCard = (link) => {
-    const domain = new URL(link.url).hostname;
-    const imgSrc = link.imagen ? link.imagen : 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=128';
-    const isDefault = !link.imagen || link.imagen.includes('google.com/s2/favicons');
+    const imgSrc = link.imagen ? link.imagen : link.favicon;
+    const isDefault = !link.imagen;
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.cat = link.categoria_id;
@@ -194,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="card-body">
       <div class="card-title">
-        <h4><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" alt="">${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
+        <h4><img src="${escapeHtml(link.favicon)}" width="18" height="18" alt="">${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
       </div>
         ${desc ? `<p>${escapeHtml(shortDesc)}</p>` : ''}
         <div class="card-actions">

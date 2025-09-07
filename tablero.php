@@ -1,5 +1,6 @@
 <?php
 require 'config.php';
+require 'favicon_utils.php';
 require_once 'image_utils.php';
 session_start();
 if(!isset($_SESSION['user_id'])){
@@ -76,10 +77,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if(empty($newImage)){
                 $domain = parse_url($link['url'], PHP_URL_HOST);
                 if($domain){
-                    $newImage = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+                    $newImage = getLocalFavicon($domain);
                 }
             }
-            if(!empty($newImage)){
+            if(!empty($newImage) && str_starts_with($newImage, 'http')){
                 $localImg = saveImageFromUrl($newImage, $user_id);
                 if($localImg){
                     $newImage = $localImg;
@@ -147,7 +148,8 @@ include 'header.php';
 <?php foreach($links as $link): ?>
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
-    $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+    $favicon = $domain ? getLocalFavicon($domain) : '';
+    $imgSrc = !empty($link['imagen']) ? $link['imagen'] : $favicon;
     $isDefault = empty($link['imagen']);
     ?>
     <div class="card">
