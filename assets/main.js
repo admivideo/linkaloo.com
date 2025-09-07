@@ -114,20 +114,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const sel = card.querySelector('.move-select');
     if (sel) {
       sel.addEventListener('change', () => {
+        const cardEl = sel.closest('.card');
+        if (!cardEl) return;
         const id = sel.dataset.id;
-        const categoria = sel.value;
+        const nuevaCat = sel.value;
+        const antiguaCat = cardEl.dataset.cat;
         fetch('move_link.php', {
           method: 'POST',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: 'id=' + encodeURIComponent(id) + '&categoria_id=' + encodeURIComponent(categoria)
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'id=' + encodeURIComponent(id) + '&categoria_id=' + encodeURIComponent(nuevaCat)
         }).then(res => res.json()).then(data => {
           if (data.success) {
-            const cardEl = sel.closest('.card');
-            if (cardEl) {
-              cardEl.dataset.cat = categoria;
-              const active = document.querySelector('.board-btn.active');
-              if (active) filter(active.dataset.cat, searchInput ? searchInput.value.toLowerCase() : '');
+            cardEl.dataset.cat = nuevaCat;
+            if (antiguaCat !== nuevaCat) {
+              offsets[antiguaCat] = Math.max((offsets[antiguaCat] || 1) - 1, 0);
+              offsets[nuevaCat] = (offsets[nuevaCat] || 0) + 1;
             }
+            const active = document.querySelector('.board-btn.active');
+            if (active) filter(active.dataset.cat, searchInput ? searchInput.value.toLowerCase() : '');
+          } else {
+            sel.value = antiguaCat;
           }
         });
       });
@@ -187,10 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <a href="editar_link.php?id=${link.id}" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
       </div>
       <div class="card-body">
-        <div class="card-title">
-          <img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" width="20" height="20" alt="">
-          <h4>${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
-        </div>
+      <div class="card-title">
+        <h4><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" width="20" height="20" alt="">${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
+      </div>
         ${desc ? `<p>${escapeHtml(shortDesc)}</p>` : ''}
         <div class="card-actions">
           <select class="move-select" data-id="${link.id}">${categoryOptions}</select>

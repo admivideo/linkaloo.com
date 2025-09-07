@@ -23,11 +23,67 @@ if(!$board){
     exit;
 }
 
+function scrapeImage($url){
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; linkalooBot/1.0)',
+        CURLOPT_TIMEOUT => 5,
+    ]);
+    $html = curl_exec($ch);
+    curl_close($ch);
+    if(!$html){
+        return '';
+    }
+    $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if($enc){
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
+    }
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    $doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+    $getMeta = function($name, $attr='property') use ($xpath){
+        $nodes = $xpath->query("//meta[@$attr='$name']/@content");
+        return $nodes->length ? trim($nodes->item(0)->nodeValue) : '';
+    };
+    $image = $getMeta('og:image') ?: $getMeta('twitter:image');
+    if(!empty($image) && !preg_match('#^https?://#', $image)){
+        $parts = parse_url($url);
+        $base = $parts['scheme'].'://'.$parts['host'];
+        if(isset($parts['port'])){
+            $base .= ':'.$parts['port'];
+        }
+        $image = rtrim($base,'/').'/'.ltrim($image,'/');
+    }
+    return $image;
+}
+
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if(isset($_POST['delete_board'])){
         $pdo->prepare('DELETE FROM links WHERE categoria_id = ? AND usuario_id = ?')->execute([$id, $user_id]);
         $pdo->prepare('DELETE FROM categorias WHERE id = ? AND usuario_id = ?')->execute([$id, $user_id]);
         header('Location: tableros.php');
+        exit;
+    } elseif(isset($_POST['update_images'])){
+        $linksStmt = $pdo->prepare('SELECT id, url, imagen FROM links WHERE usuario_id = ? AND categoria_id = ?');
+        $linksStmt->execute([$user_id, $id]);
+        $links = $linksStmt->fetchAll();
+        foreach($links as $link){
+            $newImage = scrapeImage($link['url']);
+            if(empty($newImage)){
+                $domain = parse_url($link['url'], PHP_URL_HOST);
+                if($domain){
+                    $newImage = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+                }
+            }
+            if($newImage && $newImage !== $link['imagen']){
+                $updImg = $pdo->prepare('UPDATE links SET imagen = ? WHERE id = ? AND usuario_id = ?');
+                $updImg->execute([$newImage, $link['id'], $user_id]);
+            }
+        }
+        header('Location: tablero.php?id=' . $id);
         exit;
     } else {
         $nombre = trim($_POST['nombre'] ?? '');
@@ -38,6 +94,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         $board = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
+
+$linksStmt = $pdo->prepare('SELECT id, url, imagen FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY id DESC');
+$linksStmt->execute([$user_id, $id]);
+$links = $linksStmt->fetchAll();
 
 $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : '';
 $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado_en'])) : '';
@@ -72,6 +132,29 @@ include 'header.php';
         </form>
     </div>
 </div>
+<?php if(!empty($links)): ?>
+<form method="post" class="update-images-form">
+    <button type="submit" name="update_images">Actualizar imágenes</button>
+</form>
+<div class="link-cards board-links">
+<?php foreach($links as $link): ?>
+    <?php
+        $domain = parse_url($link['url'], PHP_URL_HOST);
+        $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+        $isDefault = empty($link['imagen']) || strpos($link['imagen'], 'google.com/s2/favicons') !== false;
+    ?>
+    <div class="card">
+        <div class="card-image <?= $isDefault ? 'no-image' : '' ?>">
+            <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
+                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="">
+            </a>
+        </div>
+    </div>
+<?php endforeach; ?>
+</div>
+<?php else: ?>
+    <p>No hay links en este tablero.</p>
+<?php endif; ?>
 </div>
 </body>
 </html>
