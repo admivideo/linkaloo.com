@@ -1,5 +1,6 @@
 <?php
 require 'config.php';
+require 'favicon_utils.php';
 require_once 'image_utils.php';
 session_start();
 if(!isset($_SESSION['user_id'])){
@@ -107,10 +108,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             if (empty($imagen)) {
                 $domain = parse_url($link_url, PHP_URL_HOST);
                 if ($domain) {
-                    $imagen = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+                    $imagen = getLocalFavicon($domain);
                 }
             }
-            if(!empty($imagen)){
+            if(!empty($imagen) && str_starts_with($imagen, 'http')){
                 $localImg = saveImageFromUrl($imagen, $user_id);
                 if($localImg){
                     $imagen = $localImg;
@@ -186,7 +187,8 @@ include 'header.php';
 <?php foreach($links as $index => $link): ?>
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
-        $imgSrc = !empty($link['imagen']) ? $link['imagen'] : 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
+        $favicon = $domain ? getLocalFavicon($domain) : '';
+        $imgSrc = !empty($link['imagen']) ? $link['imagen'] : $favicon;
         $isDefault = empty($link['imagen']);
     ?>
     <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
@@ -205,7 +207,7 @@ include 'header.php';
                 }
             ?>
             <div class="card-title">
-                <h4><img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" alt=""><?= htmlspecialchars($title) ?></h4>
+                <h4><img src="<?= htmlspecialchars($favicon) ?>" width="18" height="18" alt=""><?= htmlspecialchars($title) ?></h4>
             </div>
             <?php if(!empty($link['descripcion'])): ?>
                 <?php
