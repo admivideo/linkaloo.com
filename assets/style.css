@@ -183,7 +183,6 @@ textarea {
 .board-detail-info{flex:1;}
 .board-detail-info .detail-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .board-detail-info .link-header{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
-
 .board-detail-info .created-at{color:#666;font-size:14px;margin:5px 0;}
 .board-detail-form label{display:block;margin-bottom:10px;}
 .board-detail-form input[type=text],.board-detail-form textarea{width:100%;padding:5px;}
