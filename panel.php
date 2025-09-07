@@ -198,7 +198,7 @@ include 'header.php';
                 }
             ?>
             <div class="card-title">
-                <h4><img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="20" height="20" alt=""><?= htmlspecialchars($title) ?></h4>
+                <h4><img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="25" height="25" alt=""><?= htmlspecialchars($title) ?></h4>
             </div>
             <?php if(!empty($link['descripcion'])): ?>
                 <?php
