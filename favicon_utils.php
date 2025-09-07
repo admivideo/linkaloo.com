@@ -3,15 +3,16 @@ function getLocalFavicon($domain){
     if(empty($domain)){
         return '';
     }
-    $base = preg_replace('/\.[^.]+$/', '', $domain);
-    $dir = __DIR__ . '/local_favicons/' . $base;
-    $path = $dir . '/favicon.png';
-    $relative = '/local_favicons/' . $base . '/favicon.png';
-    if(file_exists($path)){
-        return $relative;
-    }
+    $base = preg_replace('/^www\./i', '', $domain);
+    $base = preg_replace('/\.[^.]+$/', '', $base);
+    $dir = __DIR__ . '/local_favicons';
     if(!is_dir($dir)){
         mkdir($dir, 0755, true);
+    }
+    $path = $dir . '/' . $base . '.png';
+    $relative = '/local_favicons/' . $base . '.png';
+    if(file_exists($path)){
+        return $relative;
     }
     $url = 'https://www.google.com/s2/favicons?domain=' . urlencode($domain) . '&sz=128';
     $ch = curl_init($url);
