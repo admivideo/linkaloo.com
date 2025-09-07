@@ -230,10 +230,11 @@ include 'header.php';
             </div>
         </div>
     </div>
-    <?php if(($index + 1) % 16 === 0): ?>
+    <?php if(($index + 1) % 8 === 0): ?>
     <div class="card ad-card" data-cat="ad">
         <div class="card-body">
-            <ins data-revive-zoneid="52" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
+            <!-- Revive Adserver Etiqueta JS asincrónica - Generated with Revive Adserver v5.5.2 -->
+            <ins data-revive-zoneid="54" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
             <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
         </div>
     </div>
