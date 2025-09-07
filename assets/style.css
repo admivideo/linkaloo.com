@@ -86,7 +86,7 @@ textarea {
 .board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;text-decoration:none;display:inline-block;}
 .board-btn.active {background:#0d8ddc;}
 .link-cards {column-count:6;column-gap:15px;margin-top:20px;}
-.link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);break-inside:avoid;margin-bottom:15px;transition:transform .2s ease,box-shadow .2s ease;}
+.link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);break-inside:avoid;margin-bottom:15px;}
 .link-cards .card a {display:block;}
 .link-cards .card img {width:100%;height:auto;display:block;}
 .link-cards .card-image{position:relative;}
@@ -98,10 +98,6 @@ textarea {
 .link-cards .card-image.no-image a{display:flex;}
 .link-cards .card-image.local-favicon{display:flex;align-items:center;justify-content:center;background:#f5f8fa;height:80px;}
 .link-cards .card-image.local-favicon img{width:25px;height:25px;}
-
-@media (min-width:601px){
-  .link-cards .card:hover{transform:translateY(-4px);box-shadow:0 4px 8px rgba(0,0,0,0.15);}
-}
 
 .link-cards .card-body {padding:10px;display:flex;flex-direction:column;}
 .link-cards .card-title {margin-bottom:10px;overflow:hidden;}
