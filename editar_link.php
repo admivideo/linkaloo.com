@@ -38,7 +38,7 @@ $domain = parse_url($link['url'], PHP_URL_HOST);
     </div>
     <div class="board-detail-info">
         <div class="link-header">
-            <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" width="20" height="20" alt="">
+            <img src="https://www.google.com/s2/favicons?domain=<?= urlencode($domain) ?>" alt="">
             <h2><?= htmlspecialchars($title) ?></h2>
         </div>
         <?php if(!empty($link['creado_en'])): ?>

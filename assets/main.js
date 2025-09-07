@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="card-body">
       <div class="card-title">
-        <h4><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" width="20" height="20" alt="">${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
+        <h4><img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}" alt="">${escapeHtml(link.titulo ? link.titulo : link.url)}</h4>
       </div>
         ${desc ? `<p>${escapeHtml(shortDesc)}</p>` : ''}
         <div class="card-actions">
