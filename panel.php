@@ -11,6 +11,7 @@ $user_id = $_SESSION['user_id'];
 // Recuperar mensajes de error tras un posible redirect
 $error = $_SESSION['panel_error'] ?? '';
 unset($_SESSION['panel_error']);
+const AD_CATEGORY_ID = 52; // Category ID where ads should be shown
 
 function ensureUtf8($string){
     $encoding = mb_detect_encoding($string, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
@@ -141,6 +142,9 @@ $stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, image
 $stmtL->execute([$user_id]);
 $links = $stmtL->fetchAll();
 
+$selectedCat = isset($_GET['cat']) ? (int)$_GET['cat'] : null;
+$showAds = ($selectedCat === AD_CATEGORY_ID);
+
 include 'header.php';
 ?>
 <?php if(!empty($error)): ?>
@@ -230,16 +234,16 @@ include 'header.php';
             </div>
         </div>
     </div>
-    <?php if(($index + 1) % 16 === 0): ?>
-    <div class="card ad-card" data-cat="ad">
+<?php if($showAds && ($index + 1) % 16 === 0): ?>
+    <div class="card ad-card" data-cat="<?= AD_CATEGORY_ID ?>">
         <div class="card-body">
             <!-- Revive Adserver Etiqueta JS asincrónica - Generated with Revive Adserver v5.5.2 -->
             <ins data-revive-zoneid="52" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
             <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
         </div>
     </div>
-    <?php elseif(($index + 1) % 8 === 0): ?>
-    <div class="card ad-card" data-cat="ad">
+    <?php elseif($showAds && ($index + 1) % 8 === 0): ?>
+    <div class="card ad-card" data-cat="<?= AD_CATEGORY_ID ?>">
         <div class="card-body">
             <!-- Revive Adserver Etiqueta JS asincrónica - Generated with Revive Adserver v5.5.2 -->
             <ins data-revive-zoneid="54" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
