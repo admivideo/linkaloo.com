@@ -137,7 +137,7 @@ $stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ? OR
 $stmt->execute([$user_id]);
 $categorias = $stmt->fetchAll();
 
-$stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? ORDER BY creado_en DESC LIMIT 18");
+$stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? ORDER BY creado_en DESC");
 $stmtL->execute([$user_id]);
 $links = $stmtL->fetchAll();
 
@@ -195,7 +195,7 @@ include 'header.php';
     <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?> <?= $isLocalFavicon ? 'local-favicon' : '' ?>">
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
-                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="">
+                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="" loading="lazy">
             </a>
             <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
             <a href="editar_link.php?id=<?= $link['id'] ?>" class="edit-btn" aria-label="Editar"><i data-feather="edit-2"></i></a>
@@ -208,7 +208,7 @@ include 'header.php';
                 }
             ?>
             <div class="card-title">
-                <h4><img src="<?= htmlspecialchars($favicon) ?>" width="18" height="18" alt=""><?= htmlspecialchars($title) ?></h4>
+                <h4><img src="<?= htmlspecialchars($favicon) ?>" width="18" height="18" alt="" loading="lazy"><?= htmlspecialchars($title) ?></h4>
             </div>
             <?php if(!empty($link['descripcion'])): ?>
                 <?php
@@ -240,7 +240,6 @@ include 'header.php';
     <?php endif; ?>
 <?php endforeach; ?>
 </div>
-<div id="sentinel"></div>
 
 </div>
 </body>
