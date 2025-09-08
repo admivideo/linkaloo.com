@@ -8,6 +8,8 @@ if(!isset($_SESSION['user_id'])){
     exit;
 }
 $user_id = $_SESSION['user_id'];
+// Categoría seleccionada (0 = todas)
+$selectedCat = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
 // Recuperar mensajes de error tras un posible redirect
 $error = $_SESSION['panel_error'] ?? '';
 unset($_SESSION['panel_error']);
@@ -137,8 +139,13 @@ $stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ? OR
 $stmt->execute([$user_id]);
 $categorias = $stmt->fetchAll();
 
-$stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? ORDER BY creado_en DESC");
-$stmtL->execute([$user_id]);
+if ($selectedCat) {
+    $stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY creado_en DESC");
+    $stmtL->execute([$user_id, $selectedCat]);
+} else {
+    $stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ? ORDER BY creado_en DESC");
+    $stmtL->execute([$user_id]);
+}
 $links = $stmtL->fetchAll();
 
 $catCounts = [];
@@ -162,9 +169,9 @@ include 'header.php';
 <div class="board-nav">
     <button type="button" class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
-        <a href="panel.php" class="board-btn" data-cat="all">Todo</a>
+        <a href="panel.php" class="board-btn<?= $selectedCat === 0 ? ' active' : '' ?>" data-cat="all">Todo</a>
     <?php foreach($categorias as $categoria): ?>
-        <a href="panel.php?cat=<?= $categoria['id'] ?>" class="board-btn" data-cat="<?= $categoria['id'] ?>">
+        <a href="panel.php?cat=<?= $categoria['id'] ?>" class="board-btn<?= $categoria['id'] == $selectedCat ? ' active' : '' ?>" data-cat="<?= $categoria['id'] ?>">
             <?= htmlspecialchars($categoria['nombre']) ?>
         </a>
     <?php endforeach; ?>
