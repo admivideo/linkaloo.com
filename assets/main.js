@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCat = 'all';
   const filter = (cat, query = '') => {
     cards.forEach(card => {
-      const inCat = (cat === 'all' || card.dataset.cat === cat || card.classList.contains('ad-card'));
+      const inCat = (cat === 'all' || card.dataset.cat === cat);
       const matches = card.classList.contains('ad-card') || card.textContent.toLowerCase().includes(query);
       card.style.display = (inCat && matches) ? '' : 'none';
     });
