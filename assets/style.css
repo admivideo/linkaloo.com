@@ -110,6 +110,7 @@ textarea {
 .link-cards .card-body p {margin:0 0 10px;font-size:14px;}
 .link-cards .card-actions {margin-top:auto;display:flex;align-items:center;gap:5px;}
 .link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;width:fit-content;flex:0 0 auto;}
+.ad-card .sponsored-label{color:#666;font-size:12px;margin-top:5px;align-self:flex-start;text-align:left;}
 
 @media (max-width:1024px){
   .link-cards {column-count:4;}
