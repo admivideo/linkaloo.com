@@ -47,7 +47,7 @@ include 'header.php';
             <a href="panel.php?cat=<?= $board['id'] ?>" class="board-link">
                 <div class="board-thumb">
                 <?php if(!empty($board['imagen'])): ?>
-                    <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
+                    <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>" loading="lazy">
                 <?php endif; ?>
                     <span class="link-count"><i data-feather="link"></i><?= $board['total'] ?></span>
                 </div>

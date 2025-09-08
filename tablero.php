@@ -117,7 +117,7 @@ include 'header.php';
 <div class="board-detail">
     <div class="board-detail-image">
         <?php if(!empty($board['imagen'])): ?>
-            <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>">
+            <img src="<?= htmlspecialchars($board['imagen']) ?>" alt="<?= htmlspecialchars($board['nombre']) ?>" loading="lazy">
         <?php endif; ?>
     </div>
     <div class="board-detail-info">
@@ -155,7 +155,7 @@ include 'header.php';
     <div class="card">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?>">
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
-                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="">
+                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="" loading="lazy">
             </a>
         </div>
     </div>
