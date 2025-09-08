@@ -141,6 +141,16 @@ $stmtL = $pdo->prepare("SELECT id, categoria_id, url, titulo, descripcion, image
 $stmtL->execute([$user_id]);
 $links = $stmtL->fetchAll();
 
+$catCounts = [];
+foreach ($links as $l) {
+    $cat = $l['categoria_id'];
+    $catCounts[$cat] = ($catCounts[$cat] ?? 0) + 1;
+}
+$maxAdsPerCat = [];
+foreach ($catCounts as $cat => $cnt) {
+    $maxAdsPerCat[$cat] = intdiv($cnt, 8);
+}
+
 include 'header.php';
 ?>
 <?php if(!empty($error)): ?>
@@ -184,14 +194,18 @@ include 'header.php';
 </div>
 
 <div class="link-cards">
-<?php foreach($links as $index => $link): ?>
-    <?php
-        $domain = parse_url($link['url'], PHP_URL_HOST);
-        $favicon = $domain ? getLocalFavicon($domain) : '';
-        $imgSrc = !empty($link['imagen']) ? $link['imagen'] : $favicon;
-        $isDefault = empty($link['imagen']);
-        $isLocalFavicon = str_starts_with($imgSrc, '/local_favicons/');
-    ?>
+<?php
+$shownPerCat = [];
+$adsShownPerCat = [];
+foreach ($links as $link):
+    $catId = $link['categoria_id'];
+    $shownPerCat[$catId] = ($shownPerCat[$catId] ?? 0) + 1;
+    $domain = parse_url($link['url'], PHP_URL_HOST);
+    $favicon = $domain ? getLocalFavicon($domain) : '';
+    $imgSrc = !empty($link['imagen']) ? $link['imagen'] : $favicon;
+    $isDefault = empty($link['imagen']);
+    $isLocalFavicon = str_starts_with($imgSrc, '/local_favicons/');
+?>
     <div class="card" data-cat="<?= $link['categoria_id'] ?>" data-id="<?= $link['id'] ?>">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?> <?= $isLocalFavicon ? 'local-favicon' : '' ?>">
             <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
@@ -230,16 +244,22 @@ include 'header.php';
             </div>
         </div>
     </div>
-    <?php if(($index + 1) % 8 === 0): ?>
-    <div class="card ad-card" data-cat="ad">
+    <?php
+        $catAdsLimit = $maxAdsPerCat[$catId] ?? 0;
+        if ($shownPerCat[$catId] % 8 === 0 && ($adsShownPerCat[$catId] ?? 0) < $catAdsLimit):
+    ?>
+    <div class="card ad-card" data-cat="<?= $catId ?>">
         <div class="card-body">
             <!-- Revive Adserver Etiqueta JS asincrónica - Generated with Revive Adserver v5.5.2 -->
             <ins data-revive-zoneid="54" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
             <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
         </div>
     </div>
-    <?php endif; ?>
-<?php endforeach; ?>
+    <?php
+            $adsShownPerCat[$catId] = ($adsShownPerCat[$catId] ?? 0) + 1;
+        endif;
+    endforeach;
+?>
 </div>
 
 </div>
