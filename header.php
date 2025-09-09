@@ -33,23 +33,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
             <?php if(isset($_SESSION['user_id'])): ?>
                 <?php if(isset($categorias)): ?>
                     <li class="add-menu">
-                        <button type="button" class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
-                        <div class="control-forms">
-                            <form method="post" class="form-categoria">
-                                <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
-                                <button type="submit">Crear tablero</button>
-                            </form>
-                            <form method="post" class="form-link">
-                                <input type="url" name="link_url" placeholder="URL" required>
-                                <input type="text" name="link_title" placeholder="Título" maxlength="50">
-                                <select name="categoria_id">
-                                <?php foreach($categorias as $categoria): ?>
-                                    <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
-                                <?php endforeach; ?>
-                                </select>
-                                <button type="submit">Guardar link</button>
-                            </form>
-                        </div>
+                        <button type="button" class="open-modal" aria-label="Añadir"><i data-feather="plus"></i></button>
                     </li>
                 <?php endif; ?>
                 <li><a href="/tableros.php">Tableros</a></li>
@@ -71,4 +55,27 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         </ul>
     </nav>
 </header>
+<?php if(isset($categorias)): ?>
+<div class="add-modal">
+    <div class="add-modal-content">
+        <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
+        <div class="control-forms">
+            <form method="post" class="form-categoria">
+                <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
+                <button type="submit">Crear tablero</button>
+            </form>
+            <form method="post" class="form-link">
+                <input type="url" name="link_url" placeholder="URL" required>
+                <input type="text" name="link_title" placeholder="Título" maxlength="50">
+                <select name="categoria_id">
+                <?php foreach($categorias as $categoria): ?>
+                    <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
+                <?php endforeach; ?>
+                </select>
+                <button type="submit">Guardar link</button>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 <div class="content">

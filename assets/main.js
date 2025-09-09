@@ -173,11 +173,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const toggleFormsBtn = document.querySelector('.toggle-forms');
-  const controlForms = document.querySelector('.control-forms');
-  if (toggleFormsBtn && controlForms) {
-    toggleFormsBtn.addEventListener('click', () => {
-      controlForms.classList.toggle('show');
+  const openModalBtn = document.querySelector('.open-modal');
+  const addModal = document.querySelector('.add-modal');
+  if (openModalBtn && addModal) {
+    const close = () => addModal.classList.remove('show');
+    openModalBtn.addEventListener('click', () => {
+      addModal.classList.add('show');
+    });
+    addModal.addEventListener('click', (e) => {
+      if (e.target === addModal || e.target.classList.contains('modal-close')) {
+        close();
+      }
     });
   }
 
