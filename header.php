@@ -57,7 +57,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 </header>
 <?php if(isset($categorias)): ?>
 <div class="add-modal">
-    <div class="add-modal-content" style="padding: 20px;;">
+    <div class="add-modal-content" style="padding: 30px;">
         <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
         <div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
         <h2 class="modal-title">Guarda, organiza, comparte</h2>
