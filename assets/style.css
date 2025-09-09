@@ -71,6 +71,10 @@ textarea {
 .control-forms button{background:#1DA1F2;color:#fff;border:none;}
 .control-forms select{background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
 
+.top-menu .add-menu .control-forms{position:absolute;top:100%;right:0;background:#fff;color:#000;padding:10px;border-radius:4px;margin:0;flex-direction:column;align-items:stretch;gap:10px;z-index:1000;}
+.top-menu .add-menu .control-forms form{display:flex;gap:5px;flex-wrap:wrap;}
+
+
 .search-input{display:none;padding:5px;border:1px solid #ccc;border-radius:4px;margin-bottom:10px;width:100%;}
 .search-input.show{display:block;}
 

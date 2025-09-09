@@ -37,6 +37,27 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                 <li><a href="/login.php">Login</a></li>
                 <li><a href="/register.php">Registro</a></li>
             <?php endif; ?>
+            <?php if(isset($_SESSION['user_id']) && isset($categorias)): ?>
+                <li class="add-menu">
+                    <button type="button" class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
+                    <div class="control-forms">
+                        <form method="post" class="form-categoria">
+                            <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
+                            <button type="submit">Crear tablero</button>
+                        </form>
+                        <form method="post" class="form-link">
+                            <input type="url" name="link_url" placeholder="URL" required>
+                            <input type="text" name="link_title" placeholder="Título" maxlength="50">
+                            <select name="categoria_id">
+                            <?php foreach($categorias as $categoria): ?>
+                                <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
+                            <?php endforeach; ?>
+                            </select>
+                            <button type="submit">Guardar link</button>
+                        </form>
+                    </div>
+                </li>
+            <?php endif; ?>
             <li><button type="button" class="search-toggle" aria-label="Buscar"><i data-feather="search"></i></button></li>
             <li class="settings-menu">
                 <button class="settings-toggle" aria-label="Configuración"><i data-feather="settings"></i></button>
