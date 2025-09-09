@@ -59,7 +59,11 @@ textarea {
 .add-modal.show{display:flex;}
 .add-modal-content{background:#fff;color:#000;padding:20px;border-radius:8px;max-width:500px;width:100%;position:relative;max-height:100%;overflow:auto;}
 .modal-close{position:absolute;top:10px;right:10px;background:none;border:none;font-size:24px;cursor:pointer;}
+.add-modal-content h2.modal-title{text-align:center;margin:0 0 20px;}
 .control-forms{display:flex;flex-direction:column;gap:10px;}
+.control-forms .form-section{display:flex;flex-direction:column;gap:10px;align-items:center;}
+.control-forms .form-section h3{text-align:center;margin:0;}
+.control-forms .form-section form{width:100%;}
 .control-forms form{display:flex;gap:5px;flex-wrap:wrap;}
 .control-forms input,
 .control-forms select,
