@@ -177,6 +177,7 @@ include 'header.php';
     <?php endforeach; ?>
     </div>
     <button type="button" class="board-scroll right" aria-label="Siguiente"><i data-feather="chevron-right"></i></button>
+    <button type="button" class="search-toggle" aria-label="Buscar"><i data-feather="search"></i></button>
 </div>
 
 <input type="text" class="search-input" placeholder="Buscar links...">
