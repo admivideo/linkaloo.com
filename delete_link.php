@@ -8,15 +8,15 @@ if(!isset($_SESSION['user_id'])){
 }
 $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 if($id){
-    $catStmt = $pdo->prepare('SELECT categoria_id FROM links WHERE id = ? AND usuario_id = ?');
-    $catStmt->execute([$id, $_SESSION['user_id']]);
-    $catId = $catStmt->fetchColumn();
+    $sel = $pdo->prepare('SELECT categoria_id FROM links WHERE id = ? AND usuario_id = ?');
+    $sel->execute([$id, $_SESSION['user_id']]);
+    $cat = $sel->fetchColumn();
     $stmt = $pdo->prepare('DELETE FROM links WHERE id = ? AND usuario_id = ?');
     $stmt->execute([$id, $_SESSION['user_id']]);
-    if($stmt->rowCount() > 0){
-        if($catId){
+    if ($stmt->rowCount() > 0) {
+        if ($cat) {
             $upd = $pdo->prepare('UPDATE categorias SET modificado_en = NOW() WHERE id = ?');
-            $upd->execute([$catId]);
+            $upd->execute([$cat]);
         }
         echo json_encode(['success' => true]);
     } else {

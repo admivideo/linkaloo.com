@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let cards = Array.from(document.querySelectorAll('.link-cards .card'));
   const searchInput = document.querySelector('.search-input');
   const boardSlider = document.querySelector('.board-slider');
+  if (boardSlider) {
+    const savedScroll = sessionStorage.getItem('boardScroll');
+    if (savedScroll !== null) {
+      boardSlider.scrollLeft = parseInt(savedScroll, 10);
+    }
+  }
   const scrollLeft = document.querySelector('.board-scroll.left');
   const scrollRight = document.querySelector('.board-scroll.right');
   let currentCat = 'all';
@@ -57,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
       activeBtn.classList.add('active');
       buttons.forEach(btn => {
         btn.addEventListener('click', () => {
+          if (boardSlider) {
+            sessionStorage.setItem('boardScroll', boardSlider.scrollLeft);
+          }
           buttons.forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentCat = btn.dataset.cat;

@@ -128,8 +128,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             } else {
                 $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, url_canonica, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$user_id, $categoria_id, $link_url, $canon, $link_title, $descripcion, $imagen, $hash]);
-                $updCat = $pdo->prepare('UPDATE categorias SET modificado_en = NOW() WHERE id = ? AND usuario_id = ?');
-                $updCat->execute([$categoria_id, $user_id]);
+                if ($stmt->rowCount()) {
+                    $upd = $pdo->prepare('UPDATE categorias SET modificado_en = NOW() WHERE id = ?');
+                    $upd->execute([$categoria_id]);
+                }
             }
         }
     }
@@ -180,27 +182,9 @@ include 'header.php';
     </div>
     <button type="button" class="board-scroll right" aria-label="Siguiente"><i data-feather="chevron-right"></i></button>
     <button type="button" class="search-toggle" aria-label="Buscar"><i data-feather="search"></i></button>
-    <button type="button" class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
 </div>
 
 <input type="text" class="search-input" placeholder="Buscar links...">
-
-<div class="control-forms">
-    <form method="post" class="form-categoria">
-        <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
-        <button type="submit">Crear tablero</button>
-    </form>
-    <form method="post" class="form-link">
-        <input type="url" name="link_url" placeholder="URL" required>
-        <input type="text" name="link_title" placeholder="Título" maxlength="50">
-        <select name="categoria_id">
-        <?php foreach($categorias as $categoria): ?>
-            <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
-        <?php endforeach; ?>
-        </select>
-        <button type="submit">Guardar link</button>
-    </form>
-</div>
 
 <div class="link-cards">
 <?php
@@ -262,7 +246,6 @@ foreach ($links as $link):
             <!-- Revive Adserver Etiqueta JS asincrónica - Generated with Revive Adserver v5.5.2 -->
             <ins data-revive-zoneid="54" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
             <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
-            <div class="sponsored-label">patrocinado</div>
         </div>
     </div>
     <?php

@@ -23,6 +23,7 @@ textarea {
 .top-menu .logo img {height:50px;}
 .top-menu ul {list-style:none;display:flex;margin:0;padding:0;}
 .top-menu li {position:relative;display:flex;align-items:center;}
+.board-nav .search-toggle{margin-left:0;}
 .menu-toggle {display:none;background:none;border:none;cursor:pointer;margin-right:15px;padding:0;}
 .menu-toggle span {display:block;width:25px;height:3px;background:#fff;margin:4px 0;}
 .feather {margin:0;}
@@ -47,7 +48,7 @@ textarea {
   }
 .content {background:#fff;color:#000;padding:20px;}
 
-.toggle-forms{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;margin-left:5px;flex-shrink:0;}
+.toggle-forms{background:#1DA1F2;color:#fff;border:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;margin-left:5px;flex-shrink:0;}
 .toggle-forms svg{width:24px;height:24px;}
 .search-toggle{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
 .search-toggle svg{width:20px;height:20px;}
@@ -70,6 +71,17 @@ textarea {
 .control-forms button{background:#1DA1F2;color:#fff;border:none;}
 .control-forms select{background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;}
 
+.top-menu .add-menu .control-forms{position:absolute;top:100%;right:0;background:#fff;color:#000;padding:10px;border-radius:4px;margin:0;flex-direction:column;align-items:stretch;gap:10px;z-index:1000;}
+.top-menu .add-menu .control-forms form{display:flex;gap:5px;flex-wrap:wrap;}
+
+@media (min-width:601px){
+  .top-menu .add-menu .control-forms,
+  .settings-menu .settings-submenu{
+    min-width:300px;
+  }
+}
+
+
 .search-input{display:none;padding:5px;border:1px solid #ccc;border-radius:4px;margin-bottom:10px;width:100%;}
 .search-input.show{display:block;}
 
@@ -84,7 +96,7 @@ textarea {
 .board-slider {display:flex;overflow-x:auto;gap:10px;padding:10px 0;flex:1;scrollbar-width:none;-ms-overflow-style:none;}
 .board-slider::-webkit-scrollbar {display:none;}
 .board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;text-decoration:none;display:inline-block;}
-.board-btn.active {background:#0d8ddc;}
+.board-btn.active {background:#0b7ac2;}
 .link-cards {column-count:6;column-gap:15px;margin-top:20px;}
 .link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);break-inside:avoid;margin-bottom:15px;transition:transform .2s ease,box-shadow .2s ease;}
 .link-cards .card a {display:block;}
@@ -110,7 +122,6 @@ textarea {
 .link-cards .card-body p {margin:0 0 10px;font-size:14px;}
 .link-cards .card-actions {margin-top:auto;display:flex;align-items:center;gap:5px;}
 .link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;width:fit-content;flex:0 0 auto;}
-.ad-card .sponsored-label{color:#666;font-size:12px;margin-top:5px;align-self:flex-start;text-align:left;}
 
 @media (max-width:1024px){
   .link-cards {column-count:4;}
