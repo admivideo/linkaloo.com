@@ -128,6 +128,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             } else {
                 $stmt = $pdo->prepare('INSERT INTO links (usuario_id, categoria_id, url, url_canonica, titulo, descripcion, imagen, hash_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
                 $stmt->execute([$user_id, $categoria_id, $link_url, $canon, $link_title, $descripcion, $imagen, $hash]);
+                $updCat = $pdo->prepare('UPDATE categorias SET modificado_en = NOW() WHERE id = ? AND usuario_id = ?');
+                $updCat->execute([$categoria_id, $user_id]);
             }
         }
     }
@@ -135,7 +137,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     exit;
 }
 
-$stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ? ORDER BY creado_en DESC');
+$stmt = $pdo->prepare('SELECT id, nombre FROM categorias WHERE usuario_id = ? ORDER BY modificado_en DESC');
 $stmt->execute([$user_id]);
 $categorias = $stmt->fetchAll();
 
