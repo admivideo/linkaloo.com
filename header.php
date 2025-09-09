@@ -67,6 +67,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                     <input type="text" name="categoria_nombre" placeholder="Nombre del tablero nuevo">
                     <button type="submit">Crear tablero</button>
                 </form>
+                <hr class="form-separator">
             </div>
             <div class="form-section">
                 <h3>Añadir tu favolink</h3>
