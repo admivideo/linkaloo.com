@@ -6,7 +6,7 @@ h1 {font-size:1.6em;}
 @media (max-width:600px){
   h1 {font-size:1.4em;}
   h2 {font-size:1.3em;}
-  h3 {font-size:1.3em;}
+  h3 {font-size:1.2em;}
 }
 input[type="text"],
 input[type="password"],
@@ -69,7 +69,7 @@ textarea {
 .control-forms select,
 .control-forms button{padding:10px;padding-left:20px;border:1px solid #ccc;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;}
 .control-forms button{background:#1DA1F2;color:#fff;border:none;}
-.control-forms select{background:#ccc;color:#000;border:none;border-radius:20px;font-family:'Rambla',sans-serif;}
+.control-forms select{background:#f0e8e8;color:#000;border:none;border-radius:20px;font-family:'Rambla',sans-serif;}
 .control-forms select option[value=""]{color:#6c757d;}
 
 .form-separator{border:0;border-top:1px solid #ccc;margin:10px 0;}
