@@ -59,6 +59,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 <div class="add-modal">
     <div class="add-modal-content" style="padding: 20px;;">
         <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
+        <div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
         <h2 class="modal-title">Guarda, organiza, comparte</h2>
         <div class="control-forms">
             <div class="form-section">
@@ -67,8 +68,8 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                     <input type="text" name="categoria_nombre" placeholder="Nombre del tablero nuevo">
                     <button type="submit">Crear tablero</button>
                 </form>
-                <hr class="form-separator">
             </div>
+            <hr class="form-separator">
             <div class="form-section">
                 <h3>Añadir tu favolink</h3>
                 <form method="post" class="form-link">
