@@ -57,7 +57,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 </header>
 <?php if(isset($categorias)): ?>
 <div class="add-modal">
-    <div class="add-modal-content">
+    <div class="add-modal-content" style="padding: 20px;;">
         <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
         <h2 class="modal-title">Guarda, organiza, comparte</h2>
         <div class="control-forms">
