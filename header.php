@@ -31,32 +31,16 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
             <?php if(isset($_SESSION['user_id'])): ?>
+                <?php if(isset($categorias)): ?>
+                    <li class="add-menu">
+                        <button type="button" class="open-modal" aria-label="Añadir"><i data-feather="plus"></i></button>
+                    </li>
+                <?php endif; ?>
                 <li><a href="/tableros.php">Tableros</a></li>
                 <li><a href="/cpanel.php"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></a></li>
             <?php else: ?>
                 <li><a href="/login.php">Login</a></li>
                 <li><a href="/register.php">Registro</a></li>
-            <?php endif; ?>
-            <?php if(isset($_SESSION['user_id']) && isset($categorias)): ?>
-                <li class="add-menu">
-                    <button type="button" class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
-                    <div class="control-forms">
-                        <form method="post" class="form-categoria">
-                            <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
-                            <button type="submit">Crear tablero</button>
-                        </form>
-                        <form method="post" class="form-link">
-                            <input type="url" name="link_url" placeholder="URL" required>
-                            <input type="text" name="link_title" placeholder="Título" maxlength="50">
-                            <select name="categoria_id">
-                            <?php foreach($categorias as $categoria): ?>
-                                <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
-                            <?php endforeach; ?>
-                            </select>
-                            <button type="submit">Guardar link</button>
-                        </form>
-                    </div>
-                </li>
             <?php endif; ?>
             <li class="settings-menu">
                 <button class="settings-toggle" aria-label="Configuración"><i data-feather="settings"></i></button>
@@ -71,4 +55,35 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         </ul>
     </nav>
 </header>
+<?php if(isset($categorias)): ?>
+<div class="add-modal">
+    <div class="add-modal-content">
+        <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
+        <h2 class="modal-title">Guarda, organiza, comparte</h2>
+        <div class="control-forms">
+            <div class="form-section">
+                <h3>Añadir Tablero</h3>
+                <form method="post" class="form-categoria">
+                    <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
+                    <button type="submit">Crear tablero</button>
+                </form>
+            </div>
+            <div class="form-section">
+                <h3>Añadir tu favolink</h3>
+                <form method="post" class="form-link">
+                    <input type="url" name="link_url" placeholder="pega aquí el link" required>
+                    <input type="text" name="link_title" placeholder="Titulo" maxlength="50">
+                    <select name="categoria_id" required>
+                        <option value="">Tablero</option>
+                        <?php foreach($categorias as $categoria): ?>
+                            <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit">Guardar favolink</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 <div class="content">
