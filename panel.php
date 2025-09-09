@@ -177,27 +177,9 @@ include 'header.php';
     <?php endforeach; ?>
     </div>
     <button type="button" class="board-scroll right" aria-label="Siguiente"><i data-feather="chevron-right"></i></button>
-    <button type="button" class="toggle-forms" aria-label="Añadir"><i data-feather="plus"></i></button>
 </div>
 
 <input type="text" class="search-input" placeholder="Buscar links...">
-
-<div class="control-forms">
-    <form method="post" class="form-categoria">
-        <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
-        <button type="submit">Crear tablero</button>
-    </form>
-    <form method="post" class="form-link">
-        <input type="url" name="link_url" placeholder="URL" required>
-        <input type="text" name="link_title" placeholder="Título" maxlength="50">
-        <select name="categoria_id">
-        <?php foreach($categorias as $categoria): ?>
-            <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
-        <?php endforeach; ?>
-        </select>
-        <button type="submit">Guardar link</button>
-    </form>
-</div>
 
 <div class="link-cards">
 <?php
