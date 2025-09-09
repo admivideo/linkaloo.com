@@ -37,6 +37,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                 <li><a href="/login.php">Login</a></li>
                 <li><a href="/register.php">Registro</a></li>
             <?php endif; ?>
+            <li><button type="button" class="search-toggle" aria-label="Buscar"><i data-feather="search"></i></button></li>
             <li class="settings-menu">
                 <button class="settings-toggle" aria-label="Configuración"><i data-feather="settings"></i></button>
                 <ul class="settings-submenu">
