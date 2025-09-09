@@ -64,7 +64,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
             <div class="form-section">
                 <h3>Añadir Tablero</h3>
                 <form method="post" class="form-categoria">
-                    <input type="text" name="categoria_nombre" placeholder="Nombre del tablero">
+                    <input type="text" name="categoria_nombre" placeholder="Nombre del tablero nuevo">
                     <button type="submit">Crear tablero</button>
                 </form>
             </div>
@@ -74,7 +74,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                     <input type="url" name="link_url" placeholder="pega aquí el link" required>
                     <input type="text" name="link_title" placeholder="Titulo" maxlength="50">
                     <select name="categoria_id" required>
-                        <option value="">Tablero</option>
+                        <option value="">Elige el tablero</option>
                         <?php foreach($categorias as $categoria): ?>
                             <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
                         <?php endforeach; ?>
