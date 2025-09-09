@@ -146,6 +146,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cards.forEach(attachCardEvents);
 
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  cards.forEach(card => observer.observe(card));
+
   const detailDelete = document.querySelector('.board-detail-image .delete-btn');
   if (detailDelete) {
     detailDelete.addEventListener('click', () => {
