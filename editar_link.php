@@ -1,7 +1,7 @@
 <?php
 require 'config.php';
 require 'favicon_utils.php';
-session_start();
+require_once 'session.php';
 if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
     exit;

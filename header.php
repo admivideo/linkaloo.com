@@ -1,8 +1,5 @@
 <?php
-// Iniciar sesión solo si no se ha hecho ya
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once 'session.php';
 // Evitar caché persistente, pero permitir que el navegador recargue al volver atrás
 header('Cache-Control: no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');

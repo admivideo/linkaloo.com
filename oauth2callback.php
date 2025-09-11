@@ -1,6 +1,6 @@
 <?php
 require 'config.php';
-session_start();
+require_once 'session.php';
 
 if (!isset($_GET['code'])) {
     echo 'Código de autorización no proporcionado';
