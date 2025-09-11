@@ -1,4 +1,4 @@
-package com.example.linkaloo
+package com.android.linkaloo
 
 import android.content.Intent
 import android.net.Uri
