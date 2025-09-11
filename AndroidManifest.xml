@@ -15,18 +15,11 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
-             <!-- Varios elementos (opcional) -->
-             <intent-filter>
-                <action android:name="android.intent.action.SEND_MULTIPLE" />
+            <!-- Abrir enlaces directamente -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-
-             <!-- Abrir enlaces directamente -->
-             <intent-filter android:autoVerify="true">
-                 <action android:name="android.intent.action.VIEW" />
-                 <category android:name="android.intent.category.DEFAULT" />
-                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.BROWSABLE" />
                  <data android:scheme="https" android:host="linkaloo.com" />
                  <data android:scheme="http" android:host="linkaloo.com" />
              </intent-filter>

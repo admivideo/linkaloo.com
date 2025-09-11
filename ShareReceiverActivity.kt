@@ -27,15 +27,6 @@ class ShareReceiverActivity : AppCompatActivity() {
                 val data: Uri? = intent.data
                 data?.toString()?.let { handleLink(it) }
             }
-            Intent.ACTION_SEND_MULTIPLE -> {
-                if ("text/plain" == intent.type) {
-                    val texts = intent.getStringArrayListExtra(Intent.EXTRA_TEXT)
-                    texts?.forEach { handleLink(it) }
-                } else {
-                    val streams = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-                    streams?.forEach { handleLink(it.toString()) }
-                }
-            }
         }
 
         // Redirige a tu Main si procede o muestra una UI ligera
