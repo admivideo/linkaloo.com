@@ -66,7 +66,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                 <h3>Añadir Tablero</h3>
                 <form method="post" class="form-categoria">
                     <input type="text" name="categoria_nombre" placeholder="Nombre del tablero nuevo">
-                    <button type="submit">Crear tablero</button>
+                    <button type="submit">Crear</button>
                 </form>
             </div>
             <hr class="form-separator">

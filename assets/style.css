@@ -65,6 +65,8 @@ textarea {
 .control-forms .form-section h3{text-align:center;margin:0;color:#6c757d;}
 .control-forms .form-section form{width:100%;}
 .control-forms form{display:flex;gap:5px;flex-wrap:wrap;}
+.control-forms .form-categoria{flex-wrap:nowrap;}
+.control-forms .form-categoria input{flex:1;}
 .control-forms input,
 .control-forms select,
 .control-forms button{padding:10px;padding-left:20px;border:1px solid #ccc;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;}
@@ -74,15 +76,15 @@ textarea {
 
 .form-separator{border:0;border-top:1px solid #ccc;margin:10px 0;}
 @media(min-width:601px){
-  .control-forms form{flex-direction:column;align-items:stretch;}
-  .control-forms form input,
-  .control-forms form select,
-  .control-forms form button{flex:1 1 100%;font-size:18px;}
+  .form-link{flex-direction:column;align-items:stretch;}
+  .form-link input,
+  .form-link select,
+  .form-link button{flex:1 1 100%;font-size:18px;}
 }
 @media(max-width:600px){
-  .control-forms form input,
-  .control-forms form select,
-  .control-forms form button{flex:1 1 100%;}
+  .form-link input,
+  .form-link select,
+  .form-link button{flex:1 1 100%;}
 }
 
 @media (min-width:601px){
