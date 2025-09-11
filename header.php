@@ -73,7 +73,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                 <h3>Añadir tu favolink</h3>
                 <form method="post" class="form-link">
                     <input type="url" name="link_url" placeholder="pega aquí el link" required>
-                    <input type="text" name="link_title" placeholder="Titulo" maxlength="50">
+                    <input type="text" name="link_title" placeholder="Titulo (opcional)" maxlength="50">
                     <select name="categoria_id" required>
                         <option value="">Elige el tablero</option>
                         <?php foreach($categorias as $categoria): ?>

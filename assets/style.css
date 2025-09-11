@@ -68,9 +68,8 @@ textarea {
 .control-forms .form-categoria{flex-wrap:nowrap;}
 .control-forms .form-categoria input{flex:1;}
 .control-forms input,
-.control-forms select,
-.control-forms button{padding:10px;padding-left:20px;border:1px solid #ccc;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;}
-.control-forms button{background:#1DA1F2;color:#fff;border:none;}
+.control-forms select{padding:10px;padding-left:20px;border:1px solid #ccc;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;}
+.control-forms button{padding:10px 20px;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;background:#1DA1F2;color:#fff;border:none;text-align:center;}
 .control-forms select{background:#f0e8e8;color:#000;border:none;border-radius:20px;font-family:'Rambla',sans-serif;}
 .control-forms select option[value=""]{color:#6c757d;}
 
@@ -103,7 +102,7 @@ textarea {
 .board-nav {display:flex;align-items:center;gap:5px;margin-bottom:10px;}
 .board-slider {display:flex;overflow-x:auto;gap:10px;padding:10px 0;flex:1;scrollbar-width:none;-ms-overflow-style:none;}
 .board-slider::-webkit-scrollbar {display:none;}
-.board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;text-decoration:none;display:inline-block;}
+.board-btn {background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:20px;cursor:pointer;flex-shrink:0;text-decoration:none;display:inline-block;text-align:center;}
 .board-btn.active {background:#0b7ac2;}
 .link-cards {column-count:6;column-gap:15px;margin-top:20px;}
 .link-cards .card {background:#fff;color:#000;border-radius:8px;overflow:hidden;width:100%;box-shadow:0 2px 4px rgba(0,0,0,0.1);break-inside:avoid;margin-bottom:15px;opacity:0;transform:translateY(20px);transition:opacity .3s ease,transform .2s ease,box-shadow .2s ease;}
@@ -152,7 +151,7 @@ textarea {
 .app-logo img{height:85px;width:auto;}
 .login-form {display:flex;flex-direction:column;gap:10px;}
 .login-form input {padding:8px;}
-.login-form button {background:#1DA1F2;color:#fff;border:none;padding:10px;border-radius:4px;cursor:pointer;}
+.login-form button {background:#1DA1F2;color:#fff;border:none;padding:10px;border-radius:4px;cursor:pointer;text-align:center;}
 .login-links {display:flex;justify-content:space-between;margin-top:10px;}
 .login-links a {color:#1DA1F2;text-decoration:none;font-size:14px;}
 .social-block {text-align:center;}
@@ -215,7 +214,7 @@ textarea {
 .board-detail-form textarea{min-height:80px;}
 .board-detail-form p{margin:5px 0;}
 .board-detail-form button,
-.links-link{background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-block;}
+.links-link{background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;}
 @media (max-width:600px){
   .board-detail{flex-direction:column;}
 }
