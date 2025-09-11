@@ -10,19 +10,17 @@
              android:label="Guardar en Linkaloo">
              <!-- Un único enlace / texto -->
              <intent-filter>
-                 <action android:name="android.intent.action.SEND" />
-                 <category android:name="android.intent.category.DEFAULT" />
-                 <data android:mimeType="text/plain" />
-                 <data android:mimeType="*/*" />
-             </intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
 
              <!-- Varios elementos (opcional) -->
              <intent-filter>
-                 <action android:name="android.intent.action.SEND_MULTIPLE" />
-                 <category android:name="android.intent.category.DEFAULT" />
-                 <data android:mimeType="text/plain" />
-                 <data android:mimeType="*/*" />
-             </intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
 
              <!-- Abrir enlaces directamente -->
              <intent-filter android:autoVerify="true">
