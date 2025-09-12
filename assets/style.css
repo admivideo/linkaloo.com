@@ -213,6 +213,9 @@ textarea {
 .board-detail-form input[type=text],.board-detail-form textarea{width:100%;padding:5px;}
 .board-detail-form textarea{min-height:80px;}
 .board-detail-form p{margin:5px 0;}
+.board-detail-form .share-checkbox{display:flex;align-items:center;gap:5px;margin-bottom:10px;}
+.board-detail-form .share-icon{color:#1DA1F2;display:flex;align-items:center;}
+.board-detail-form .share-icon svg{width:16px;height:16px;}
 .board-form-buttons{display:flex;gap:10px;flex-wrap:wrap;}
 .board-detail-form button{padding:10px 20px;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;background:#1DA1F2;color:#fff;border:none;text-align:center;cursor:pointer;}
 .links-link{background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;}
