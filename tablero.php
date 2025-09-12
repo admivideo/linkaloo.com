@@ -135,9 +135,6 @@ include 'header.php';
     <div class="board-detail-info">
         <div class="detail-header">
             <h2><?= htmlspecialchars($board['nombre']) ?></h2>
-            <?php if(!empty($board['share_token'])): ?>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($publicUrl) ?>" data-title="<?= htmlspecialchars($board['nombre']) ?>" <?= !empty($shareImg) ? 'data-image="' . htmlspecialchars($shareImg) . '"' : '' ?> aria-label="Compartir"><i data-feather="share-2"></i></button>
-            <?php endif; ?>
         </div>
         <form method="post" class="board-detail-form">
             <label>Nombre<br>
@@ -151,7 +148,9 @@ include 'header.php';
                     <input type="checkbox" name="publico" value="1" <?= !empty($board['share_token']) ? 'checked' : '' ?>>
                     Compartir tablero públicamente
                 </label>
-                <div class="share-icon"><i data-feather="share-2"></i></div>
+                <?php if(!empty($board['share_token'])): ?>
+                <button type="button" class="share-board" data-url="<?= htmlspecialchars($publicUrl) ?>" data-title="<?= htmlspecialchars($board['nombre']) ?>" <?= !empty($shareImg) ? 'data-image="' . htmlspecialchars($shareImg) . '"' : '' ?> aria-label="Compartir"><i data-feather="share-2"></i></button>
+                <?php endif; ?>
             </div>
             <p>Links guardados: <a class="links-link" href="panel.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
             <p>Creado: <?= htmlspecialchars($creado) ?></p>
