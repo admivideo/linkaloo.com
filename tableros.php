@@ -53,8 +53,14 @@ include 'header.php';
                 </div>
                 <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             </a>
-            <?php if(!empty($board['share_token'])): ?>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/tablero_publico.php?token=' . $board['share_token']) ?>" aria-label="Compartir">
+            <?php if(!empty($board['share_token'])):
+                $shareUrl = $baseUrl . '/tablero_publico.php?token=' . $board['share_token'];
+                $shareImg = $board['imagen'];
+                if (!empty($shareImg) && !preg_match('#^https?://#', $shareImg)) {
+                    $shareImg = $baseUrl . '/' . ltrim($shareImg, '/');
+                }
+            ?>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($shareUrl) ?>" data-title="<?= htmlspecialchars($board['nombre']) ?>" <?= !empty($shareImg) ? 'data-image="' . htmlspecialchars($shareImg) . '"' : '' ?> aria-label="Compartir">
                 <i data-feather="share-2"></i>
             </button>
             <?php endif; ?>
