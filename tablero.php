@@ -96,8 +96,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     } else {
         $nombre = trim($_POST['nombre'] ?? '');
         $nota = trim($_POST['nota'] ?? '');
-        $upd = $pdo->prepare('UPDATE categorias SET nombre = ?, nota = ? WHERE id = ? AND usuario_id = ?');
-        $upd->execute([$nombre, $nota, $id, $user_id]);
+        $publico = isset($_POST['publico']);
+        $shareToken = $board['share_token'];
+        if($publico && empty($shareToken)){
+            $shareToken = bin2hex(random_bytes(16));
+        } elseif(!$publico){
+            $shareToken = null;
+        }
+        $upd = $pdo->prepare('UPDATE categorias SET nombre = ?, nota = ?, share_token = ? WHERE id = ? AND usuario_id = ?');
+        $upd->execute([$nombre, $nota, $shareToken, $id, $user_id]);
         $stmt->execute([$user_id, $user_id, $id, $user_id]);
         $board = $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -111,6 +118,7 @@ $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : ''
 $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado_en'])) : '';
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
+$publicUrl = !empty($board['share_token']) ? $baseUrl . '/tablero_publico.php?token=' . $board['share_token'] : '';
 
 include 'header.php';
 ?>
@@ -123,7 +131,9 @@ include 'header.php';
     <div class="board-detail-info">
         <div class="detail-header">
             <h2><?= htmlspecialchars($board['nombre']) ?></h2>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $id) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+            <?php if(!empty($board['share_token'])): ?>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($publicUrl) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+            <?php endif; ?>
         </div>
         <form method="post" class="board-detail-form">
             <label>Nombre<br>
@@ -131,6 +141,9 @@ include 'header.php';
             </label>
             <label>Nota<br>
                 <textarea name="nota"><?= htmlspecialchars($board['nota'] ?? '') ?></textarea>
+            </label>
+            <label>
+                <input type="checkbox" name="publico" value="1" <?= !empty($board['share_token']) ? 'checked' : '' ?>> Compartir tablero públicamente
             </label>
             <p>Links guardados: <a class="links-link" href="panel.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
             <p>Creado: <?= htmlspecialchars($creado) ?></p>

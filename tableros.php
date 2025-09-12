@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $pdo->prepare('SELECT c.id, c.nombre,
+$stmt = $pdo->prepare('SELECT c.id, c.nombre, c.share_token,
                               COUNT(l.id) AS total,
                               (SELECT l2.imagen FROM links l2
                                WHERE l2.categoria_id = c.id AND l2.usuario_id = ?
@@ -26,7 +26,7 @@ $stmt = $pdo->prepare('SELECT c.id, c.nombre,
                          FROM categorias c
                          LEFT JOIN links l ON l.categoria_id = c.id AND l.usuario_id = ?
                          WHERE c.usuario_id = ?
-                         GROUP BY c.id, c.nombre
+                         GROUP BY c.id, c.nombre, c.share_token
                          ORDER BY c.creado_en DESC');
 $stmt->execute([$user_id, $user_id, $user_id]);
 $boards = $stmt->fetchAll();
@@ -53,9 +53,11 @@ include 'header.php';
                 </div>
                 <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             </a>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $board['id']) ?>" aria-label="Compartir">
+            <?php if(!empty($board['share_token'])): ?>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/tablero_publico.php?token=' . $board['share_token']) ?>" aria-label="Compartir">
                 <i data-feather="share-2"></i>
             </button>
+            <?php endif; ?>
             <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar">
                 <i data-feather="edit-2"></i>
             </a>
