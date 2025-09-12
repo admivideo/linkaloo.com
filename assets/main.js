@@ -78,9 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.share-board').forEach(btn => {
     btn.addEventListener('click', async () => {
       const { url, title, image } = btn.dataset;
+      const fullTitle = title ? `${title} - tablero público de Linkadoo` : 'tablero público de Linkadoo';
       if (navigator.share) {
-        const shareData = { url };
-        if (title) shareData.title = title;
+        const shareData = { url, title: fullTitle, text: fullTitle };
         if (image && navigator.canShare) {
           try {
             const resp = await fetch(image);
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try { await navigator.share(shareData); } catch (_) {}
       } else {
         let shareUrl = 'https://www.addtoany.com/share#url=' + encodeURIComponent(url);
-        if (title) shareUrl += '&title=' + encodeURIComponent(title);
+        shareUrl += '&title=' + encodeURIComponent(fullTitle);
         window.open(shareUrl, '_blank', 'noopener');
       }
     });
