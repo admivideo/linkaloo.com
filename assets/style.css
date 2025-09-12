@@ -197,6 +197,8 @@ textarea {
 @media (max-width:600px){
   .board-grid {grid-template-columns:repeat(2,1fr);}
   .board-item {padding:5px;}
+  .board-item .share-board{top:10px;right:10px;}
+  .board-item .edit-board{top:45px;right:10px;}
 }
 
 /* Board detail */
