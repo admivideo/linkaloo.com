@@ -123,7 +123,10 @@ include 'header.php';
     <div class="board-detail-info">
         <div class="detail-header">
             <h2><?= htmlspecialchars($board['nombre']) ?></h2>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $id) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $id) ?>" aria-label="Compartir tablero públicamente">
+                <i data-feather="share-2"></i>
+                <span>Compartir tablero públicamente</span>
+            </button>
         </div>
         <form method="post" class="board-detail-form">
             <label>Nombre<br>

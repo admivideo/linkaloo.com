@@ -53,7 +53,7 @@ include 'header.php';
                 </div>
                 <span class="board-name"><?= htmlspecialchars($board['nombre']) ?></span>
             </a>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $board['id']) ?>" aria-label="Compartir">
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $board['id']) ?>" aria-label="Compartir tablero públicamente">
                 <i data-feather="share-2"></i>
             </button>
             <a href="tablero.php?id=<?= $board['id'] ?>" class="edit-board" aria-label="Editar">
