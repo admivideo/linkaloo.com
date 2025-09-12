@@ -146,10 +146,13 @@ include 'header.php';
             <label>Nota<br>
                 <textarea name="nota"><?= htmlspecialchars($board['nota'] ?? '') ?></textarea>
             </label>
-            <label>
-                <input type="checkbox" name="publico" value="1" <?= !empty($board['share_token']) ? 'checked' : '' ?>>
-                Compartir tablero públicamente <i data-feather="share-2"></i>
-            </label>
+            <div class="share-checkbox">
+                <label>
+                    <input type="checkbox" name="publico" value="1" <?= !empty($board['share_token']) ? 'checked' : '' ?>>
+                    Compartir tablero públicamente
+                </label>
+                <div class="share-icon"><i data-feather="share-2"></i></div>
+            </div>
             <p>Links guardados: <a class="links-link" href="panel.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
             <p>Creado: <?= htmlspecialchars($creado) ?></p>
             <p>Modificado: <?= htmlspecialchars($modificado) ?></p>
