@@ -12,17 +12,20 @@ class ShareReceiverActivity : AppCompatActivity() {
 
         when (intent?.action) {
             Intent.ACTION_SEND -> {
-                if ("text/plain" == intent.type) {
-                    val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
-                    sharedText?.let { handleLink(it) }
+                when (intent.type) {
+                    "text/plain" -> {
+                        val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                        sharedText?.let { handleLink(it) }
+                    }
+                    else -> {
+                        val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                        stream?.toString()?.let { handleLink(it) }
+                    }
                 }
             }
             Intent.ACTION_VIEW -> {
                 val data: Uri? = intent.data
                 data?.toString()?.let { handleLink(it) }
-            }
-            Intent.ACTION_SEND_MULTIPLE -> {
-                // Manejo de múltiples elementos si lo necesitas
             }
         }
 

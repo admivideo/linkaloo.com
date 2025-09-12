@@ -2,7 +2,7 @@
 require 'config.php';
 require 'favicon_utils.php';
 require_once 'image_utils.php';
-session_start();
+require_once 'session.php';
 if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
     exit;
@@ -96,8 +96,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     } else {
         $nombre = trim($_POST['nombre'] ?? '');
         $nota = trim($_POST['nota'] ?? '');
-        $upd = $pdo->prepare('UPDATE categorias SET nombre = ?, nota = ? WHERE id = ? AND usuario_id = ?');
-        $upd->execute([$nombre, $nota, $id, $user_id]);
+        $publico = isset($_POST['publico']);
+        $shareToken = $board['share_token'];
+        if($publico && empty($shareToken)){
+            $shareToken = bin2hex(random_bytes(16));
+        } elseif(!$publico){
+            $shareToken = null;
+        }
+        $upd = $pdo->prepare('UPDATE categorias SET nombre = ?, nota = ?, share_token = ? WHERE id = ? AND usuario_id = ?');
+        $upd->execute([$nombre, $nota, $shareToken, $id, $user_id]);
         $stmt->execute([$user_id, $user_id, $id, $user_id]);
         $board = $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -111,6 +118,11 @@ $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : ''
 $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado_en'])) : '';
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
+$publicUrl = !empty($board['share_token']) ? $baseUrl . '/tablero_publico.php?token=' . $board['share_token'] : '';
+$shareImg = $board['imagen'] ?? '';
+if (!empty($shareImg) && !preg_match('#^https?://#', $shareImg)) {
+    $shareImg = $baseUrl . '/' . ltrim($shareImg, '/');
+}
 
 include 'header.php';
 ?>
@@ -123,10 +135,6 @@ include 'header.php';
     <div class="board-detail-info">
         <div class="detail-header">
             <h2><?= htmlspecialchars($board['nombre']) ?></h2>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($baseUrl . '/panel.php?cat=' . $id) ?>" aria-label="Compartir tablero públicamente">
-                <i data-feather="share-2"></i>
-                <span>Compartir tablero públicamente</span>
-            </button>
         </div>
         <form method="post" class="board-detail-form">
             <label>Nombre<br>
@@ -135,18 +143,27 @@ include 'header.php';
             <label>Nota<br>
                 <textarea name="nota"><?= htmlspecialchars($board['nota'] ?? '') ?></textarea>
             </label>
+            <div class="share-checkbox">
+                <label>
+                    <input type="checkbox" name="publico" value="1" <?= !empty($board['share_token']) ? 'checked' : '' ?>>
+                    Compartir tablero públicamente
+                </label>
+                <?php if(!empty($board['share_token'])): ?>
+                <button type="button" class="share-board" data-url="<?= htmlspecialchars($publicUrl) ?>" data-title="<?= htmlspecialchars($board['nombre']) ?>" <?= !empty($shareImg) ? 'data-image="' . htmlspecialchars($shareImg) . '"' : '' ?> aria-label="Compartir"><i data-feather="share-2"></i></button>
+                <?php endif; ?>
+            </div>
             <p>Links guardados: <a class="links-link" href="panel.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
             <p>Creado: <?= htmlspecialchars($creado) ?></p>
             <p>Modificado: <?= htmlspecialchars($modificado) ?></p>
-            <button type="submit">Guardar</button>
-            <button type="submit" name="delete_board" onclick="return confirm('¿Eliminar este tablero?');">Eliminar tablero</button>
+            <div class="board-form-buttons">
+                <button type="submit" name="update_images">Actualizar imágenes</button>
+                <button type="submit">Guardar</button>
+                <button type="submit" name="delete_board" onclick="return confirm('¿Eliminar este tablero?');">Eliminar tablero</button>
+            </div>
         </form>
     </div>
 </div>
 <?php if(!empty($links)): ?>
-<form method="post" class="update-images-form">
-    <button type="submit" name="update_images">Actualizar imágenes</button>
-</form>
 <div class="link-cards board-links">
 <?php foreach($links as $link): ?>
     <?php

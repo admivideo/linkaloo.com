@@ -1,8 +1,5 @@
 <?php
-// Iniciar sesión solo si no se ha hecho ya
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once 'session.php';
 // Evitar caché persistente, pero permitir que el navegador recargue al volver atrás
 header('Cache-Control: no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
@@ -63,10 +60,9 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         <h2 class="modal-title">Guarda, organiza, comparte</h2>
         <div class="control-forms">
             <div class="form-section">
-                <h3>Añadir Tablero</h3>
                 <form method="post" class="form-categoria">
                     <input type="text" name="categoria_nombre" placeholder="Nombre del tablero nuevo">
-                    <button type="submit">Crear tablero</button>
+                    <button type="submit">Crear</button>
                 </form>
             </div>
             <hr class="form-separator">
@@ -74,7 +70,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                 <h3>Añadir tu favolink</h3>
                 <form method="post" class="form-link">
                     <input type="url" name="link_url" placeholder="pega aquí el link" required>
-                    <input type="text" name="link_title" placeholder="Titulo" maxlength="50">
+                    <input type="text" name="link_title" placeholder="Titulo (opcional)" maxlength="50">
                     <select name="categoria_id" required>
                         <option value="">Elige el tablero</option>
                         <?php foreach($categorias as $categoria): ?>
