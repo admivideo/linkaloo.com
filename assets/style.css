@@ -185,7 +185,7 @@ textarea {
 .board-link .link-count svg{width:16px;height:16px;}
 .board-name {display:block;font-weight:bold;margin-top:5px;color:#1DA1F2;}
 .share-board{background:#fff;color:#1DA1F2;border:none;border-radius:4px;padding:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
-.share-board svg{width:16px;height:16px;}
+.share-board svg{width:16px;height:16px;stroke:currentcolor;}
 .board-item .share-board{position:absolute;top:20px;right:20px;z-index:1;}
 .board-item .edit-board{position:absolute;top:55px;right:20px;text-decoration:none;background:#fff;color:#1DA1F2;border:none;border-radius:4px;padding:5px;display:flex;align-items:center;justify-content:center;z-index:1;}
 .board-item .edit-board svg{width:16px;height:16px;}
@@ -214,6 +214,7 @@ textarea {
 .board-detail-form textarea{min-height:80px;}
 .board-detail-form p{margin:5px 0;}
 .board-detail-form .share-checkbox{display:flex;align-items:center;gap:5px;margin-bottom:10px;}
+.board-detail-form .share-checkbox label{display:flex;align-items:center;gap:5px;margin:0;}
 .board-form-buttons{display:flex;gap:10px;flex-wrap:wrap;}
 .board-detail-form button{padding:10px 20px;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;background:#1DA1F2;color:#fff;border:none;text-align:center;cursor:pointer;}
 .links-link{background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;}
