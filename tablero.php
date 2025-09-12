@@ -152,15 +152,15 @@ include 'header.php';
             <p>Links guardados: <a class="links-link" href="panel.php?cat=<?= $id ?>"><?= $board['total_links'] ?></a></p>
             <p>Creado: <?= htmlspecialchars($creado) ?></p>
             <p>Modificado: <?= htmlspecialchars($modificado) ?></p>
-            <button type="submit">Guardar</button>
-            <button type="submit" name="delete_board" onclick="return confirm('¿Eliminar este tablero?');">Eliminar tablero</button>
+            <div class="board-form-buttons">
+                <button type="submit" name="update_images">Actualizar imágenes</button>
+                <button type="submit">Guardar</button>
+                <button type="submit" name="delete_board" onclick="return confirm('¿Eliminar este tablero?');">Eliminar tablero</button>
+            </div>
         </form>
     </div>
 </div>
 <?php if(!empty($links)): ?>
-<form method="post" class="update-images-form">
-    <button type="submit" name="update_images">Actualizar imágenes</button>
-</form>
 <div class="link-cards board-links">
 <?php foreach($links as $link): ?>
     <?php
