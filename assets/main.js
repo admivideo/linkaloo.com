@@ -77,11 +77,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.share-board').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const url = btn.dataset.url;
+      const { url, title, image } = btn.dataset;
       if (navigator.share) {
-        try { await navigator.share({ url }); } catch (_) {}
+        const shareData = { url };
+        if (title) shareData.title = title;
+        if (image && navigator.canShare) {
+          try {
+            const resp = await fetch(image);
+            const blob = await resp.blob();
+            const name = image.split('/').pop().split('?')[0] || 'image';
+            const file = new File([blob], name, { type: blob.type });
+            if (navigator.canShare({ files: [file] })) {
+              shareData.files = [file];
+            }
+          } catch (_) {}
+        }
+        try { await navigator.share(shareData); } catch (_) {}
       } else {
-        const shareUrl = 'https://www.addtoany.com/share#url=' + encodeURIComponent(url);
+        let shareUrl = 'https://www.addtoany.com/share#url=' + encodeURIComponent(url);
+        if (title) shareUrl += '&title=' + encodeURIComponent(title);
         window.open(shareUrl, '_blank', 'noopener');
       }
     });

@@ -10,7 +10,7 @@ if(!$token){
     exit('Tablero no disponible');
 }
 
-$stmt = $pdo->prepare('SELECT id, nombre, nota FROM categorias WHERE share_token = ?');
+$stmt = $pdo->prepare('SELECT c.id, c.nombre, c.nota, (SELECT l2.imagen FROM links l2 WHERE l2.categoria_id = c.id ORDER BY l2.id LIMIT 1) AS imagen FROM categorias c WHERE share_token = ?');
 $stmt->execute([$token]);
 $board = $stmt->fetch(PDO::FETCH_ASSOC);
 if(!$board){
@@ -24,6 +24,10 @@ $links = $linksStmt->fetchAll();
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
 $shareUrl = $baseUrl . '/tablero_publico.php?token=' . $token;
+$shareImg = $board['imagen'] ?? '';
+if (!empty($shareImg) && !preg_match('#^https?://#', $shareImg)) {
+    $shareImg = $baseUrl . '/' . ltrim($shareImg, '/');
+}
 
 include 'header.php';
 ?>
@@ -31,7 +35,7 @@ include 'header.php';
     <div class="board-detail-info">
         <div class="detail-header">
             <h2><?= htmlspecialchars($board['nombre']) ?></h2>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($shareUrl) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($shareUrl) ?>" data-title="<?= htmlspecialchars($board['nombre']) ?>" <?= !empty($shareImg) ? 'data-image="' . htmlspecialchars($shareImg) . '"' : '' ?> aria-label="Compartir"><i data-feather="share-2"></i></button>
         </div>
         <?php if(!empty($board['nota'])): ?>
         <p><?= htmlspecialchars($board['nota']) ?></p>

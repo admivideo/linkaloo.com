@@ -119,6 +119,10 @@ $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
 $publicUrl = !empty($board['share_token']) ? $baseUrl . '/tablero_publico.php?token=' . $board['share_token'] : '';
+$shareImg = $board['imagen'] ?? '';
+if (!empty($shareImg) && !preg_match('#^https?://#', $shareImg)) {
+    $shareImg = $baseUrl . '/' . ltrim($shareImg, '/');
+}
 
 include 'header.php';
 ?>
@@ -132,7 +136,7 @@ include 'header.php';
         <div class="detail-header">
             <h2><?= htmlspecialchars($board['nombre']) ?></h2>
             <?php if(!empty($board['share_token'])): ?>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($publicUrl) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
+            <button type="button" class="share-board" data-url="<?= htmlspecialchars($publicUrl) ?>" data-title="<?= htmlspecialchars($board['nombre']) ?>" <?= !empty($shareImg) ? 'data-image="' . htmlspecialchars($shareImg) . '"' : '' ?> aria-label="Compartir"><i data-feather="share-2"></i></button>
             <?php endif; ?>
         </div>
         <form method="post" class="board-detail-form">
