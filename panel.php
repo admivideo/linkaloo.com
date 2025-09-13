@@ -42,12 +42,11 @@ function scrapeMetadata($url){
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         CURLOPT_TIMEOUT => 10,
-        CURLOPT_ENCODING => '',
+        CURLOPT_ENCODING => 'gzip, deflate',
         CURLOPT_REFERER => 'https://www.google.com/',
         CURLOPT_HTTPHEADER => [
             'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
-            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Encoding: gzip, deflate, br'
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
         ],
     ]);
     $html = curl_exec($ch);
@@ -73,20 +72,27 @@ function scrapeMetadata($url){
         $meta['title'] = trim($titles->item(0)->textContent);
     }
     if(empty($meta['title'])){
-        $meta['title'] = $getMeta('og:title');
+        $meta['title'] = $getMeta('og:title') ?: $getMeta('twitter:title');
     }
-    $meta['description'] = $getMeta('og:description') ?: $getMeta('description','name');
+    $meta['description'] = $getMeta('og:description')
+        ?: $getMeta('description','name')
+        ?: $getMeta('twitter:description');
     $meta['image'] = $getMeta('og:image')
         ?: $getMeta('og:image:url')
         ?: $getMeta('og:image:secure_url')
         ?: $getMeta('twitter:image');
-    if(!empty($meta['image']) && !preg_match('#^https?://#', $meta['image'])){
-        $parts = parse_url($url);
-        $base = $parts['scheme'].'://'.$parts['host'];
-        if(isset($parts['port'])){
-            $base .= ':'.$parts['port'];
+    if(!empty($meta['image'])){
+        if(str_starts_with($meta['image'], '//')){
+            $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'http';
+            $meta['image'] = $scheme . ':' . $meta['image'];
+        } elseif(!preg_match('#^https?://#', $meta['image'])){
+            $parts = parse_url($url);
+            $base = $parts['scheme'].'://'.$parts['host'];
+            if(isset($parts['port'])){
+                $base .= ':'.$parts['port'];
+            }
+            $meta['image'] = rtrim($base,'/').'/'.ltrim($meta['image'],'/');
         }
-        $meta['image'] = rtrim($base,'/').'/'.ltrim($meta['image'],'/');
     }
     foreach($meta as &$value){
         $value = ensureUtf8($value);

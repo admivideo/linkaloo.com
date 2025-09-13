@@ -32,6 +32,7 @@ function scrapeImage($url){
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         CURLOPT_TIMEOUT => 5,
+        CURLOPT_ENCODING => 'gzip, deflate',
         CURLOPT_HTTPHEADER => [
             'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
             'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -58,13 +59,18 @@ function scrapeImage($url){
         ?: $getMeta('og:image:url')
         ?: $getMeta('og:image:secure_url')
         ?: $getMeta('twitter:image');
-    if(!empty($image) && !preg_match('#^https?://#', $image)){
-        $parts = parse_url($url);
-        $base = $parts['scheme'].'://'.$parts['host'];
-        if(isset($parts['port'])){
-            $base .= ':'.$parts['port'];
+    if(!empty($image)){
+        if(str_starts_with($image, '//')){
+            $scheme = parse_url($url, PHP_URL_SCHEME) ?: 'http';
+            $image = $scheme . ':' . $image;
+        } elseif(!preg_match('#^https?://#', $image)){
+            $parts = parse_url($url);
+            $base = $parts['scheme'].'://'.$parts['host'];
+            if(isset($parts['port'])){
+                $base .= ':'.$parts['port'];
+            }
+            $image = rtrim($base,'/').'/'.ltrim($image,'/');
         }
-        $image = rtrim($base,'/').'/'.ltrim($image,'/');
     }
     return $image;
 }
