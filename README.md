@@ -4,7 +4,7 @@ Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP
 
 ## Documentación
 
-Consulta [docs/estructura.md](docs/estructura.md) para una visión general de la arquitectura del proyecto y de la base de datos. Para una guía paso a paso de instalación y verificación, revisa [docs/instalacion.md](docs/instalacion.md).
+Consulta el índice [docs/README.md](docs/README.md) para una visión general de la arquitectura, una guía de instalación paso a paso y otras referencias.
 
 ## Características
 
