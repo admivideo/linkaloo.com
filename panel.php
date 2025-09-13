@@ -40,8 +40,12 @@ function scrapeMetadata($url){
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; linkalooBot/1.0)',
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         CURLOPT_TIMEOUT => 5,
+        CURLOPT_HTTPHEADER => [
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        ],
     ]);
     $html = curl_exec($ch);
     curl_close($ch);
@@ -65,8 +69,14 @@ function scrapeMetadata($url){
     if($titles->length){
         $meta['title'] = trim($titles->item(0)->textContent);
     }
+    if(empty($meta['title'])){
+        $meta['title'] = $getMeta('og:title');
+    }
     $meta['description'] = $getMeta('og:description') ?: $getMeta('description','name');
-    $meta['image'] = $getMeta('og:image') ?: $getMeta('twitter:image');
+    $meta['image'] = $getMeta('og:image')
+        ?: $getMeta('og:image:url')
+        ?: $getMeta('og:image:secure_url')
+        ?: $getMeta('twitter:image');
     if(!empty($meta['image']) && !preg_match('#^https?://#', $meta['image'])){
         $parts = parse_url($url);
         $base = $parts['scheme'].'://'.$parts['host'];
