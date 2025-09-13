@@ -41,10 +41,13 @@ function scrapeMetadata($url){
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        CURLOPT_TIMEOUT => 5,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_ENCODING => '',
+        CURLOPT_REFERER => 'https://www.google.com/',
         CURLOPT_HTTPHEADER => [
             'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
-            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Encoding: gzip, deflate, br'
         ],
     ]);
     $html = curl_exec($ch);
