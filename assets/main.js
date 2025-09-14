@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Las fichas se cargan todas inicialmente; se eliminó la carga incremental.
 
-  const MAX_DESC = 50;
+  const MAX_DESC = window.innerWidth <= 768 ? 50 : 150;
   document.querySelectorAll('.card-body p').forEach(p => {
     const text = p.textContent.trim();
     if (text.length > MAX_DESC) {

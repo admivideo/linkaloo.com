@@ -3,6 +3,7 @@ require 'config.php';
 require 'favicon_utils.php';
 require_once 'image_utils.php';
 require_once 'session.php';
+require_once 'device.php';
 
 $token = $_GET['token'] ?? '';
 if(!$token){
@@ -21,6 +22,7 @@ if(!$board){
 $linksStmt = $pdo->prepare('SELECT url, titulo, descripcion, imagen FROM links WHERE categoria_id = ? ORDER BY id DESC');
 $linksStmt->execute([$board['id']]);
 $links = $linksStmt->fetchAll();
+$descLimit = isMobile() ? 50 : 150;
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
 $shareUrl = $baseUrl . '/tablero_publico.php?token=' . $token;
@@ -56,8 +58,8 @@ include 'header.php';
             $title = mb_substr($title, 0, 47) . '...';
         }
         $desc = $link['descripcion'] ?? '';
-        if (mb_strlen($desc) > 50) {
-            $desc = mb_substr($desc, 0, 47) . '...';
+        if (mb_strlen($desc) > $descLimit) {
+            $desc = mb_substr($desc, 0, $descLimit - 3) . '...';
         }
     ?>
     <div class="card">
