@@ -38,7 +38,7 @@ include 'header.php';
             <a href="register.php">Registrarse</a>
             <a href="#">¿Olvidaste tu contraseña?</a>
         </div>
-        <h3>O ingresar con</h3>
+        <h3>O ingresa con</h3>
         <a class="social-btn google" href="oauth.php?provider=google">Google</a>
     </div>
 </div>
