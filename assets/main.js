@@ -198,12 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const openModalBtn = document.querySelector('.open-modal');
+  const openModalBtns = document.querySelectorAll('.open-modal');
   const addModal = document.querySelector('.add-modal');
-  if (openModalBtn && addModal) {
+  if (openModalBtns.length && addModal) {
     const close = () => addModal.classList.remove('show');
-    openModalBtn.addEventListener('click', () => {
-      addModal.classList.add('show');
+    openModalBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        addModal.classList.add('show');
+      });
     });
     addModal.addEventListener('click', (e) => {
       if (e.target === addModal || e.target.classList.contains('modal-close')) {
