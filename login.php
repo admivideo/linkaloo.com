@@ -38,12 +38,8 @@ include 'header.php';
             <a href="register.php">Registrarse</a>
             <a href="#">¿Olvidaste tu contraseña?</a>
         </div>
-    </div>
-    <div class="social-block">
-        <h3>O ingresar con</h3>
-        <a class="social-btn instagram" href="oauth.php?provider=instagram">Instagram</a>
+        <h3>O ingresa con</h3>
         <a class="social-btn google" href="oauth.php?provider=google">Google</a>
-        <a class="social-btn facebook" href="oauth.php?provider=facebook">Facebook</a>
     </div>
 </div>
 </div>
