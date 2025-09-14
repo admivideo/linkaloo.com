@@ -65,20 +65,20 @@ $user = $stmt->fetch();
 if ($user) {
     $userId   = $user['id'];
     $userName = $user['nombre'];
+    $_SESSION['user_id']   = $userId;
+    $_SESSION['user_name'] = $userName;
+    header('Location: panel.php');
+    exit;
 } else {
     $passHash = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
     $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
     $stmt->execute([$name ?: $email, $email, $passHash]);
     $userId   = $pdo->lastInsertId();
-    $catStmt = $pdo->prepare('INSERT INTO categorias (usuario_id, nombre) VALUES (?, ?)');
-    $catStmt->execute([$userId, 'Sin Categoria']);
     $userName = $name ?: $email;
+    $_SESSION['user_id']   = $userId;
+    $_SESSION['user_name'] = $userName;
+    header('Location: seleccion_tableros.php');
+    exit;
 }
-
-$_SESSION['user_id']   = $userId;
-$_SESSION['user_name'] = $userName;
-
-header('Location: panel.php');
-exit;
 ?>
 
