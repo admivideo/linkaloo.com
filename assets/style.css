@@ -76,7 +76,7 @@ textarea {
 .control-forms select{background:#f0e8e8;color:#000;border:none;border-radius:20px;font-family:'Rambla',sans-serif;}
 .control-forms select option[value=""]{color:#6c757d;}
 
-.form-link .select-create{display:flex;gap:5px;}
+.form-link .select-create{display:flex;flex-direction:column;gap:5px;}
 .form-link .select-create select,
 .form-link .select-create input{flex:1;}
 @media(min-width:601px){

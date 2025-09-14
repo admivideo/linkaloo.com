@@ -73,7 +73,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                                 <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <input type="text" name="categoria_nombre" placeholder="o crear uno nuevo">
+                        <input type="text" name="categoria_nombre" placeholder="o crea un nuevo (opcional)">
                     </div>
                     <button type="submit">Guardar favolink</button>
                 </form>
