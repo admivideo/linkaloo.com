@@ -25,6 +25,9 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 <header class="top-menu">
     <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="linkaloo"><!-- Logo file already on server --></a></div>
     <nav>
+        <?php if(isset($_SESSION['user_id']) && isset($categorias)): ?>
+            <button type="button" class="open-modal add-mobile" aria-label="Añadir"><i data-feather="plus"></i></button>
+        <?php endif; ?>
         <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
             <?php if(isset($_SESSION['user_id'])): ?>

@@ -48,8 +48,10 @@ textarea {
   }
 .content {background:#fff;color:#000;padding:20px;}
 
-.open-modal{background:#1DA1F2;color:#fff;border:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;margin-left:5px;flex-shrink:0;}
+.open-modal{background:#1DA1F2;color:#fff;border:none;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;margin:0 5px;flex-shrink:0;}
 .open-modal svg{width:24px;height:24px;}
+.add-mobile{display:none;}
+@media (max-width:600px){.add-mobile{display:flex;}.top-menu .menu .add-menu{display:none;}}
 .search-toggle{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
 .search-toggle svg{width:20px;height:20px;}
 .board-scroll{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;flex-shrink:0;}
