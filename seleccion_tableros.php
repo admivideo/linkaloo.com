@@ -8,23 +8,25 @@ if(!isset($_SESSION['user_id'])){
 $user_id = $_SESSION['user_id'];
 
 $predefinedBoards = [
-    'Ciencias y educación',
-    'Deportes',
-    'Fitness y salud',
+    'Recetas',
+    'Humor',
+    'Noticias',
+    'Moda',
+    'Decoración',
     'Música',
-    'Comedia',
-    'Comida y bebida',
-    'Automoción y vehículos',
-    'DIY',
-    'Animales',
-    'Belleza y estilo',
-    'Viajes',
-    'Motivación y consejos',
-    'Gaming',
-    'Entretenimiento',
-    'Arte',
-    'Trucos para la vida cotidiana',
-    'Actividades al aire libre',
+    'Cine y series',
+    'Deportes',
+    'Escapadas',
+    'Tecnología',
+    'Belleza',
+    'Fitness',
+    'Mascotas',
+    'Desarrollo personal',
+    'Política',
+    'Negocios',
+    'Compras',
+    'Coches',
+    'Motos',
 ];
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
@@ -46,7 +48,7 @@ include 'header.php';
 ?>
 <div class="board-select">
     <h2>Elige tus intereses</h2>
-    <p>Recibe mejores sugerencias de vídeos</p>
+    <p>así vamos creando tus tableros</p>
     <form method="post">
         <div class="board-options">
             <?php foreach($predefinedBoards as $board): ?>
