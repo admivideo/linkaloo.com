@@ -23,6 +23,9 @@ textarea {
 .top-menu .logo img {height:50px;}
 .top-menu ul {list-style:none;display:flex;margin:0;padding:0;}
 .top-menu li {position:relative;display:flex;align-items:flex-start;}
+@media (min-width:601px){
+  .top-menu li {align-items:center;}
+}
 .board-nav .search-toggle{margin-left:0;}
 .menu-toggle {display:none;background:none;border:none;cursor:pointer;margin-right:15px;padding:0;}
 .menu-toggle span {display:block;width:25px;height:3px;background:#fff;margin:4px 0;}
