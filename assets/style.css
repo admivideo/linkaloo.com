@@ -228,6 +228,19 @@ textarea {
 .board-detail-form button{padding:10px 20px;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;background:#1DA1F2;color:#fff;border:none;text-align:center;cursor:pointer;}
 .links-link{background:#1DA1F2;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;}
 @media (max-width:600px){
-  .board-detail{flex-direction:column;}
+.board-detail{flex-direction:column;}
 }
 
+/* Board selection */
+.board-select{max-width:600px;margin:0 auto;text-align:center;}
+.board-select h2{margin-bottom:5px;}
+.board-select p{color:#6c757d;margin:0 0 20px;}
+.board-options{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px;}
+.board-option{position:relative;}
+.board-option input{display:none;}
+.board-option span{display:inline-block;padding:8px 15px;border:1px solid #ccc;border-radius:20px;cursor:pointer;color:#000;background:#f5f8fa;}
+.board-option input:checked + span{background:#1DA1F2;color:#fff;border-color:#1DA1F2;}
+.board-select-buttons{display:flex;justify-content:space-between;max-width:300px;margin:0 auto;}
+.board-select-buttons a,.board-select-buttons button{flex:1;padding:10px;border-radius:20px;text-align:center;text-decoration:none;}
+.board-select-buttons a{margin-right:10px;background:#f5f8fa;color:#000;}
+.board-select-buttons button{background:#1DA1F2;color:#fff;border:none;cursor:pointer;}
