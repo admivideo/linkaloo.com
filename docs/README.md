@@ -4,6 +4,7 @@ Este directorio reúne los documentos principales del proyecto:
 
 - `estructura.md`: visión general de la arquitectura y de la base de datos.
 - `instalacion.md`: guía para preparar un entorno local de desarrollo.
+- `uso.md`: instrucciones paso a paso para utilizar la aplicación.
 
 ## Comprobaciones rápidas
 
