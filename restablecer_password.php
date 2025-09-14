@@ -36,6 +36,7 @@ if ($token) {
 
 include 'header.php';
 ?>
+<div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
 <div class="login-wrapper">
     <div class="login-block">
         <h2>Restablecer contraseña</h2>
