@@ -103,8 +103,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 $link_title = mb_substr($link_title, 0, 47) . '...';
             }
             $descripcion = ensureUtf8($meta['description'] ?? '');
-            if (mb_strlen($descripcion) > 75) {
-                $descripcion = mb_substr($descripcion, 0, 72) . '...';
+            if (mb_strlen($descripcion) > 45) {
+                $descripcion = mb_substr($descripcion, 0, 42) . '...';
             }
             $imagen = $meta['image'] ?? '';
             if (empty($imagen)) {
@@ -220,8 +220,8 @@ foreach ($links as $link):
             <?php if(!empty($link['descripcion'])): ?>
                 <?php
                     $desc = $link['descripcion'];
-                    if (mb_strlen($desc) > 75) {
-                        $desc = mb_substr($desc, 0, 72) . '...';
+                    if (mb_strlen($desc) > 45) {
+                        $desc = mb_substr($desc, 0, 42) . '...';
                     }
                 ?>
                 <p><?= htmlspecialchars($desc) ?></p>

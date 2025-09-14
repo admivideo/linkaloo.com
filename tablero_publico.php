@@ -56,8 +56,8 @@ include 'header.php';
             $title = mb_substr($title, 0, 47) . '...';
         }
         $desc = $link['descripcion'] ?? '';
-        if (mb_strlen($desc) > 75) {
-            $desc = mb_substr($desc, 0, 72) . '...';
+        if (mb_strlen($desc) > 45) {
+            $desc = mb_substr($desc, 0, 42) . '...';
         }
     ?>
     <div class="card">
