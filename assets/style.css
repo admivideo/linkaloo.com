@@ -127,7 +127,7 @@ textarea {
 .link-cards .card-title {margin-bottom:10px;overflow:hidden;}
 .link-cards .card-title h4 {margin:0;font-size:16px;display:flex;align-items:flex-start;}
 .link-cards .card-title h4 img {width:18px;height:18px;margin-right:5px;flex-shrink:0;}
-.link-cards .card-body p {margin:0 0 10px;font-size:14px;}
+.link-cards .card-body p {margin:0 0 10px;font-size:14px;color:#666;}
 .link-cards .card-actions {margin-top:auto;display:flex;align-items:center;gap:5px;}
 .link-cards .card-actions .move-select {padding:4px;background:#1DA1F2;color:#fff;border:none;border-radius:4px;font-family:'Rambla',sans-serif;width:fit-content;flex:0 0 auto;}
 .ad-card .ad-label{color:#6c757d;font-size:12px;text-align:left;margin-top:5px;}

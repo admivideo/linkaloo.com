@@ -25,8 +25,8 @@ foreach($links as &$link){
     if(mb_strlen($link['titulo']) > 50){
         $link['titulo'] = mb_substr($link['titulo'], 0, 47) . '...';
     }
-    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 75){
-        $link['descripcion'] = mb_substr($link['descripcion'], 0, 72) . '...';
+    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 45){
+        $link['descripcion'] = mb_substr($link['descripcion'], 0, 42) . '...';
     }
     $domain = parse_url($link['url'], PHP_URL_HOST);
     $link['favicon'] = $domain ? getLocalFavicon($domain) : '';
