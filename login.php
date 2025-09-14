@@ -12,7 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($captcha && !empty($recaptchaSecretKey)) {
             $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecretKey}&response={$captcha}");
             $data = json_decode($response, true);
-            $captchaValid = $data['success'] ?? false;
+            $captchaValid = ($data['success'] ?? false)
+                && ($data['score'] ?? 0) >= 0.5
+                && ($data['action'] ?? '') === 'login';
         }
         if ($captchaValid) {
             $stmt = $pdo->prepare('SELECT id, nombre, pass_hash FROM usuarios WHERE email = ?');
@@ -40,11 +42,11 @@ include 'header.php';
     <div class="login-block">
         <h2>Iniciar sesión</h2>
         <?php if($error): ?><p class="error"><?= $error ?></p><?php endif; ?>
-        <form method="post" class="login-form">
+        <form method="post" class="login-form" id="login-form">
             <input type="email" name="email" placeholder="Email">
             <input type="password" name="password" placeholder="Contraseña">
             <?php if(!empty($recaptchaSiteKey)): ?>
-            <div class="g-recaptcha" data-sitekey="<?= $recaptchaSiteKey ?>"></div>
+            <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
             <?php endif; ?>
             <button type="submit">Entrar</button>
         </form>
@@ -57,6 +59,19 @@ include 'header.php';
     </div>
 </div>
 </div>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<?php if(!empty($recaptchaSiteKey)): ?>
+<script src="https://www.google.com/recaptcha/api.js?render=<?= $recaptchaSiteKey ?>"></script>
+<script>
+document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    grecaptcha.ready(function() {
+        grecaptcha.execute('<?= $recaptchaSiteKey ?>', {action: 'login'}).then(function(token) {
+            document.getElementById('g-recaptcha-response').value = token;
+            e.target.submit();
+        });
+    });
+});
+</script>
+<?php endif; ?>
 </body>
 </html>
