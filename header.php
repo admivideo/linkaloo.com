@@ -25,6 +25,9 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 <header class="top-menu">
     <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="linkaloo"><!-- Logo file already on server --></a></div>
     <nav>
+        <?php if(isset($_SESSION['user_id']) && isset($categorias)): ?>
+            <button type="button" class="open-modal add-mobile" aria-label="Añadir"><i data-feather="plus"></i></button>
+        <?php endif; ?>
         <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
             <?php if(isset($_SESSION['user_id'])): ?>
@@ -57,26 +60,21 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
     <div class="add-modal-content" style="padding: 30px;">
         <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
         <div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
-        <h2 class="modal-title">Guarda, organiza, comparte</h2>
+        <h2 class="modal-title">Añadir tu favolink</h2>
         <div class="control-forms">
             <div class="form-section">
-                <form method="post" class="form-categoria">
-                    <input type="text" name="categoria_nombre" placeholder="Nombre del tablero nuevo">
-                    <button type="submit">Crear</button>
-                </form>
-            </div>
-            <hr class="form-separator">
-            <div class="form-section">
-                <h3>Añadir tu favolink</h3>
                 <form method="post" class="form-link">
-                    <input type="url" name="link_url" placeholder="pega aquí el link" required>
-                    <input type="text" name="link_title" placeholder="Titulo (opcional)" maxlength="50">
-                    <select name="categoria_id" required>
-                        <option value="">Elige el tablero</option>
-                        <?php foreach($categorias as $categoria): ?>
-                            <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="url" name="link_url" placeholder="Pega aquí el link" required>
+                    <input type="text" name="link_title" placeholder="Título (opcional)" maxlength="50">
+                    <div class="select-create">
+                        <select name="categoria_id">
+                            <option value="">Elige el tablero</option>
+                            <?php foreach($categorias as $categoria): ?>
+                                <option value="<?= $categoria['id'] ?>"><?= htmlspecialchars($categoria['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="text" name="categoria_nombre" placeholder="o crea un nuevo (opcional)">
+                    </div>
                     <button type="submit">Guardar favolink</button>
                 </form>
             </div>

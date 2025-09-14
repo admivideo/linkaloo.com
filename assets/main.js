@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Las fichas se cargan todas inicialmente; se eliminó la carga incremental.
 
-  const MAX_DESC = 250;
+  const MAX_DESC = window.innerWidth <= 768 ? 50 : 150;
   document.querySelectorAll('.card-body p').forEach(p => {
     const text = p.textContent.trim();
     if (text.length > MAX_DESC) {
@@ -198,12 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const openModalBtn = document.querySelector('.open-modal');
+  const openModalBtns = document.querySelectorAll('.open-modal');
   const addModal = document.querySelector('.add-modal');
-  if (openModalBtn && addModal) {
+  if (openModalBtns.length && addModal) {
     const close = () => addModal.classList.remove('show');
-    openModalBtn.addEventListener('click', () => {
-      addModal.classList.add('show');
+    openModalBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        addModal.classList.add('show');
+      });
     });
     addModal.addEventListener('click', (e) => {
       if (e.target === addModal || e.target.classList.contains('modal-close')) {

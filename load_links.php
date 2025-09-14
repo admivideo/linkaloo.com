@@ -2,6 +2,7 @@
 require 'config.php';
 require 'favicon_utils.php';
 require_once 'session.php';
+require_once 'device.php';
 if(!isset($_SESSION['user_id'])){
     http_response_code(401);
     exit;
@@ -21,12 +22,13 @@ $sql .= " ORDER BY creado_en DESC LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $links = $stmt->fetchAll();
+$descLimit = isMobile() ? 50 : 150;
 foreach($links as &$link){
     if(mb_strlen($link['titulo']) > 50){
         $link['titulo'] = mb_substr($link['titulo'], 0, 47) . '...';
     }
-    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > 75){
-        $link['descripcion'] = mb_substr($link['descripcion'], 0, 72) . '...';
+    if(!empty($link['descripcion']) && mb_strlen($link['descripcion']) > $descLimit){
+        $link['descripcion'] = mb_substr($link['descripcion'], 0, $descLimit - 3) . '...';
     }
     $domain = parse_url($link['url'], PHP_URL_HOST);
     $link['favicon'] = $domain ? getLocalFavicon($domain) : '';
