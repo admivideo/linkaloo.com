@@ -176,6 +176,7 @@ textarea {
 }
 
 .login-block h2{text-align:center;}
+.login-block h3{text-align:center;}
 
 /* Board management */
 .board-admin {margin:0 auto;}
