@@ -3,6 +3,7 @@ require 'config.php';
 require 'favicon_utils.php';
 require_once 'image_utils.php';
 require_once 'session.php';
+require_once 'device.php';
 if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
     exit;
@@ -10,6 +11,7 @@ if(!isset($_SESSION['user_id'])){
 $user_id = $_SESSION['user_id'];
 // Categoría seleccionada (0 = todas)
 $selectedCat = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
+$descLimit = isMobile() ? 50 : 150;
 // Recuperar mensajes de error tras un posible redirect
 $error = $_SESSION['panel_error'] ?? '';
 unset($_SESSION['panel_error']);
@@ -103,8 +105,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 $link_title = mb_substr($link_title, 0, 47) . '...';
             }
             $descripcion = ensureUtf8($meta['description'] ?? '');
-            if (mb_strlen($descripcion) > 50) {
-                $descripcion = mb_substr($descripcion, 0, 47) . '...';
+            if (mb_strlen($descripcion) > $descLimit) {
+                $descripcion = mb_substr($descripcion, 0, $descLimit - 3) . '...';
             }
             $imagen = $meta['image'] ?? '';
             if (empty($imagen)) {
@@ -220,8 +222,8 @@ foreach ($links as $link):
             <?php if(!empty($link['descripcion'])): ?>
                 <?php
                     $desc = $link['descripcion'];
-                    if (mb_strlen($desc) > 50) {
-                        $desc = mb_substr($desc, 0, 47) . '...';
+                    if (mb_strlen($desc) > $descLimit) {
+                        $desc = mb_substr($desc, 0, $descLimit - 3) . '...';
                     }
                 ?>
                 <p><?= htmlspecialchars($desc) ?></p>
