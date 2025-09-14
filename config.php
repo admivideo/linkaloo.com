@@ -25,4 +25,8 @@ try {
 $googleClientId     = getenv('GOOGLE_CLIENT_ID') ?: '731706222639-8ise1fcsud3mv3552bt7hrck3o7o6n31.apps.googleusercontent.com';
 $googleClientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: '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';
 $googleRedirectUri  = getenv('GOOGLE_REDIRECT_URI') ?: 'https://linkaloo.com/oauth2callback.php';
+
+// reCAPTCHA configuration (set your keys in environment variables)
+$recaptchaSiteKey   = getenv('RECAPTCHA_SITE_KEY') ?: '';
+$recaptchaSecretKey = getenv('RECAPTCHA_SECRET_KEY') ?: '';
 ?>

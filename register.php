@@ -7,20 +7,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = trim($_POST['nombre'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    $captcha = $_POST['g-recaptcha-response'] ?? '';
     if ($nombre && $email && $password) {
-        $stmt = $pdo->prepare('SELECT id FROM usuarios WHERE email = ?');
-        $stmt->execute([$email]);
-        if ($stmt->fetch()) {
-            $error = 'El email ya existe';
+        $captchaValid = false;
+        if ($captcha && !empty($recaptchaSecretKey)) {
+            $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecretKey}&response={$captcha}");
+            $data = json_decode($response, true);
+            $captchaValid = $data['success'] ?? false;
+        }
+        if ($captchaValid) {
+            $stmt = $pdo->prepare('SELECT id FROM usuarios WHERE email = ?');
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                $error = 'El email ya existe';
+            } else {
+                $hash = password_hash($password, PASSWORD_BCRYPT);
+                $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
+                $stmt->execute([$nombre, $email, $hash]);
+                $userId = $pdo->lastInsertId();
+                $_SESSION['user_id'] = $userId;
+                $_SESSION['user_name'] = $nombre;
+                header('Location: seleccion_tableros.php');
+                exit;
+            }
         } else {
-            $hash = password_hash($password, PASSWORD_BCRYPT);
-            $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
-            $stmt->execute([$nombre, $email, $hash]);
-            $userId = $pdo->lastInsertId();
-            $_SESSION['user_id'] = $userId;
-            $_SESSION['user_name'] = $nombre;
-            header('Location: seleccion_tableros.php');
-            exit;
+            $error = 'Verificación humana fallida';
         }
     } else {
         $error = 'Rellena todos los campos';
@@ -37,6 +48,9 @@ include 'header.php';
             <input type="text" name="nombre" placeholder="Nombre">
             <input type="email" name="email" placeholder="Email">
             <input type="password" name="password" placeholder="Contraseña">
+            <?php if(!empty($recaptchaSiteKey)): ?>
+            <div class="g-recaptcha" data-sitekey="<?= $recaptchaSiteKey ?>"></div>
+            <?php endif; ?>
             <button type="submit">Registrarse</button>
         </form>
         <div class="login-links">
@@ -54,5 +68,6 @@ include 'header.php';
     -->
 </div>
 </div>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
