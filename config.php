@@ -26,7 +26,9 @@ $googleClientId     = getenv('GOOGLE_CLIENT_ID') ?: '731706222639-8ise1fcsud3mv3
 $googleClientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: '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';
 $googleRedirectUri  = getenv('GOOGLE_REDIRECT_URI') ?: 'https://linkaloo.com/oauth2callback.php';
 
-// reCAPTCHA configuration (set your keys in environment variables)
-$recaptchaSiteKey   = getenv('6Lf8pckrAAAAAE5BqEQKcugNtA_34k6-ErygC4vB') ?: '';
-$recaptchaSecretKey = getenv('6Lf8pckrAAAAAGdoqnT9mw0PwMzBB9VIuKuxsN-_') ?: '';
+// reCAPTCHA v3 configuration (set your keys in environment variables)
+// Use environment variables `RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` or
+// fall back to hard-coded keys if provided.
+$recaptchaSiteKey   = getenv('RECAPTCHA_SITE_KEY') ?: '6Lf8pckrAAAAAE5BqEQKcugNtA_34k6-ErygC4vB';
+$recaptchaSecretKey = getenv('RECAPTCHA_SECRET_KEY') ?: '6Lf8pckrAAAAAGdoqnT9mw0PwMzBB9VIuKuxsN-_';
 ?>
