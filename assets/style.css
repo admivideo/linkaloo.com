@@ -70,15 +70,15 @@ textarea {
 .control-forms .form-section h3{text-align:center;margin:0;color:#6c757d;}
 .control-forms .form-section form{width:100%;}
 .control-forms form{display:flex;gap:5px;flex-wrap:wrap;}
-.control-forms .form-categoria{flex-wrap:nowrap;}
-.control-forms .form-categoria input{flex:1;}
 .control-forms input,
 .control-forms select{padding:10px;padding-left:20px;border:1px solid #ccc;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;}
 .control-forms button{padding:10px 20px;border-radius:20px;font-family:'Rambla',sans-serif;font-size:16px;background:#1DA1F2;color:#fff;border:none;text-align:center;}
 .control-forms select{background:#f0e8e8;color:#000;border:none;border-radius:20px;font-family:'Rambla',sans-serif;}
 .control-forms select option[value=""]{color:#6c757d;}
 
-.form-separator{border:0;border-top:1px solid #ccc;margin:10px 0;}
+.form-link .select-create{display:flex;gap:5px;}
+.form-link .select-create select,
+.form-link .select-create input{flex:1;}
 @media(min-width:601px){
   .form-link{flex-direction:column;align-items:stretch;}
   .form-link input,

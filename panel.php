@@ -85,16 +85,16 @@ function scrapeMetadata($url){
 }
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    if(isset($_POST['categoria_nombre'])){
-        $categoria_nombre = trim($_POST['categoria_nombre']);
+    if(isset($_POST['link_url'])){
+        $link_url = trim($_POST['link_url']);
+        $link_title = trim($_POST['link_title']);
+        $categoria_id = isset($_POST['categoria_id']) ? (int)$_POST['categoria_id'] : 0;
+        $categoria_nombre = trim($_POST['categoria_nombre'] ?? '');
         if($categoria_nombre){
             $stmt = $pdo->prepare('INSERT INTO categorias (usuario_id, nombre) VALUES (?, ?)');
             $stmt->execute([$user_id, $categoria_nombre]);
+            $categoria_id = (int)$pdo->lastInsertId();
         }
-    } elseif(isset($_POST['link_url'])){
-        $link_url = trim($_POST['link_url']);
-        $link_title = trim($_POST['link_title']);
-        $categoria_id = (int)$_POST['categoria_id'];
         if($link_url && $categoria_id){
             $meta = scrapeMetadata($link_url);
             if(!$link_title && !empty($meta['title'])){
