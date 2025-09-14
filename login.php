@@ -6,17 +6,28 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
+    $captcha = $_POST['g-recaptcha-response'] ?? '';
     if ($email && $password) {
-        $stmt = $pdo->prepare('SELECT id, nombre, pass_hash FROM usuarios WHERE email = ?');
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-        if ($user && password_verify($password, $user['pass_hash'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['nombre'];
-            header('Location: panel.php');
-            exit;
+        $captchaValid = false;
+        if ($captcha && !empty($recaptchaSecretKey)) {
+            $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecretKey}&response={$captcha}");
+            $data = json_decode($response, true);
+            $captchaValid = $data['success'] ?? false;
+        }
+        if ($captchaValid) {
+            $stmt = $pdo->prepare('SELECT id, nombre, pass_hash FROM usuarios WHERE email = ?');
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+            if ($user && password_verify($password, $user['pass_hash'])) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $user['nombre'];
+                header('Location: panel.php');
+                exit;
+            } else {
+                $error = 'Usuario o contraseña incorrectos';
+            }
         } else {
-            $error = 'Usuario o contraseña incorrectos';
+            $error = 'Verificación humana fallida';
         }
     } else {
         $error = 'Introduce email y contraseña';
@@ -32,6 +43,9 @@ include 'header.php';
         <form method="post" class="login-form">
             <input type="email" name="email" placeholder="Email">
             <input type="password" name="password" placeholder="Contraseña">
+            <?php if(!empty($recaptchaSiteKey)): ?>
+            <div class="g-recaptcha" data-sitekey="<?= $recaptchaSiteKey ?>"></div>
+            <?php endif; ?>
             <button type="submit">Entrar</button>
         </form>
         <div class="login-links">
@@ -43,5 +57,6 @@ include 'header.php';
     </div>
 </div>
 </div>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </body>
 </html>
