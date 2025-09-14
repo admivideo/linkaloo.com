@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 include 'header.php';
 ?>
+<div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
 <div class="login-wrapper">
     <div class="login-block">
         <h2>Registro</h2>
@@ -40,7 +41,7 @@ include 'header.php';
         </form>
         <div class="login-links">
             <a href="login.php">Iniciar sesión</a>
-            <a href="#">¿Olvidaste tu contraseña?</a>
+            <a href="recuperar_password.php">¿Olvidaste tu contraseña?</a>
         </div>
     </div>
     <!--
