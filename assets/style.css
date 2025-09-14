@@ -86,9 +86,10 @@ textarea {
   .form-link button{flex:1 1 100%;font-size:18px;}
 }
 @media(max-width:600px){
+  .form-link{flex-direction:column;align-items:stretch;}
   .form-link input,
   .form-link select,
-  .form-link button{flex:1 1 100%;}
+  .form-link button{flex:1 1 100%;width:100%;}
 }
 
 @media (min-width:601px){
