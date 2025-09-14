@@ -36,7 +36,7 @@ include 'header.php';
         </form>
         <div class="login-links">
             <a href="register.php">Registrarse</a>
-            <a href="#">¿Olvidaste tu contraseña?</a>
+            <a href="recuperar_password.php">¿Olvidaste tu contraseña?</a>
         </div>
         <h3>O ingresa con</h3>
         <a class="social-btn google" href="oauth.php?provider=google">Google</a>
