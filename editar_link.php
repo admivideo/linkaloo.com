@@ -19,9 +19,11 @@ if(!$link){
 }
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $nota = trim($_POST['nota_link'] ?? '');
-    $upd = $pdo->prepare('UPDATE links SET nota_link = ? WHERE id = ? AND usuario_id = ?');
-    $upd->execute([$nota, $id, $user_id]);
+    $nota   = trim($_POST['nota_link'] ?? '');
+    $titulo = trim($_POST['titulo'] ?? '');
+    $titulo = ($titulo !== '') ? $titulo : null;
+    $upd = $pdo->prepare('UPDATE links SET nota_link = ?, titulo = ? WHERE id = ? AND usuario_id = ?');
+    $upd->execute([$nota, $titulo, $id, $user_id]);
     $stmt->execute([$id, $user_id]);
     $link = $stmt->fetch(PDO::FETCH_ASSOC);
 }
@@ -51,6 +53,9 @@ $favicon = $domain ? getLocalFavicon($domain) : '';
             <?php if(!empty($link['descripcion'])): ?>
                 <p><?= htmlspecialchars($link['descripcion']) ?></p>
             <?php endif; ?>
+            <label>Título<br>
+                <input type="text" name="titulo" value="<?= htmlspecialchars($link['titulo'] ?? '') ?>" maxlength="50">
+            </label>
             <label>Nota<br>
                 <textarea name="nota_link"><?= htmlspecialchars($link['nota_link'] ?? '') ?></textarea>
             </label>
