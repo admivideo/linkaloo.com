@@ -26,9 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hash = password_hash($password, PASSWORD_BCRYPT);
                 $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
                 $stmt->execute([$nombre, $email, $hash]);
-                $userId = $pdo->lastInsertId();
+                $userId = (int) $pdo->lastInsertId();
+                session_regenerate_id(true);
                 $_SESSION['user_id'] = $userId;
                 $_SESSION['user_name'] = $nombre;
+                linkalooIssueRememberMeToken($pdo, $userId);
                 header('Location: seleccion_tableros.php');
                 exit;
             }
