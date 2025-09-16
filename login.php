@@ -2,6 +2,16 @@
 require 'config.php';
 require_once 'session.php';
 
+$sharedParam = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sharedParam = trim($_POST['shared'] ?? '');
+} elseif (isset($_GET['shared'])) {
+    $sharedParam = trim($_GET['shared']);
+}
+if ($sharedParam !== '' && !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
+    $sharedParam = '';
+}
+
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
@@ -25,7 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = (int) $user['id'];
                 $_SESSION['user_name'] = $user['nombre'];
                 linkalooIssueRememberMeToken($pdo, (int) $user['id']);
-                header('Location: panel.php');
+                $redirect = 'panel.php';
+                if ($sharedParam !== '') {
+                    $redirect .= '?shared=' . rawurlencode($sharedParam);
+                }
+                header('Location: ' . $redirect);
                 exit;
             } else {
                 $error = 'Usuario o contraseña incorrectos';
@@ -47,6 +61,7 @@ include 'header.php';
         <form method="post" class="login-form" id="login-form">
             <input type="email" name="email" placeholder="Email">
             <input type="password" name="password" placeholder="Contraseña">
+            <input type="hidden" name="shared" value="<?= htmlspecialchars($sharedParam, ENT_QUOTES, 'UTF-8') ?>">
             <?php if(!empty($recaptchaSiteKey)): ?>
             <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
             <?php endif; ?>

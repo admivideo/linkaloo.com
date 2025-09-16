@@ -5,7 +5,9 @@ require_once 'image_utils.php';
 require_once 'session.php';
 require_once 'device.php';
 if(!isset($_SESSION['user_id'])){
-    header('Location: login.php');
+    $query = $_SERVER['QUERY_STRING'] ?? '';
+    $target = 'login.php' . ($query ? '?' . $query : '');
+    header('Location: ' . $target);
     exit;
 }
 $user_id = $_SESSION['user_id'];
