@@ -63,20 +63,24 @@ $stmt->execute([$email]);
 $user = $stmt->fetch();
 
 if ($user) {
-    $userId   = $user['id'];
+    $userId   = (int) $user['id'];
     $userName = $user['nombre'];
+    session_regenerate_id(true);
     $_SESSION['user_id']   = $userId;
     $_SESSION['user_name'] = $userName;
+    linkalooIssueRememberMeToken($pdo, $userId);
     header('Location: panel.php');
     exit;
 } else {
     $passHash = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
     $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, pass_hash) VALUES (?, ?, ?)');
     $stmt->execute([$name ?: $email, $email, $passHash]);
-    $userId   = $pdo->lastInsertId();
+    $userId   = (int) $pdo->lastInsertId();
     $userName = $name ?: $email;
+    session_regenerate_id(true);
     $_SESSION['user_id']   = $userId;
     $_SESSION['user_name'] = $userName;
+    linkalooIssueRememberMeToken($pdo, $userId);
     header('Location: seleccion_tableros.php');
     exit;
 }

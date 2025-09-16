@@ -21,8 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email]);
             $user = $stmt->fetch();
             if ($user && password_verify($password, $user['pass_hash'])) {
-                $_SESSION['user_id'] = $user['id'];
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = (int) $user['id'];
                 $_SESSION['user_name'] = $user['nombre'];
+                linkalooIssueRememberMeToken($pdo, (int) $user['id']);
                 header('Location: panel.php');
                 exit;
             } else {
