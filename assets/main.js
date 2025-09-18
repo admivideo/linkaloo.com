@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.feather) {
     feather.replace();
   }
+  const params = new URLSearchParams(window.location.search);
   const toggle = document.querySelector('.menu-toggle');
   const menu = document.querySelector('.top-menu ul');
   if (toggle && menu) {
@@ -50,29 +51,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-    if (buttons.length) {
-      const params = new URLSearchParams(window.location.search);
-      const initial = params.get('cat');
-      let activeBtn = buttons[0];
-      if (initial) {
-        const found = Array.from(buttons).find(b => b.dataset.cat === initial);
-        if (found) activeBtn = found;
-      }
-      currentCat = activeBtn.dataset.cat;
-      filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
-      activeBtn.classList.add('active');
-      buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (boardSlider) {
-            sessionStorage.setItem('boardScroll', boardSlider.scrollLeft);
-          }
-          buttons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentCat = btn.dataset.cat;
-          filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
-        });
-      });
+  if (buttons.length) {
+    const initial = params.get('cat');
+    let activeBtn = buttons[0];
+    if (initial) {
+      const found = Array.from(buttons).find(b => b.dataset.cat === initial);
+      if (found) activeBtn = found;
     }
+    currentCat = activeBtn.dataset.cat;
+    filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
+    activeBtn.classList.add('active');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (boardSlider) {
+          sessionStorage.setItem('boardScroll', boardSlider.scrollLeft);
+        }
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCat = btn.dataset.cat;
+        filter(currentCat, searchInput ? searchInput.value.toLowerCase() : '');
+      });
+    });
+  }
 
 
   document.querySelectorAll('.share-board').forEach(btn => {
@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openModalBtns = document.querySelectorAll('.open-modal');
   const addModal = document.querySelector('.add-modal');
+  const linkInput = addModal ? addModal.querySelector('.form-link [name="link_url"]') : null;
   if (openModalBtns.length && addModal) {
     const close = () => addModal.classList.remove('show');
     openModalBtns.forEach(btn => {
@@ -212,6 +213,30 @@ document.addEventListener('DOMContentLoaded', () => {
         close();
       }
     });
+  }
+
+  const sharedParam = params.get('shared');
+  if (sharedParam && addModal && linkInput) {
+    const candidate = sharedParam.trim();
+    let validUrl = '';
+    try {
+      const parsed = new URL(candidate);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        validUrl = parsed.toString();
+      }
+    } catch (_) {}
+
+    if (validUrl) {
+      linkInput.value = validUrl;
+      addModal.classList.add('show');
+      try { linkInput.focus(); } catch (_) {}
+      params.delete('shared');
+      if (typeof history.replaceState === 'function') {
+        const newQuery = params.toString();
+        const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${window.location.hash}`;
+        history.replaceState(null, '', newUrl);
+      }
+    }
   }
 
   document.addEventListener('click', (e) => {

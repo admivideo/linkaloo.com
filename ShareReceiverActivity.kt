@@ -4,7 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
 import androidx.appcompat.app.AppCompatActivity
+import java.util.Locale
 
 class ShareReceiverActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,10 +36,32 @@ class ShareReceiverActivity : AppCompatActivity() {
     }
 
     private fun handleLink(link: String) {
-        Log.d("ShareReceiver", "Received link: $link")
-        // Abre Linkaloo con el enlace compartido como parámetro
-        val encoded = Uri.encode(link)
-        val uri = Uri.parse("https://linkaloo.com/?shared=" + encoded)
-        startActivity(Intent(Intent.ACTION_VIEW, uri))
+        val matcher = Patterns.WEB_URL.matcher(link)
+        if (!matcher.find()) {
+            Log.w("ShareReceiver", "No valid URL found in shared content")
+            return
+        }
+
+        var sharedUrl = link.substring(matcher.start(), matcher.end()).trim()
+        if (!sharedUrl.startsWith("http://", ignoreCase = true) &&
+            !sharedUrl.startsWith("https://", ignoreCase = true)
+        ) {
+            sharedUrl = "https://$sharedUrl"
+        }
+
+        val sharedUri = Uri.parse(sharedUrl)
+        val host = sharedUri.host?.lowercase(Locale.ROOT)
+
+        if (host != null && (host == "linkaloo.com" || host.endsWith(".linkaloo.com"))) {
+            Log.d("ShareReceiver", "Opening Linkaloo URL directly: $sharedUrl")
+            startActivity(Intent(Intent.ACTION_VIEW, sharedUri))
+            return
+        }
+
+        Log.d("ShareReceiver", "Forwarding shared link: $sharedUrl")
+        val targetUri = Uri.parse("https://linkaloo.com/panel.php").buildUpon()
+            .appendQueryParameter("shared", sharedUrl)
+            .build()
+        startActivity(Intent(Intent.ACTION_VIEW, targetUri))
     }
 }
