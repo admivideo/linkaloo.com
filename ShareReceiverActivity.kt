@@ -12,22 +12,16 @@ class ShareReceiverActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        when (intent?.action) {
-            Intent.ACTION_SEND -> {
-                when (intent.type) {
-                    "text/plain" -> {
-                        val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
-                        sharedText?.let { handleLink(it) }
-                    }
-                    else -> {
-                        val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                        stream?.toString()?.let { handleLink(it) }
-                    }
+        if (intent?.action == Intent.ACTION_SEND) {
+            when (intent.type) {
+                "text/plain" -> {
+                    val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                    sharedText?.let { handleLink(it) }
                 }
-            }
-            Intent.ACTION_VIEW -> {
-                val data: Uri? = intent.data
-                data?.toString()?.let { handleLink(it) }
+                else -> {
+                    val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                    stream?.toString()?.let { handleLink(it) }
+                }
             }
         }
 
@@ -54,7 +48,7 @@ class ShareReceiverActivity : AppCompatActivity() {
 
         if (host != null && (host == "linkaloo.com" || host.endsWith(".linkaloo.com"))) {
             Log.d("ShareReceiver", "Opening Linkaloo URL directly: $sharedUrl")
-            startActivity(Intent(Intent.ACTION_VIEW, sharedUri))
+            launchInApp(sharedUri)
             return
         }
 
@@ -62,6 +56,13 @@ class ShareReceiverActivity : AppCompatActivity() {
         val targetUri = Uri.parse("https://linkaloo.com/panel.php").buildUpon()
             .appendQueryParameter("shared", sharedUrl)
             .build()
-        startActivity(Intent(Intent.ACTION_VIEW, targetUri))
+        launchInApp(targetUri)
+    }
+
+    private fun launchInApp(uri: Uri) {
+        val inAppIntent = Intent(this, LinkDispatcherActivity::class.java).apply {
+            data = uri
+        }
+        startActivity(inAppIntent)
     }
 }
