@@ -201,16 +201,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const openModalBtns = document.querySelectorAll('.open-modal');
   const addModal = document.querySelector('.add-modal');
   const linkInput = addModal ? addModal.querySelector('.form-link [name="link_url"]') : null;
+  const clipboardPreview = addModal ? addModal.querySelector('.clipboard-preview') : null;
+  const clipboardText = clipboardPreview ? clipboardPreview.querySelector('.clipboard-text') : null;
+
+  const showAddModal = () => {
+    if (!addModal) return;
+    addModal.classList.add('show');
+    if (linkInput) {
+      try { linkInput.focus(); } catch (_) {}
+    }
+  };
+
+  const hideAddModal = () => {
+    if (!addModal) return;
+    addModal.classList.remove('show');
+  };
+
+  const updateClipboardPreview = (state, content) => {
+    if (!clipboardPreview || !clipboardText) return;
+    clipboardPreview.hidden = false;
+    clipboardPreview.removeAttribute('data-state');
+    if (state) {
+      clipboardPreview.setAttribute('data-state', state);
+    }
+    clipboardText.textContent = content;
+  };
+
   if (openModalBtns.length && addModal) {
-    const close = () => addModal.classList.remove('show');
     openModalBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        addModal.classList.add('show');
+        showAddModal();
       });
     });
     addModal.addEventListener('click', (e) => {
       if (e.target === addModal || e.target.classList.contains('modal-close')) {
-        close();
+        hideAddModal();
       }
     });
   }
@@ -230,13 +255,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (validUrl) {
       linkInput.value = validUrl;
-      addModal.classList.add('show');
-      try { linkInput.focus(); } catch (_) {}
+      showAddModal();
       params.delete('shared');
       if (typeof history.replaceState === 'function') {
         const newQuery = params.toString();
         const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${window.location.hash}`;
         history.replaceState(null, '', newUrl);
+      }
+    }
+  }
+
+  const shouldShowClipboardModal = addModal && !sharedParam;
+  if (shouldShowClipboardModal) {
+    const showClipboardModal = (state, message, prefillValue) => {
+      updateClipboardPreview(state, message);
+      if (linkInput && prefillValue && !linkInput.value) {
+        linkInput.value = prefillValue;
+      }
+      showAddModal();
+    };
+
+    if (!navigator.clipboard || typeof navigator.clipboard.readText !== 'function') {
+      showClipboardModal('error', 'Tu navegador no permite leer el portapapeles automáticamente.');
+    } else {
+      const handleClipboardError = () => {
+        showClipboardModal('error', 'No se pudo acceder al portapapeles. Permite el acceso y vuelve a intentarlo.');
+      };
+      try {
+        navigator.clipboard.readText().then(text => {
+          const rawText = typeof text === 'string' ? text : '';
+          const trimmed = rawText.trim();
+          if (trimmed) {
+            showClipboardModal('filled', rawText, trimmed);
+          } else {
+            showClipboardModal('empty', 'El portapapeles está vacío.');
+          }
+        }).catch(() => {
+          handleClipboardError();
+        });
+      } catch (_) {
+        handleClipboardError();
       }
     }
   }
