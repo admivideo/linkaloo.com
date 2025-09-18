@@ -2,6 +2,18 @@
 require 'config.php';
 require_once 'session.php';
 
+$sharedParam = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sharedParam = trim($_POST['shared'] ?? '');
+} elseif (isset($_GET['shared'])) {
+    $sharedParam = trim($_GET['shared']);
+}
+if ($sharedParam !== '' && !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
+    $sharedParam = '';
+}
+$encodedShared = $sharedParam !== '' ? rawurlencode($sharedParam) : '';
+$loginUrl = 'login.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
+
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = trim($_POST['nombre'] ?? '');
@@ -31,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = $userId;
                 $_SESSION['user_name'] = $nombre;
                 linkalooIssueRememberMeToken($pdo, $userId);
-                header('Location: seleccion_tableros.php');
+                $redirect = 'seleccion_tableros.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
+                header('Location: ' . $redirect);
                 exit;
             }
         } else {
@@ -52,13 +65,14 @@ include 'header.php';
             <input type="text" name="nombre" placeholder="Nombre">
             <input type="email" name="email" placeholder="Email">
             <input type="password" name="password" placeholder="Contraseña">
+            <input type="hidden" name="shared" value="<?= htmlspecialchars($sharedParam, ENT_QUOTES, 'UTF-8') ?>">
             <?php if(!empty($recaptchaSiteKey)): ?>
             <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
             <?php endif; ?>
             <button type="submit">Registrarse</button>
         </form>
         <div class="login-links">
-            <a href="login.php">Iniciar sesión</a>
+            <a href="<?= htmlspecialchars($loginUrl, ENT_QUOTES, 'UTF-8') ?>">Iniciar sesión</a>
             <a href="recuperar_password.php">¿Olvidaste tu contraseña?</a>
         </div>
     </div>
