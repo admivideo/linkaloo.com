@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
 import androidx.appcompat.app.AppCompatActivity
+import java.util.Locale
 
 class ShareReceiverActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +47,15 @@ class ShareReceiverActivity : AppCompatActivity() {
             !sharedUrl.startsWith("https://", ignoreCase = true)
         ) {
             sharedUrl = "https://$sharedUrl"
+        }
+
+        val sharedUri = Uri.parse(sharedUrl)
+        val host = sharedUri.host?.lowercase(Locale.ROOT)
+
+        if (host != null && (host == "linkaloo.com" || host.endsWith(".linkaloo.com"))) {
+            Log.d("ShareReceiver", "Opening Linkaloo URL directly: $sharedUrl")
+            startActivity(Intent(Intent.ACTION_VIEW, sharedUri))
+            return
         }
 
         Log.d("ShareReceiver", "Forwarding shared link: $sharedUrl")
