@@ -217,14 +217,21 @@ document.addEventListener('DOMContentLoaded', () => {
     addModal.classList.remove('show');
   };
 
-  const updateClipboardPreview = (state, content) => {
+  const updateClipboardPreview = (state, message) => {
     if (!clipboardPreview || !clipboardText) return;
     clipboardPreview.hidden = false;
     clipboardPreview.removeAttribute('data-state');
-    if (state) {
-      clipboardPreview.setAttribute('data-state', state);
+    const visualStateMap = {
+      'permission-denied': 'error',
+      unsupported: 'error',
+      prompt: 'empty',
+      loading: 'empty'
+    };
+    const visualState = state ? (visualStateMap[state] || state) : null;
+    if (visualState) {
+      clipboardPreview.setAttribute('data-state', visualState);
     }
-    clipboardText.textContent = content;
+    clipboardText.textContent = message || '';
   };
 
   if (openModalBtns.length && addModal) {
@@ -267,35 +274,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const shouldShowClipboardModal = addModal && !sharedParam;
   if (shouldShowClipboardModal) {
-    const showClipboardModal = (state, message, prefillValue) => {
-      updateClipboardPreview(state, message);
-      if (linkInput && prefillValue && !linkInput.value) {
-        linkInput.value = prefillValue;
-      }
-      showAddModal();
+    const clipboardImportBtn = clipboardPreview ? clipboardPreview.querySelector('.clipboard-import-btn') : null;
+    const CLIPBOARD_MESSAGES = {
+      prompt: 'Pulsa «Importar desde portapapeles» cuando quieras pegar el enlace automáticamente.',
+      loading: 'Leyendo el portapapeles...',
+      empty: 'Tu portapapeles está vacío. Copia un enlace y vuelve a pulsar «Importar desde portapapeles».',
+      permissionDenied: 'No se concedió el permiso para leer el portapapeles. Ajusta los permisos de tu navegador y vuelve a pulsar «Importar desde portapapeles».',
+      unsupported: 'Tu navegador no permite leer el portapapeles automáticamente. Copia el enlace y pégalo manualmente.',
+      error: 'No se pudo leer el portapapeles. Vuelve a pulsar el botón para reintentarlo.'
     };
 
+    let clipboardState = null;
+    const setClipboardState = (state, message, options = {}) => {
+      clipboardState = state;
+      updateClipboardPreview(state, message);
+      const { prefillValue } = options;
+      if (state === 'filled' && linkInput && typeof prefillValue === 'string' && prefillValue && !linkInput.value) {
+        linkInput.value = prefillValue;
+        try { linkInput.focus(); } catch (_) {}
+      }
+    };
+
+    const setImportButtonAvailability = (available) => {
+      if (!clipboardImportBtn) return;
+      if (available) {
+        clipboardImportBtn.disabled = false;
+        clipboardImportBtn.removeAttribute('aria-disabled');
+      } else {
+        clipboardImportBtn.disabled = true;
+        clipboardImportBtn.setAttribute('aria-disabled', 'true');
+      }
+    };
+
+    showAddModal();
+
     if (!navigator.clipboard || typeof navigator.clipboard.readText !== 'function') {
-      showClipboardModal('error', 'Tu navegador no permite leer el portapapeles automáticamente.');
-    } else {
-      const handleClipboardError = () => {
-        showClipboardModal('error', 'No se pudo acceder al portapapeles. Permite el acceso y vuelve a intentarlo.');
-      };
-      try {
-        navigator.clipboard.readText().then(text => {
+      setImportButtonAvailability(false);
+      setClipboardState('unsupported', CLIPBOARD_MESSAGES.unsupported);
+      return;
+    }
+
+    setImportButtonAvailability(true);
+    setClipboardState('prompt', CLIPBOARD_MESSAGES.prompt);
+
+    let permissionState = 'prompt';
+
+    if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+      navigator.permissions.query({ name: 'clipboard-read' }).then(status => {
+        const applyPermissionState = () => {
+          permissionState = status.state;
+          if (permissionState === 'denied') {
+            setClipboardState('permission-denied', CLIPBOARD_MESSAGES.permissionDenied);
+          } else if (clipboardState === 'permission-denied') {
+            setClipboardState('prompt', CLIPBOARD_MESSAGES.prompt);
+          }
+        };
+        applyPermissionState();
+        status.addEventListener('change', applyPermissionState);
+      }).catch(() => {});
+    }
+
+    if (clipboardImportBtn) {
+      clipboardImportBtn.addEventListener('click', async () => {
+        if (permissionState === 'denied') {
+          setClipboardState('permission-denied', CLIPBOARD_MESSAGES.permissionDenied);
+          return;
+        }
+        setClipboardState('loading', CLIPBOARD_MESSAGES.loading);
+        clipboardImportBtn.disabled = true;
+        try {
+          const text = await navigator.clipboard.readText();
           const rawText = typeof text === 'string' ? text : '';
           const trimmed = rawText.trim();
           if (trimmed) {
-            showClipboardModal('filled', rawText, trimmed);
+            setClipboardState('filled', `Hemos encontrado lo siguiente en tu portapapeles:\n\n${rawText}`, { prefillValue: trimmed });
           } else {
-            showClipboardModal('empty', 'El portapapeles está vacío.');
+            setClipboardState('empty', CLIPBOARD_MESSAGES.empty);
           }
-        }).catch(() => {
-          handleClipboardError();
-        });
-      } catch (_) {
-        handleClipboardError();
-      }
+        } catch (error) {
+          if (error && (error.name === 'NotAllowedError' || error.name === 'SecurityError')) {
+            permissionState = 'denied';
+            setClipboardState('permission-denied', CLIPBOARD_MESSAGES.permissionDenied);
+          } else {
+            setClipboardState('error', CLIPBOARD_MESSAGES.error);
+          }
+        } finally {
+          clipboardImportBtn.disabled = false;
+          clipboardImportBtn.removeAttribute('aria-disabled');
+        }
+      });
     }
   }
 
