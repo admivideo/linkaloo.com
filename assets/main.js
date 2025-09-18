@@ -218,9 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const sharedParam = params.get('shared');
   if (sharedParam && addModal && linkInput) {
     const candidate = sharedParam.trim();
+    const sanitizedCandidate = candidate.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
     let validUrl = '';
     try {
-      const parsed = new URL(candidate);
+      const parsed = new URL(sanitizedCandidate);
       if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
         validUrl = parsed.toString();
       }
