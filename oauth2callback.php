@@ -8,6 +8,17 @@ if (!isset($_GET['code'])) {
 }
 
 $code = $_GET['code'];
+$stateParam = $_GET['state'] ?? '';
+$expectedState = $_SESSION['oauth_state_token'] ?? '';
+$sharedParam = $_SESSION['oauth_state_shared'] ?? '';
+unset($_SESSION['oauth_state_token'], $_SESSION['oauth_state_shared']);
+if (!is_string($sharedParam) || $sharedParam === '' || !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
+    $sharedParam = '';
+}
+if (!$expectedState || !$stateParam || !hash_equals($expectedState, $stateParam)) {
+    $sharedParam = '';
+}
+$encodedShared = $sharedParam !== '' ? rawurlencode($sharedParam) : '';
 
 $ch = curl_init('https://oauth2.googleapis.com/token');
 curl_setopt_array($ch, [
@@ -69,7 +80,8 @@ if ($user) {
     $_SESSION['user_id']   = $userId;
     $_SESSION['user_name'] = $userName;
     linkalooIssueRememberMeToken($pdo, $userId);
-    header('Location: panel.php');
+    $redirect = 'panel.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
+    header('Location: ' . $redirect);
     exit;
 } else {
     $passHash = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
@@ -81,7 +93,8 @@ if ($user) {
     $_SESSION['user_id']   = $userId;
     $_SESSION['user_name'] = $userName;
     linkalooIssueRememberMeToken($pdo, $userId);
-    header('Location: seleccion_tableros.php');
+    $redirect = 'seleccion_tableros.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
+    header('Location: ' . $redirect);
     exit;
 }
 ?>

@@ -5,6 +5,17 @@ if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
     exit;
 }
+$sharedParam = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sharedParam = trim($_POST['shared'] ?? '');
+} elseif (isset($_GET['shared'])) {
+    $sharedParam = trim($_GET['shared']);
+}
+if ($sharedParam !== '' && !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
+    $sharedParam = '';
+}
+$encodedShared = $sharedParam !== '' ? rawurlencode($sharedParam) : '';
+$skipUrl = 'panel.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
 $user_id = $_SESSION['user_id'];
 
 $predefinedBoards = [
@@ -40,7 +51,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
             }
         }
     }
-    header('Location: panel.php');
+    $redirect = $skipUrl;
+    header('Location: ' . $redirect);
     exit;
 }
 
@@ -50,6 +62,7 @@ include 'header.php';
     <h2>Elige tus intereses</h2>
     <p>así vamos creando tus tableros</p>
     <form method="post">
+        <input type="hidden" name="shared" value="<?= htmlspecialchars($sharedParam, ENT_QUOTES, 'UTF-8') ?>">
         <div class="board-options">
             <?php foreach($predefinedBoards as $board): ?>
             <label class="board-option">
@@ -59,7 +72,7 @@ include 'header.php';
             <?php endforeach; ?>
         </div>
         <div class="board-select-buttons">
-            <a href="panel.php" class="skip-btn">Omitir</a>
+            <a href="<?= htmlspecialchars($skipUrl, ENT_QUOTES, 'UTF-8') ?>" class="skip-btn">Omitir</a>
             <button type="submit" class="next-btn">Siguiente</button>
         </div>
     </form>

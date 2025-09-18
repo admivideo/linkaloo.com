@@ -12,6 +12,10 @@ if ($sharedParam !== '' && !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
     $sharedParam = '';
 }
 
+$encodedShared = $sharedParam !== '' ? rawurlencode($sharedParam) : '';
+$registerUrl   = 'register.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
+$googleOauthUrl = 'oauth.php?provider=google' . ($encodedShared ? '&shared=' . $encodedShared : '');
+
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
@@ -68,11 +72,11 @@ include 'header.php';
             <button type="submit">Entrar</button>
         </form>
         <div class="login-links">
-            <a href="register.php">Registrarse</a>
+            <a href="<?= htmlspecialchars($registerUrl, ENT_QUOTES, 'UTF-8') ?>">Registrarse</a>
             <a href="recuperar_password.php">¿Olvidaste tu contraseña?</a>
         </div>
         <h3>O ingresa con</h3>
-        <a class="social-btn google" href="oauth.php?provider=google">Google</a>
+        <a class="social-btn google" href="<?= htmlspecialchars($googleOauthUrl, ENT_QUOTES, 'UTF-8') ?>">Google</a>
     </div>
 </div>
 </div>
