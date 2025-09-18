@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } elseif (isset($_GET['shared'])) {
     $sharedParam = trim($_GET['shared']);
 }
-if ($sharedParam !== '' && !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
+if (!isValidSharedUrl($sharedParam)) {
     $sharedParam = '';
 }
 $encodedShared = $sharedParam !== '' ? rawurlencode($sharedParam) : '';

@@ -6,9 +6,9 @@ $provider = $_GET['provider'] ?? '';
 $sharedParam = '';
 if (isset($_GET['shared'])) {
     $sharedParam = trim($_GET['shared']);
-    if ($sharedParam !== '' && !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
-        $sharedParam = '';
-    }
+}
+if (!isValidSharedUrl($sharedParam)) {
+    $sharedParam = '';
 }
 
 if ($provider === 'google') {

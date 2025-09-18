@@ -12,7 +12,7 @@ $stateParam = $_GET['state'] ?? '';
 $expectedState = $_SESSION['oauth_state_token'] ?? '';
 $sharedParam = $_SESSION['oauth_state_shared'] ?? '';
 unset($_SESSION['oauth_state_token'], $_SESSION['oauth_state_shared']);
-if (!is_string($sharedParam) || $sharedParam === '' || !filter_var($sharedParam, FILTER_VALIDATE_URL)) {
+if (!isValidSharedUrl($sharedParam)) {
     $sharedParam = '';
 }
 if (!$expectedState || !$stateParam || !hash_equals($expectedState, $stateParam)) {
