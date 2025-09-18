@@ -65,7 +65,10 @@ textarea {
 .add-modal-content{background:#fff;color:#000;padding:10px;padding-left:20px;border-radius:20px;max-width:500px;width:100%;position:relative;max-height:100%;overflow:auto;}
 .clipboard-preview{background:#f5f8fa;border-radius:12px;padding:15px;margin-bottom:15px;max-height:240px;overflow:auto;}
 .clipboard-preview h3{margin:0 0 10px;font-size:16px;color:#1DA1F2;}
-.clipboard-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;color:#000;}
+.clipboard-preview .clipboard-instructions{margin:0 0 10px;font-size:14px;color:#6c757d;}
+.clipboard-preview .clipboard-import-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;font-family:'Rambla',sans-serif;font-size:14px;background:#1DA1F2;color:#fff;border:none;cursor:pointer;margin-bottom:12px;}
+.clipboard-preview .clipboard-import-btn:disabled{background:#9ec9f2;cursor:not-allowed;}
+.clipboard-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;color:#000;margin-top:12px;}
 .clipboard-preview[data-state="empty"] .clipboard-text{color:#6c757d;}
 .clipboard-preview[data-state="error"] .clipboard-text{color:#b3261e;}
 .modal-close{position:absolute;top:10px;right:10px;background:none;border:none;font-size:24px;cursor:pointer;}

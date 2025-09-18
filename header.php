@@ -63,7 +63,9 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         <h2 class="modal-title">Añadir tu favolink</h2>
         <div class="clipboard-preview" hidden>
             <h3>Contenido del portapapeles</h3>
-            <div class="clipboard-text"></div>
+            <p class="clipboard-instructions">Importa un enlace que ya hayas copiado. Tras pulsar el botón, el navegador te pedirá permiso para acceder al portapapeles.</p>
+            <button type="button" class="clipboard-import-btn">Importar desde portapapeles</button>
+            <div class="clipboard-text" aria-live="polite"></div>
         </div>
         <div class="control-forms">
             <div class="form-section">
