@@ -1,28 +1,42 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.linkaloo">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="Linkaloo">
-         <activity
-             android:name=".ShareReceiverActivity"
-             android:exported="true"
-             android:label="Guardar en Linkaloo">
-             <!-- Un único enlace / texto -->
-             <intent-filter>
+        <activity
+            android:name=".ShareReceiverActivity"
+            android:exported="true"
+            android:label="Guardar en Linkaloo">
+            <!-- Un único enlace / texto -->
+            <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+        </activity>
 
+        <activity
+            android:name=".LinkDispatcherActivity"
+            android:exported="true"
+            android:label="Linkaloo"
+            android:launchMode="singleTop">
             <!-- Abrir enlaces directamente -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                 <data android:scheme="https" android:host="linkaloo.com" />
-                 <data android:scheme="http" android:host="linkaloo.com" />
-             </intent-filter>
-         </activity>
-     </application>
-  </manifest>
+                <data
+                    android:host="linkaloo.com"
+                    android:pathPrefix="/"
+                    android:scheme="https" />
+                <data
+                    android:host="www.linkaloo.com"
+                    android:pathPrefix="/"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
