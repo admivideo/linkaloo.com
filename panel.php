@@ -5,8 +5,12 @@ require_once 'image_utils.php';
 require_once 'session.php';
 require_once 'device.php';
 if(!isset($_SESSION['user_id'])){
-    $query = $_SERVER['QUERY_STRING'] ?? '';
-    $target = 'login.php' . ($query ? '?' . $query : '');
+    $queryParams = $_GET;
+    $query = '';
+    if(!empty($queryParams)){
+        $query = http_build_query($queryParams, '', '&', PHP_QUERY_RFC3986);
+    }
+    $target = 'login.php' . ($query !== '' ? '?' . $query : '');
     header('Location: ' . $target);
     exit;
 }
