@@ -61,6 +61,10 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         <button type="button" class="modal-close" aria-label="Cerrar">&times;</button>
         <div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
         <h2 class="modal-title">Añadir tu favolink</h2>
+        <div class="clipboard-preview" hidden>
+            <h3>Contenido del portapapeles</h3>
+            <div class="clipboard-text"></div>
+        </div>
         <div class="control-forms">
             <div class="form-section">
                 <form method="post" class="form-link">
