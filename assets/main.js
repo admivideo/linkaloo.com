@@ -250,8 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sharedParam = params.get('shared');
   if (sharedParam && addModal && linkInput) {
     const candidate = sharedParam.trim();
-    const recodedCandidate = encodeURI(candidate).replace(/%25([0-9A-Fa-f]{2})/g, (_, hex) => '%' + hex);
-    const sanitizedCandidate = recodedCandidate.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
+    const sanitizedCandidate = candidate.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
     let validUrl = '';
     try {
       const parsed = new URL(sanitizedCandidate);
