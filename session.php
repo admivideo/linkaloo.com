@@ -23,6 +23,93 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+if (!function_exists('isValidSharedUrl')) {
+    function isValidSharedUrl($url): bool
+    {
+        if (!is_string($url)) {
+            return false;
+        }
+
+        $url = trim($url);
+        if ($url === '') {
+            return false;
+        }
+
+        $parts = parse_url($url);
+        if ($parts === false) {
+            return false;
+        }
+
+        $scheme = strtolower($parts['scheme'] ?? '');
+        if ($scheme !== 'http' && $scheme !== 'https') {
+            return false;
+        }
+
+        $host = $parts['host'] ?? '';
+        if ($host === '') {
+            return false;
+        }
+
+        $asciiHost = $host;
+        if (preg_match('/[^\x00-\x7f]/', $host)) {
+            if (!function_exists('idn_to_ascii')) {
+                return false;
+            }
+
+            if (defined('INTL_IDNA_VARIANT_UTS46')) {
+                $asciiHost = idn_to_ascii($host, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            } else {
+                $asciiHost = idn_to_ascii($host, IDNA_DEFAULT);
+            }
+
+            if ($asciiHost === false || $asciiHost === '') {
+                return false;
+            }
+        }
+
+        $sanitizedUrl = $scheme . '://';
+
+        if (isset($parts['user'])) {
+            $sanitizedUrl .= rawurlencode(rawurldecode($parts['user']));
+            if (isset($parts['pass'])) {
+                $sanitizedUrl .= ':' . rawurlencode(rawurldecode($parts['pass']));
+            }
+            $sanitizedUrl .= '@';
+        }
+
+        $needsIpv6Brackets = strpos($parts['host'], ':') !== false
+            && strpos($url, '[' . $parts['host'] . ']') !== false;
+        if ($needsIpv6Brackets) {
+            $sanitizedUrl .= '[' . $asciiHost . ']';
+        } else {
+            $sanitizedUrl .= $asciiHost;
+        }
+
+        if (isset($parts['port'])) {
+            $sanitizedUrl .= ':' . $parts['port'];
+        }
+
+        if (isset($parts['path'])) {
+            $segments = explode('/', $parts['path']);
+            foreach ($segments as &$segment) {
+                $segment = rawurlencode(rawurldecode($segment));
+            }
+            unset($segment);
+            $sanitizedUrl .= implode('/', $segments);
+        }
+
+        if (isset($parts['query'])) {
+            $sanitizedUrl .= '?' . $parts['query'];
+        }
+
+        if (isset($parts['fragment'])) {
+            $sanitizedUrl .= '#' . $parts['fragment'];
+        }
+
+        return filter_var($sanitizedUrl, FILTER_VALIDATE_URL) !== false;
+    }
+}
+
 if (!function_exists('linkalooRememberCookieOptions')) {
     function linkalooRememberCookieOptions(int $expires): array
     {
