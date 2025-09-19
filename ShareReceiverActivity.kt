@@ -1,7 +1,10 @@
 package com.android.linkaloo
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
+import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -126,11 +129,53 @@ class ShareReceiverActivity : AppCompatActivity() {
 
     private fun startActivityIfPossible(intent: Intent) {
         val resolved = intent.resolveActivity(packageManager)
-        if (resolved != null) {
-            startActivity(intent)
-        } else {
+        if (resolved == null) {
             Log.e("ShareReceiver", "No activity available to handle intent: $intent")
+            return
         }
+
+        if (resolved.packageName == packageName &&
+            resolved.className == ShareReceiverActivity::class.java.name
+        ) {
+            val browserIntent = Intent(intent).apply {
+                addCategory(Intent.CATEGORY_BROWSABLE)
+                setComponent(null)
+                `package` = null
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                val chooserIntent = Intent.createChooser(browserIntent, null).apply {
+                    putExtra(
+                        Intent.EXTRA_EXCLUDE_COMPONENTS,
+                        arrayOf(ComponentName(this@ShareReceiverActivity, ShareReceiverActivity::class.java))
+                    )
+                }
+                try {
+                    startActivity(chooserIntent)
+                } catch (error: ActivityNotFoundException) {
+                    Log.e("ShareReceiver", "No external browser available for intent: $browserIntent", error)
+                }
+            } else {
+                val alternatives = packageManager.queryIntentActivities(
+                    browserIntent,
+                    PackageManager.MATCH_DEFAULT_ONLY
+                )
+                val target = alternatives.firstOrNull {
+                    it.activityInfo.packageName != packageName ||
+                        it.activityInfo.name != ShareReceiverActivity::class.java.name
+                }
+
+                if (target != null) {
+                    browserIntent.setClassName(target.activityInfo.packageName, target.activityInfo.name)
+                    startActivity(browserIntent)
+                } else {
+                    Log.e("ShareReceiver", "No external browser available for intent: $browserIntent")
+                }
+            }
+            return
+        }
+
+        startActivity(intent)
     }
 
     private fun Intent.getParcelableUriExtra(name: String): Uri? {
