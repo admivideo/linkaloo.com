@@ -6,6 +6,7 @@ La tabla siguiente resume los puntos de entrada más relevantes; los detalles de
 | Script / Ruta             | Método(s) | Propósito principal |
 |---------------------------|-----------|---------------------|
 | `panel.php`               | `GET`, `POST` | Panel privado; crea enlaces y muestra tableros. |
+| `share_target.php`        | `GET`, `POST` | Normaliza URLs recibidas desde Web Share Target y redirige al panel. |
 | `load_links.php`          | `GET`     | Devuelve enlaces paginados en JSON. |
 | `move_link.php`           | `POST`    | Cambia un enlace de tablero. |
 | `delete_link.php`         | `POST`    | Elimina un enlace. |
@@ -33,6 +34,14 @@ El script:
 2. Extrae metadatos (`scrapeMetadata`) y descarga imágenes (`saveImageFromUrl`).
 3. Limita título y descripción a 50/150 caracteres según el dispositivo (ver `device.php`).
 4. Actualiza la marca `modificado_en` del tablero.
+
+## `share_target.php`
+
+- **Métodos:** `POST` (también acepta `GET`).
+- **Parámetros:**
+  - `url`, `text`, `title` — valores entregados por el navegador al compartir.
+- **Comportamiento:** extrae la primera URL válida de los parámetros, comprueba que sea HTTP/HTTPS con `isValidSharedUrl()` y redirige a `panel.php?shared=...`.
+- Si no encuentra una URL válida, redirige a `panel.php` sin parámetros.
 
 ## `load_links.php`
 

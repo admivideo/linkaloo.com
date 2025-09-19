@@ -14,6 +14,7 @@ Consulta el índice [docs/README.md](docs/README.md) para una visión general de
 - Buscador de enlaces y filtros por tablero.
 - Menú inferior para mover rápidamente un enlace a otro tablero.
 - Botón para compartir por ficha que usa la Web Share API o copia al portapapeles.
+- Recepción de enlaces desde otros navegadores mediante Web Share Target (`share_target.php`).
 - Icono de configuración con acceso a Cookies, Política de cookies, Condiciones de servicio, Política de privacidad y Quiénes somos, todas con contenido estándar.
 - Diseño responsivo: dos columnas en móvil y altura adaptable sin separación vertical.
 - Carga progresiva de enlaces (scroll infinito) a partir de la ficha 18.
@@ -24,7 +25,7 @@ Consulta el índice [docs/README.md](docs/README.md) para una visión general de
 1. Clona el repositorio.
 2. Crea una base de datos MySQL y ejecuta `database.sql`.
 3. Ajusta las credenciales en `config.php`.
-4. Coloca el logo `img/linkaloo_white.png` (y los favicons en el servidor).
+4. Coloca los recursos gráficos (`img/linkaloo_white.png`, `img/logo_linkaloo_blue.png`, `img/favicon.png`, `img/icon-192.png`, `img/icon-512.png` y `favicon.ico`) en el servidor.
 5. Inicia un servidor PHP en la raíz del proyecto (`php -S localhost:8000`).
 
 ## Uso

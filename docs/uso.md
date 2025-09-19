@@ -19,7 +19,7 @@ Después del registro, `seleccion_tableros.php` propone una serie de intereses. 
 
 - **Navegación entre tableros:** el carrusel superior permite cambiar rápidamente entre tableros. El botón «Todo» muestra todas las fichas.
 - **Búsqueda y filtros:** usa el icono de lupa para mostrar el buscador. El filtrado es instantáneo sobre las fichas cargadas.
-- **Añadir enlaces:** pulsa el botón «+» para abrir el modal. Introduce la URL y opcionalmente el título o el tablero destino. El sistema extrae título, descripción, favicon e imagen automáticamente y evita duplicados.
+- **Añadir enlaces:** pulsa el botón «+» para abrir el modal. Introduce la URL y opcionalmente el título o el tablero destino. El sistema extrae título, descripción, favicon e imagen automáticamente y evita duplicados. Si instalas la app como PWA en tu móvil, podrás usar el menú «Compartir» de otros navegadores: `share_target.php` recibe la URL y abre el panel con el modal precargado.
 - **Acciones en una ficha:**
   - **Mover** a otro tablero mediante el desplegable.
   - **Compartir** con la Web Share API o AddToAny.
