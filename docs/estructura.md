@@ -1,38 +1,82 @@
 # Estructura y arquitectura del proyecto
 
-Este documento ofrece una visión general de la aplicación **linkaloo** y de cómo está organizada.
+Este documento ofrece una visión completa de cómo está organizada la aplicación **linkaloo**, qué componentes intervienen y cómo se comunican.
 
-## Estructura de directorios
+## Pila tecnológica
 
-- `index.php`: punto de entrada público con el formulario de acceso.
-- `login.php`, `register.php`, `logout.php`: gestión de autenticación.
-- `panel.php`: panel principal que muestra los tableros y enlaces del usuario.
-- `tablero.php`, `tableros.php`: creación y administración de tableros.
-- `assets/main.js`: código JavaScript que maneja la carga de enlaces, filtros y acciones en las tarjetas.
-- `assets/style.css`: hoja de estilos principal.
-- `load_links.php`, `move_link.php`, `editar_link.php`, `delete_link.php`: endpoints AJAX para operar sobre los enlaces.
-- `config.php`: configuración de la base de datos y credenciales opcionales de OAuth.
-- `img/`: logotipos y favicons.
+- **Backend:** PHP 8 con `PDO` para el acceso a MySQL 8.
+- **Frontend:** HTML renderizado por PHP, estilos en `assets/style.css` y JavaScript en `assets/main.js`.
+- **Persistencia:** Base de datos MySQL (`database.sql`) y almacenamiento de archivos en disco (`fichas/` y `local_favicons/`).
+- **Dependencias externas:** Google OAuth 2.0 y reCAPTCHA v3 para autenticación y protección contra bots.
 
-## Esquema de la base de datos
+## Estructura de directorios relevantes
 
-La base de datos se define en `database.sql` y utiliza codificación `utf8mb4`.
+| Ruta                         | Descripción |
+|------------------------------|-------------|
+| `index.php`                  | Página de bienvenida con acceso al formulario de login. |
+| `login.php`, `register.php`  | Formularios de autenticación local con reCAPTCHA y enlaces a Google OAuth. |
+| `panel.php`                  | Panel principal donde se listan tableros y enlaces, y desde donde se crean nuevas fichas. |
+| `tableros.php`, `tablero.php`| Administración de tableros: creación, edición, compartir públicamente y actualización masiva de imágenes. |
+| `tablero_publico.php`        | Vista de solo lectura accesible mediante `share_token`. |
+| `seleccion_tableros.php`     | Asistente opcional que crea tableros sugeridos tras el registro. |
+| `load_links.php`, `move_link.php`, `delete_link.php`, `editar_link.php` | Endpoints y páginas auxiliares para operaciones AJAX y edición de enlaces. |
+| `session.php`                | Arranque de sesión, cookie «Recordarme» y validaciones de URL compartidas. |
+| `favicon_utils.php`, `image_utils.php` | Descarga y normalización de imágenes asociadas a enlaces. |
+| `assets/`                    | Recursos frontales (`main.js`, `style.css`, iconos Feather). |
+| `fichas/`                    | Carpeta donde se guardan las imágenes locales de las fichas por usuario. |
+| `local_favicons/`            | Favicons descargados y redimensionados para mostrarse junto a cada enlace. |
+| `docs/`                      | Documentación técnica (este directorio). |
 
-- **usuarios**: almacena las credenciales básicas (`id`, `nombre`, `email`, `pass_hash`).
-- **categorias**: representa los tableros personales del usuario. Incluye nombre, color, imagen, nota y token de compartición.
-- **links**: registros individuales de cada enlace guardado. Contiene URL, título, descripción, favicon y referencias al usuario y a la categoría.
+## Flujo de navegación y datos
 
-## Flujo principal
+1. **Autenticación:**
+   - `index.php` redirige a `login.php` o `register.php` según la acción.
+   - Ambos formularios incluyen reCAPTCHA v3 y pueden recibir el parámetro opcional `shared` para precargar un enlace tras el login.
+   - Google OAuth se inicia desde `oauth.php` y concluye en `oauth2callback.php`, que crea usuarios nuevos si no existen.
 
-1. Un usuario se registra o inicia sesión.
-2. Desde el panel puede crear tableros y agregar enlaces mediante el botón “+”.
-3. Cada tarjeta de enlace permite mover, buscar, compartir o eliminar el recurso.
-4. El desplazamiento infinito carga enlaces adicionales a partir de la ficha 18 para optimizar el rendimiento.
+2. **Panel de usuario (`panel.php`):**
+   - Requiere sesión activa (`session.php` redirige al login si no existe `$_SESSION['user_id']`).
+   - Permite crear un enlace enviando un `POST` que dispara `scrapeMetadata()` para recuperar título, descripción e imagen, evita duplicados con un hash SHA-1 (`hash_url`) y almacena los datos en `links`.
+   - Muestra los tableros del usuario y renderiza las tarjetas iniciales. `assets/main.js` se encarga de aplicar filtros, búsqueda y compartir.
 
-## Configuración
+3. **Operaciones asíncronas:**
+   - `load_links.php` devuelve enlaces paginados (18 por petición) en JSON.
+   - `move_link.php` y `delete_link.php` actualizan o eliminan enlaces mediante `fetch` desde el frontend y responden con objetos `{ success: bool }`.
+   - `editar_link.php` presenta un formulario para actualizar notas y título de una ficha concreta.
 
-- Crea la base de datos ejecutando `database.sql`.
-- Define las credenciales en `config.php`.
-- Para el login con Google, configura las variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
-- Registra `http://localhost:8000/oauth2callback.php` (o `https://linkaloo.com/oauth2callback.php`) como URI de redirección autorizada; corresponde al endpoint de backend que procesa el callback OAuth.
+4. **Gestión de tableros:**
+   - `tableros.php` lista todos los tableros con métricas básicas y permite crear nuevos mediante un formulario `POST`.
+   - `tablero.php` permite renombrar el tablero, añadir notas, activar la compartición pública (`share_token`) y ejecutar una actualización masiva de imágenes (`update_images`). También ofrece la opción de borrar el tablero y todas sus fichas.
+   - Los tableros marcados como públicos generan una URL estable (`tablero_publico.php?token=...`) que muestra sus enlaces con la misma estética del panel pero en modo lectura.
 
+5. **Recuperación de contraseñas:**
+   - `recuperar_password.php` genera un token temporal en `password_resets` y envía el enlace por correo.
+   - `restablecer_password.php` valida el token, actualiza el `pass_hash` y elimina el registro usado.
+
+## Sesiones y seguridad
+
+- `session.php` ajusta la duración de la sesión (`LINKALOO_SESSION_LIFETIME`), aplica `SameSite=Lax` y fuerza `httponly`.
+- Implementa un mecanismo «Recordarme»: guarda un token `selector:validator` en la cookie `linkaloo_remember`, lo valida contra la tabla `usuario_tokens` y lo renueva automáticamente.
+- `isValidSharedUrl()` comprueba que el parámetro `shared` sea una URL HTTP/HTTPS válida antes de reutilizarlo tras el login o el registro.
+- Los scripts que modifican datos verifican la pertenencia del recurso (`usuario_id`) antes de ejecutar `UPDATE` o `DELETE`.
+- Las operaciones que exponen datos (`tablero_publico.php`) solo aceptan tokens generados mediante `bin2hex(random_bytes(16))`.
+
+## Extracción y almacenamiento de metadatos
+
+- `panel.php` y `tablero.php` usan cURL para descargar el HTML de las URLs, extraer metadatos Open Graph/Twitter (`scrapeMetadata()` y `scrapeImage()`), normalizar la codificación y limitar la longitud de los textos según el dispositivo (`device.php`).
+- Cuando se encuentra una imagen remota, `image_utils.php` la descarga, la redimensiona (máx. 300 px de ancho) y la guarda en `fichas/<usuario>/`.
+- Si no hay imagen disponible, `favicon_utils.php` solicita un favicon a Google (`https://www.google.com/s2/favicons`), lo redimensiona a 25×25 px y lo guarda en `local_favicons/` para futuras visitas.
+
+## Frontend y experiencia de usuario
+
+- `assets/main.js` inicializa iconos Feather, gestiona el carrusel horizontal de tableros, controla el buscador inline y maneja el modal para agregar enlaces.
+- Los botones «Compartir» utilizan la Web Share API cuando está disponible; como alternativa abren AddToAny.
+- El script aplica animaciones progresivas (`IntersectionObserver`) y recorta descripciones largas en función del ancho de pantalla.
+- Desde el panel es posible abrir el modal de creación con un enlace compartido (`?shared=<URL>`); el JavaScript valida el parámetro y precarga el formulario.
+
+## Archivos estáticos y layout
+
+- `header.php` contiene la cabecera HTML común (metaetiquetas, enlaces a CSS/JS) y se incluye en todas las páginas.
+- Las páginas legales (`cookies.php`, `politica_privacidad.php`, etc.) son enlaces estáticos accesibles desde el menú de configuración.
+
+Con esta información puedes localizar rápidamente el código responsable de cada función y comprender cómo fluye la información entre el frontend, PHP y la base de datos.
