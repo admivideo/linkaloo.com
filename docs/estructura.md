@@ -72,7 +72,7 @@ Este documento ofrece una visión completa de cómo está organizada la aplicaci
 - `assets/main.js` inicializa iconos Feather, gestiona el carrusel horizontal de tableros, controla el buscador inline y maneja el modal para agregar enlaces.
 - Los botones «Compartir» utilizan la Web Share API cuando está disponible; como alternativa abren AddToAny.
 - El script aplica animaciones progresivas (`IntersectionObserver`) y recorta descripciones largas en función del ancho de pantalla.
-- Desde el panel es posible abrir el modal de creación con un enlace compartido (`?shared=<URL>`); el JavaScript valida el parámetro y precarga el formulario.
+- Desde el panel es posible abrir el modal de creación con un enlace compartido (`?shared=<URL>`); el JavaScript valida el parámetro y precarga el formulario. El archivo `share_target.php` permite que una PWA instalada reciba URLs desde el menú «Compartir» del sistema.
 
 ## Archivos estáticos y layout
 

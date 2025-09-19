@@ -1,5 +1,7 @@
 favicon.ico
 img/favicon.png
+img/icon-192.png
+img/icon-512.png
 
 node_modules
 fichas/*
