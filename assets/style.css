@@ -79,6 +79,9 @@ textarea {
 .form-link .select-create{display:flex;flex-direction:column;gap:5px;}
 .form-link .select-create select,
 .form-link .select-create input{flex:1;}
+.form-link .url-input-group{display:flex;gap:5px;width:100%;flex:1 1 100%;align-items:stretch;}
+.form-link .url-input-group input{flex:1 1 auto;min-width:0;}
+.form-link .url-input-group .paste-link-btn{flex:0 0 auto;white-space:nowrap;}
 @media(min-width:601px){
   .form-link{flex-direction:column;align-items:stretch;}
   .form-link input,

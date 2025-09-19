@@ -64,7 +64,10 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         <div class="control-forms">
             <div class="form-section">
                 <form method="post" class="form-link">
-                    <input type="url" name="link_url" placeholder="Pega aquí el link" required>
+                    <div class="url-input-group">
+                        <input type="url" name="link_url" placeholder="Pega aquí el link" required>
+                        <button type="button" class="paste-link-btn">Pegar link</button>
+                    </div>
                     <input type="text" name="link_title" placeholder="Título (opcional)" maxlength="50">
                     <div class="select-create">
                         <select name="categoria_id">
