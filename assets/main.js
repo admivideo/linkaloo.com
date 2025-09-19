@@ -201,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const openModalBtns = document.querySelectorAll('.open-modal');
   const addModal = document.querySelector('.add-modal');
   const linkInput = addModal ? addModal.querySelector('.form-link [name="link_url"]') : null;
+  const pasteLinkButton = addModal ? addModal.querySelector('.paste-link-btn') : null;
   if (openModalBtns.length && addModal) {
     const close = () => addModal.classList.remove('show');
     openModalBtns.forEach(btn => {
@@ -237,6 +238,25 @@ document.addEventListener('DOMContentLoaded', () => {
         history.replaceState(null, '', newUrl);
       }
     }
+  }
+
+  if (pasteLinkButton && linkInput) {
+    pasteLinkButton.addEventListener('click', async () => {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            linkInput.value = text.trim();
+            linkInput.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          try { linkInput.focus(); } catch (_) {}
+        } catch (_) {
+          alert('No se pudo acceder al portapapeles. Pega el enlace manualmente (Ctrl+V).');
+        }
+      } else {
+        alert('Tu navegador no permite pegar automáticamente. Usa Ctrl+V.');
+      }
+    });
   }
 
   document.addEventListener('click', (e) => {
