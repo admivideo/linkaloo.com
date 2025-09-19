@@ -93,7 +93,8 @@ textarea {
   .form-link input,
   .form-link select,
   .form-link button{flex:1 1 100%;width:100%;}
-  .form-link .url-input-group .paste-link-btn{width:auto;flex:0 0 auto;padding:10px 14px;font-size:14px;}
+  .form-link .url-input-group input{flex:1 1 100%;width:100%;}
+  .form-link .url-input-group .paste-link-btn{display:none;}
 }
 
 @media (min-width:601px){
