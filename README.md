@@ -24,7 +24,7 @@ Consulta el índice [docs/README.md](docs/README.md) para una visión general de
 
 1. Clona el repositorio.
 2. Crea una base de datos MySQL y ejecuta `database.sql`.
-3. Ajusta las credenciales en `config.php`.
+3. Configura las variables de entorno descritas en la sección "Variables de entorno".
 4. Coloca los recursos gráficos (`img/linkaloo_white.png`, `img/logo_linkaloo_blue.png`, `img/favicon.png`, `img/icon-192.png`, `img/icon-512.png` y `favicon.ico`) en el servidor.
 5. Inicia un servidor PHP en la raíz del proyecto (`php -S localhost:8000`).
 
@@ -56,6 +56,23 @@ Cualquier texto puede adaptarse editando los archivos correspondientes.
   - `npm run lint:css`
 
 
+## Variables de entorno
+
+El proyecto lee la configuración exclusivamente desde variables de entorno. Asegúrate de definirlas antes de iniciar PHP (por ejemplo, en tu panel de hosting o mediante un fichero `.env` si usas un cargador de variables).
+
+| Variable                 | Descripción |
+| ------------------------ | ----------- |
+| `DB_HOST`                | Host del servidor MySQL. |
+| `DB_NAME`                | Nombre de la base de datos. |
+| `DB_USERNAME`            | Usuario con permisos sobre la base de datos. |
+| `DB_PASSWORD`            | Contraseña del usuario de base de datos. |
+| `DB_CHARSET`             | Conjunto de caracteres usado en la conexión (por ejemplo, `utf8mb4`). |
+| `GOOGLE_CLIENT_ID`       | Client ID de OAuth 2.0 para Google. |
+| `GOOGLE_CLIENT_SECRET`   | Client Secret de OAuth 2.0 para Google. |
+| `GOOGLE_REDIRECT_URI`    | URL de callback configurada en Google Cloud. |
+| `RECAPTCHA_SITE_KEY`     | Clave pública de reCAPTCHA v3. |
+| `RECAPTCHA_SECRET_KEY`   | Clave privada de reCAPTCHA v3. |
+
 ## Login con Google
 
 1. Ve a [Google Cloud Console](https://console.cloud.google.com/) y crea un proyecto.
@@ -63,6 +80,6 @@ Cualquier texto puede adaptarse editando los archivos correspondientes.
 3. En **Credentials** crea un **OAuth client ID** de tipo "Web application".
 4. Añade `http://localhost:8000/oauth2callback.php` (el endpoint de backend que maneja el callback OAuth) y `https://linkaloo.com/oauth2callback.php` en **Authorized redirect URIs**.
 5. Copia el *Client ID* y el *Client Secret*.
-6. Define `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` como variables de entorno (no hay fallback en `config.php`).
+6. Define `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI` como variables de entorno.
 7. Usa el enlace "Google" en `login.php` para autenticarte.
 

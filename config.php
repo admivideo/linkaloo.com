@@ -1,10 +1,27 @@
 <?php
+
+if (!function_exists('envOrFail')) {
+    /**
+     * Retrieve an environment variable or throw when it's not available.
+     */
+    function envOrFail(string $key): string
+    {
+        $value = getenv($key);
+
+        if ($value === false || $value === '') {
+            throw new \RuntimeException(sprintf('Environment variable %s is not set.', $key));
+        }
+
+        return $value;
+    }
+}
+
 // Database configuration for linkaloo
-$host     = '82.223.84.165';
-$dbname   = 'smartlinks';
-$username = 'smartuserIOn0s';
-$password = 'WMCuxq@ts8s8g8^w';
-$charset  = 'utf8mb4';
+$host     = envOrFail('DB_HOST');
+$dbname   = envOrFail('DB_NAME');
+$username = envOrFail('DB_USERNAME');
+$password = envOrFail('DB_PASSWORD');
+$charset  = envOrFail('DB_CHARSET');
 
 $options = [
     PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -22,13 +39,11 @@ try {
 }
 
 // Google OAuth configuration
-$googleClientId     = getenv('GOOGLE_CLIENT_ID') ?: '731706222639-8ise1fcsud3mv3552bt7hrck3o7o6n31.apps.googleusercontent.com';
-$googleClientSecret = getenv('GOOGLE_CLIENT_SECRET') ?: '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';
-$googleRedirectUri  = getenv('GOOGLE_REDIRECT_URI') ?: 'https://linkaloo.com/oauth2callback.php';
+$googleClientId     = envOrFail('GOOGLE_CLIENT_ID');
+$googleClientSecret = envOrFail('GOOGLE_CLIENT_SECRET');
+$googleRedirectUri  = envOrFail('GOOGLE_REDIRECT_URI');
 
-// reCAPTCHA v3 configuration (set your keys in environment variables)
-// Use environment variables `RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` or
-// fall back to hard-coded keys if provided.
-$recaptchaSiteKey   = getenv('RECAPTCHA_SITE_KEY') ?: '6Lf8pckrAAAAAE5BqEQKcugNtA_34k6-ErygC4vB';
-$recaptchaSecretKey = getenv('RECAPTCHA_SECRET_KEY') ?: '6Lf8pckrAAAAAGdoqnT9mw0PwMzBB9VIuKuxsN-_';
+// reCAPTCHA v3 configuration
+$recaptchaSiteKey   = envOrFail('RECAPTCHA_SITE_KEY');
+$recaptchaSecretKey = envOrFail('RECAPTCHA_SECRET_KEY');
 ?>
