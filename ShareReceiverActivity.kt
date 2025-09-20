@@ -1,12 +1,14 @@
 package com.android.linkaloo
 
+<<<<<<< HEAD
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ComponentName
+=======
+>>>>>>> parent of ad2cf33 (Merge pull request #211 from admivideo/codex/revisar-androidmanifest-y-completar-flujo-de-trabajo)
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
@@ -18,67 +20,26 @@ class ShareReceiverActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         when (intent?.action) {
-            Intent.ACTION_SEND -> handleSendIntent(intent)
-            Intent.ACTION_SEND_MULTIPLE -> handleSendMultipleIntent(intent)
-            Intent.ACTION_VIEW -> handleViewIntent(intent)
+            Intent.ACTION_SEND -> {
+                when (intent.type) {
+                    "text/plain" -> {
+                        val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                        sharedText?.let { handleLink(it) }
+                    }
+                    else -> {
+                        val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                        stream?.toString()?.let { handleLink(it) }
+                    }
+                }
+            }
+            Intent.ACTION_VIEW -> {
+                val data: Uri? = intent.data
+                data?.toString()?.let { handleLink(it) }
+            }
         }
 
         // Redirige a tu Main si procede o muestra una UI ligera
         finish()
-    }
-
-    private fun handleSendIntent(intent: Intent) {
-        val type = intent.type.orEmpty()
-        if (type.startsWith("text/")) {
-            val sharedText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
-            if (!sharedText.isNullOrBlank()) {
-                handleLink(sharedText)
-                return
-            }
-
-            extractFromClipData(intent.clipData)?.let {
-                handleLink(it)
-                return
-            }
-        }
-
-        val stream = intent.getParcelableUriExtra(Intent.EXTRA_STREAM)
-        if (stream != null) {
-            handleLink(stream.toString())
-            return
-        }
-
-        Log.w("ShareReceiver", "No shareable content found in ACTION_SEND intent")
-    }
-
-    private fun handleSendMultipleIntent(intent: Intent) {
-        val texts = intent.getCharSequenceArrayListExtra(Intent.EXTRA_TEXT)
-        texts?.firstOrNull { it.isNotBlank() }?.toString()?.let {
-            handleLink(it)
-            return
-        }
-
-        extractFromClipData(intent.clipData)?.let {
-            handleLink(it)
-            return
-        }
-
-        val streams = intent.getParcelableUriArrayListExtra(Intent.EXTRA_STREAM)
-        streams?.firstOrNull()?.let {
-            handleLink(it.toString())
-            return
-        }
-
-        Log.w("ShareReceiver", "No shareable content found in ACTION_SEND_MULTIPLE intent")
-    }
-
-    private fun handleViewIntent(intent: Intent) {
-        val data: Uri? = intent.data
-        if (data != null) {
-            handleLink(data.toString())
-        } else {
-            Log.w("ShareReceiver", "ACTION_VIEW intent received without data")
-        }
     }
 
     private fun handleLink(link: String) {
@@ -100,7 +61,7 @@ class ShareReceiverActivity : AppCompatActivity() {
 
         if (host != null && (host == "linkaloo.com" || host.endsWith(".linkaloo.com"))) {
             Log.d("ShareReceiver", "Opening Linkaloo URL directly: $sharedUrl")
-            startActivityIfPossible(Intent(Intent.ACTION_VIEW, sharedUri))
+            startActivity(Intent(Intent.ACTION_VIEW, sharedUri))
             return
         }
 
@@ -108,6 +69,7 @@ class ShareReceiverActivity : AppCompatActivity() {
         val targetUri = Uri.parse("https://linkaloo.com/panel.php").buildUpon()
             .appendQueryParameter("shared", sharedUrl)
             .build()
+<<<<<<< HEAD
         startActivityIfPossible(Intent(Intent.ACTION_VIEW, targetUri))
     }
 
@@ -194,5 +156,8 @@ class ShareReceiverActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             getParcelableArrayListExtra(name)
         }
+=======
+        startActivity(Intent(Intent.ACTION_VIEW, targetUri))
+>>>>>>> parent of ad2cf33 (Merge pull request #211 from admivideo/codex/revisar-androidmanifest-y-completar-flujo-de-trabajo)
     }
 }
