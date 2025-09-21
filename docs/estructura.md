@@ -85,9 +85,8 @@ el dispositivo).
 ## Integración con Android
 
 `ShareReceiverActivity.kt` actúa como *share target*: intercepta enlaces
-compartidos en Android y abre el panel web (`panel.php`) con el parámetro
-`shared=<url>`. El panel redirige automáticamente a `nuevo_link.php` para
-mostrar el formulario de alta con la URL ya rellenada.
+compartidos en Android y abre directamente `nuevo_link.php` con el parámetro
+`shared=<url>` para mostrar el formulario de alta con la URL ya rellenada.
 
 ## Esquema de la base de datos
 
