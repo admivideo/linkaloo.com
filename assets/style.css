@@ -76,11 +76,17 @@ textarea {
 @media(max-width:600px){
   .add-link-page{padding:30px 15px;min-height:calc(100vh - 140px);}
   .add-link-card{padding:25px 15px;gap:16px;}
-  .add-link-card .form-section{max-width:100%;}
+  .add-link-card .form-section{max-width:100%;display:flex;flex-direction:column;align-items:center;gap:16px;}
   .add-link-card .form-link input,
   .add-link-card .form-link select,
-  .add-link-card .form-link button{font-size:16px;}
+  .add-link-card .form-link button{font-size:16px;max-width:320px;margin:0 auto;}
   .add-link-card .app-logo img{height:72px;}
+  .add-link-card .control-forms{flex-direction:column;align-items:center;}
+  .add-link-card .form-link{align-items:center;width:100%;}
+  .add-link-card .form-link .select-create{width:100%;align-items:center;}
+  .add-link-card .form-link .select-create select,
+  .add-link-card .form-link .select-create input{width:100%;max-width:320px;margin:0 auto;}
+  .add-link-card .back-to-panel{margin:0 auto;}
 }
 .control-forms{display:flex;flex-direction:column;gap:10px;}
 .control-forms .form-section{display:flex;flex-direction:column;gap:10px;align-items:center;}
