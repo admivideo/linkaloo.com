@@ -169,7 +169,6 @@ include 'header.php';
 <div class="favolink-page">
     <div class="favolink-card">
         <div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
-        <p class="favolink-tagline">Yours favolinks with superpowers</p>
         <h2 class="modal-title">Añadir tu favolink</h2>
         <div class="control-forms">
             <div class="form-section">
