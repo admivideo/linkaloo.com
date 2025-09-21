@@ -7,8 +7,8 @@ la interfaz web.
 
 1. Abre la página `index.php` y accede al enlace de registro o inicio de sesión.
 2. Regístrate con correo y contraseña o autentícate con Google. Si compartiste un
-   enlace desde otra aplicación, el parámetro `shared` se conservará y verás el
-   modal de alta al llegar al panel.
+   enlace desde otra aplicación, el parámetro `shared` se conservará y el panel
+   te llevará directamente a la vista de alta para completar el guardado.
 3. Tras el registro se ofrece un asistente (`seleccion_tableros.php`) para crear
    tableros iniciales a partir de una lista de intereses; puedes omitirlo si
    prefieres comenzar con un lienzo en blanco.
@@ -25,7 +25,7 @@ la interfaz web.
 
 ## Guardar y editar enlaces
 
-1. Haz clic en el botón `+` para abrir el modal de "Guardar link".
+1. Haz clic en el botón `+` para abrir la vista "Guardar link".
 2. Introduce la URL y, opcionalmente, un título personalizado. Puedes elegir un
    tablero existente o crear uno nuevo escribiendo su nombre.
 3. Al guardar, el sistema descarga metadatos, genera una miniatura y evita
@@ -51,4 +51,5 @@ la interfaz web.
 - `assets/main.js` detecta automáticamente móviles para recortar descripciones y
   optimizar la lectura.
 - En Android, la actividad `ShareReceiverActivity` permite enviar un enlace desde
-  otra aplicación y abrir directamente el panel con el modal de alta prellenado.
+  otra aplicación y abrir directamente el panel, que redirige a la vista de alta
+  con el formulario prellenado.

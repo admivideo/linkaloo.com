@@ -44,7 +44,7 @@ la carga de recursos externos como Feather Icons.
 ## Componentes del frontend
 
 - `assets/main.js` controla la interacción del panel: selección de tableros,
-  filtros de búsqueda, apertura del modal para crear enlaces, envío de
+  filtros de búsqueda, navegación y envío de
   formularios AJAX (`move_link.php`, `delete_link.php`), animaciones de entrada y
   funciones de compartición que recurren a la Web Share API o a AddToAny como
   alternativa.
@@ -54,7 +54,7 @@ la carga de recursos externos como Feather Icons.
 
 ## Flujo de creación de enlaces
 
-1. El usuario abre el modal "Guardar link" en `panel.php`.
+1. El usuario abre la vista `nuevo_link.php` desde el botón "+" del encabezado.
 2. Al enviar el formulario se valida o crea la categoría destino.
 3. `panel.php` descarga metadatos (`scrapeMetadata`) y favicons, normaliza la URL
    (`canonicalizeUrl`) y evita duplicados calculando un hash SHA-1.
@@ -86,8 +86,8 @@ el dispositivo).
 
 `ShareReceiverActivity.kt` actúa como *share target*: intercepta enlaces
 compartidos en Android y abre el panel web (`panel.php`) con el parámetro
-`shared=<url>`. De esta forma se reutiliza la lógica del panel para mostrar el
-modal de alta de enlaces con la URL ya rellenada.
+`shared=<url>`. El panel redirige automáticamente a `nuevo_link.php` para
+mostrar el formulario de alta con la URL ya rellenada.
 
 ## Esquema de la base de datos
 
