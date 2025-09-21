@@ -75,7 +75,12 @@ textarea {
 .back-to-panel:hover{text-decoration:underline;}
 @media(max-width:600px){
   .add-link-page{padding:30px 15px;min-height:calc(100vh - 140px);}
-  .add-link-card{padding:25px 15px;}
+  .add-link-card{padding:25px 15px;gap:16px;}
+  .add-link-card .form-section{max-width:100%;}
+  .add-link-card .form-link input,
+  .add-link-card .form-link select,
+  .add-link-card .form-link button{font-size:16px;}
+  .add-link-card .app-logo img{height:72px;}
 }
 .control-forms{display:flex;flex-direction:column;gap:10px;}
 .control-forms .form-section{display:flex;flex-direction:column;gap:10px;align-items:center;}

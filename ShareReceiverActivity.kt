@@ -59,7 +59,7 @@ class ShareReceiverActivity : AppCompatActivity() {
         }
 
         Log.d("ShareReceiver", "Forwarding shared link: $sharedUrl")
-        val targetUri = Uri.parse("https://linkaloo.com/panel.php").buildUpon()
+        val targetUri = Uri.parse("https://linkaloo.com/nuevo_link.php").buildUpon()
             .appendQueryParameter("shared", sharedUrl)
             .build()
         startActivity(Intent(Intent.ACTION_VIEW, targetUri))
