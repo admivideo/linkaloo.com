@@ -2,6 +2,7 @@
 
 Este directorio reúne los documentos principales del proyecto:
 
+- `manual_tecnico.md`: panorama completo de la arquitectura, componentes, integraciones y prácticas recomendadas.
 - `estructura.md`: visión general de la arquitectura y de la base de datos.
 - `instalacion.md`: guía para preparar un entorno local de desarrollo.
 - `uso.md`: instrucciones paso a paso para utilizar la aplicación.
