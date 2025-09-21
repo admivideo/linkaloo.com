@@ -25,6 +25,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 <header class="top-menu">
     <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="linkaloo"><!-- Logo file already on server --></a></div>
     <nav>
+        <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <?php if(isset($_SESSION['user_id']) && isset($categorias)): ?>
             <?php
                 $addLinkParams = [];
@@ -35,7 +36,6 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
             ?>
             <a class="open-modal add-mobile" aria-label="Añadir" href="<?= htmlspecialchars($addLinkUrl, ENT_QUOTES, 'UTF-8') ?>"><i data-feather="plus"></i></a>
         <?php endif; ?>
-        <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
         <ul class="menu">
             <?php if(isset($_SESSION['user_id'])): ?>
                 <?php if(isset($categorias)): ?>
