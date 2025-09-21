@@ -80,7 +80,7 @@ if ($user) {
     $_SESSION['user_id']   = $userId;
     $_SESSION['user_name'] = $userName;
     linkalooIssueRememberMeToken($pdo, $userId);
-    $redirect = 'panel.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
+    $redirect = $encodedShared ? 'agregar_favolink.php?shared=' . $encodedShared : 'panel.php';
     header('Location: ' . $redirect);
     exit;
 } else {
