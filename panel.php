@@ -18,6 +18,20 @@ $descLimit = isMobile() ? 50 : 150;
 $error = $_SESSION['panel_error'] ?? '';
 unset($_SESSION['panel_error']);
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['shared'])) {
+    $candidate = trim($_GET['shared']);
+    $redirectParams = [];
+    if ($candidate !== '' && isValidSharedUrl($candidate)) {
+        $redirectParams['shared'] = $candidate;
+    }
+    if ($selectedCat) {
+        $redirectParams['cat'] = $selectedCat;
+    }
+    $query = $redirectParams ? '?' . http_build_query($redirectParams) : '';
+    header('Location: nuevo_link.php' . $query);
+    exit;
+}
+
 function ensureUtf8($string){
     $encoding = mb_detect_encoding($string, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
     if($encoding && $encoding !== 'UTF-8'){
