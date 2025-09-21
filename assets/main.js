@@ -198,43 +198,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const openModalBtns = document.querySelectorAll('.open-modal');
-  const addModal = document.querySelector('.add-modal');
-  const linkInput = addModal ? addModal.querySelector('.form-link [name="link_url"]') : null;
-  if (openModalBtns.length && addModal) {
-    const close = () => addModal.classList.remove('show');
-    openModalBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        addModal.classList.add('show');
-      });
-    });
-    addModal.addEventListener('click', (e) => {
-      if (e.target === addModal || e.target.classList.contains('modal-close')) {
-        close();
+  const favolinkForm = document.querySelector('.favolink-form');
+  if (favolinkForm) {
+    const linkInput = favolinkForm.querySelector('[name="link_url"]');
+    if (linkInput) {
+      const sharedParam = params.get('shared');
+      if (sharedParam) {
+        try { linkInput.focus(); } catch (_) {}
       }
-    });
-  }
-
-  const sharedParam = params.get('shared');
-  if (sharedParam && addModal && linkInput) {
-    const candidate = sharedParam.trim();
-    let validUrl = '';
-    try {
-      const parsed = new URL(candidate);
-      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-        validUrl = parsed.toString();
-      }
-    } catch (_) {}
-
-    if (validUrl) {
-      linkInput.value = validUrl;
-      addModal.classList.add('show');
-      try { linkInput.focus(); } catch (_) {}
-      params.delete('shared');
-      if (typeof history.replaceState === 'function') {
-        const newQuery = params.toString();
-        const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${window.location.hash}`;
-        history.replaceState(null, '', newUrl);
+      if (params.has('shared')) {
+        params.delete('shared');
+        if (typeof history.replaceState === 'function') {
+          const newQuery = params.toString();
+          const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${window.location.hash}`;
+          history.replaceState(null, '', newUrl);
+        }
       }
     }
   }
