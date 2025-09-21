@@ -27,11 +27,11 @@ include 'header.php';
 <div class="add-link-page">
     <div class="add-link-card">
         <div class="app-logo"><img src="/img/logo_linkaloo_blue.png" alt="Linkaloo logo"></div>
-        <h2 class="modal-title">Añadir tu favolink</h2>
+        <h2 class="modal-title">Añadir link</h2>
         <div class="control-forms">
             <div class="form-section">
                 <form method="post" action="panel.php" class="form-link">
-                    <input type="url" name="link_url" placeholder="Pega aquí el link" value="<?= htmlspecialchars($sharedPrefill, ENT_QUOTES, 'UTF-8') ?>" required>
+                    <input type="url" name="link_url" placeholder="Pega aquí tu link" value="<?= htmlspecialchars($sharedPrefill, ENT_QUOTES, 'UTF-8') ?>" required>
                     <input type="text" name="link_title" placeholder="Título (opcional)" maxlength="50">
                     <div class="select-create">
                         <select name="categoria_id">
@@ -40,7 +40,7 @@ include 'header.php';
                                 <option value="<?= $categoria['id'] ?>" <?= $categoria['id'] == $selectedCat ? 'selected' : '' ?>><?= htmlspecialchars($categoria['nombre']) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <input type="text" name="categoria_nombre" placeholder="o crea un nuevo (opcional)">
+                        <input type="text" name="categoria_nombre" placeholder="o crea uno nuevo (opcional)">
                     </div>
                     <button type="submit">Guardar favolink</button>
                 </form>
