@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 linkalooIssueRememberMeToken($pdo, (int) $user['id']);
                 $redirect = 'panel.php';
                 if ($sharedParam !== '') {
-                    $redirect .= '?shared=' . rawurlencode($sharedParam);
+                    $redirect = 'agregar_favolink.php?shared=' . rawurlencode($sharedParam);
                 }
                 header('Location: ' . $redirect);
                 exit;

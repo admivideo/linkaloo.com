@@ -15,7 +15,7 @@ if (!isValidSharedUrl($sharedParam)) {
     $sharedParam = '';
 }
 $encodedShared = $sharedParam !== '' ? rawurlencode($sharedParam) : '';
-$skipUrl = 'panel.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
+$skipUrl = $encodedShared ? 'agregar_favolink.php?shared=' . $encodedShared : 'panel.php';
 $user_id = $_SESSION['user_id'];
 
 $predefinedBoards = [
