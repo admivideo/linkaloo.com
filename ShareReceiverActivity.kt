@@ -1,5 +1,6 @@
 package com.android.linkaloo
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -12,8 +13,8 @@ import java.util.Locale
 class ShareReceiverActivity : AppCompatActivity() {
 
     private companion object {
-        private const val EXTRA_ALREADY_REDIRECTED = "com.android.linkaloo.EXTRA_ALREADY_REDIRECTED"
-        private const val LINKALOO_DEEP_LINK_TARGET = "//linkaloo.com/agregar_favolink.php"
+        private val LINKALOO_DEEP_LINK_BASE = Uri.parse("linkaloo://linkaloo.com/agregar_favolink.php")
+        private val LINKALOO_WEB_FALLBACK = Uri.parse("https://linkaloo.com/agregar_favolink.php")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,16 +24,15 @@ class ShareReceiverActivity : AppCompatActivity() {
             Intent.ACTION_SEND -> {
                 val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
                 if (!sharedText.isNullOrBlank()) {
-                    handleLink(sharedText, alreadyRedirected = false)
+                    handleLink(sharedText)
                 } else {
                     val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                    stream?.toString()?.let { handleLink(it, alreadyRedirected = false) }
+                    stream?.toString()?.let { handleLink(it) }
                 }
             }
             Intent.ACTION_VIEW -> {
                 val data: Uri? = intent.data
-                val alreadyRedirected = intent.getBooleanExtra(EXTRA_ALREADY_REDIRECTED, false)
-                data?.toString()?.let { handleLink(it, alreadyRedirected) }
+                data?.toString()?.let { handleLink(it) }
             }
         }
 
@@ -40,14 +40,29 @@ class ShareReceiverActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun handleLink(link: String, alreadyRedirected: Boolean) {
-        val matcher = Patterns.WEB_URL.matcher(link)
+    private fun handleLink(link: String) {
+        val trimmed = link.trim()
+        if (trimmed.isEmpty()) {
+            Log.w("ShareReceiver", "Empty link received")
+            return
+        }
+
+        val incomingUri = runCatching { Uri.parse(trimmed) }.getOrNull()
+        if (incomingUri?.scheme?.equals("linkaloo", ignoreCase = true) == true) {
+            val normalized = normalizeLinkalooUri(incomingUri)
+            val fallback = normalized.buildUpon().scheme("https").build()
+            Log.d("ShareReceiver", "Handling Linkaloo deep link: $normalized")
+            openUri(normalized, fallback)
+            return
+        }
+
+        val matcher = Patterns.WEB_URL.matcher(trimmed)
         if (!matcher.find()) {
             Log.w("ShareReceiver", "No valid URL found in shared content")
             return
         }
 
-        var sharedUrl = link.substring(matcher.start(), matcher.end()).trim()
+        var sharedUrl = trimmed.substring(matcher.start(), matcher.end()).trim()
         if (!sharedUrl.startsWith("http://", ignoreCase = true) &&
             !sharedUrl.startsWith("https://", ignoreCase = true)
         ) {
@@ -59,35 +74,81 @@ class ShareReceiverActivity : AppCompatActivity() {
 
         if (host != null && (host == "linkaloo.com" || host.endsWith(".linkaloo.com"))) {
             Log.d("ShareReceiver", "Opening Linkaloo URL directly: $sharedUrl")
-            openInBrowser(sharedUri, alreadyRedirected)
+            openUri(sharedUri, null)
             return
         }
 
-        Log.d("ShareReceiver", "Forwarding shared link: $sharedUrl")
-        val targetUri = Uri.parse("https:$LINKALOO_DEEP_LINK_TARGET").buildUpon()
+        Log.d("ShareReceiver", "Forwarding shared link via deep link: $sharedUrl")
+        val targetUri = LINKALOO_DEEP_LINK_BASE.buildUpon()
             .appendQueryParameter("shared", sharedUrl)
             .build()
-        openInBrowser(targetUri, alreadyRedirected = false)
+        val fallbackUri = LINKALOO_WEB_FALLBACK.buildUpon()
+            .appendQueryParameter("shared", sharedUrl)
+            .build()
+        openUri(targetUri, fallbackUri)
     }
 
-    private fun openInBrowser(uri: Uri, alreadyRedirected: Boolean) {
-        val viewIntent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
-
-        if (!alreadyRedirected) {
-            viewIntent.putExtra(EXTRA_ALREADY_REDIRECTED, true)
-            startActivity(viewIntent)
-            return
+    private fun normalizeLinkalooUri(uri: Uri): Uri {
+        val host = uri.host
+        val authority = when {
+            host.isNullOrBlank() || !host.contains('.') -> "linkaloo.com"
+            else -> host
         }
 
+        val builder = Uri.Builder()
+            .scheme(uri.scheme ?: "linkaloo")
+            .authority(
+                if (uri.port != -1) {
+                    "$authority:${uri.port}"
+                } else {
+                    authority
+                }
+            )
+
+        if (host.isNullOrBlank() || !host.contains('.')) {
+            if (!host.isNullOrBlank()) {
+                builder.appendPath(host)
+            }
+        }
+
+        uri.pathSegments.filter { it.isNotEmpty() }.forEach { builder.appendPath(it) }
+
+        uri.encodedQuery?.let { builder.encodedQuery(it) }
+        uri.fragment?.let { builder.fragment(it) }
+        return builder.build()
+    }
+
+    private fun openUri(primary: Uri, fallback: Uri?) {
+        val viewIntent = Intent(Intent.ACTION_VIEW, primary).addCategory(Intent.CATEGORY_BROWSABLE)
         val alternatives = packageManager.queryIntentActivities(viewIntent, PackageManager.MATCH_DEFAULT_ONLY)
+
         val nonSelf = alternatives.firstOrNull { it.activityInfo.packageName != packageName }
         if (nonSelf != null) {
             val explicit = Intent(viewIntent).apply {
                 setClassName(nonSelf.activityInfo.packageName, nonSelf.activityInfo.name)
             }
             startActivity(explicit)
-        } else {
+            return
+        }
+
+        val handledBySelf = alternatives.any { it.activityInfo.packageName == packageName }
+        if (handledBySelf) {
+            if (fallback != null && fallback != primary) {
+                openUri(fallback, null)
+            } else {
+                Log.w("ShareReceiver", "No external handler for $primary and no fallback available")
+            }
+            return
+        }
+
+        try {
             startActivity(viewIntent)
+        } catch (ex: ActivityNotFoundException) {
+            if (fallback != null && fallback != primary) {
+                openUri(fallback, null)
+            } else {
+                Log.e("ShareReceiver", "Unable to open $primary", ex)
+            }
         }
     }
 }
