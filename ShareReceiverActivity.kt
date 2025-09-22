@@ -1,6 +1,7 @@
 package com.android.linkaloo
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -9,25 +10,28 @@ import androidx.appcompat.app.AppCompatActivity
 import java.util.Locale
 
 class ShareReceiverActivity : AppCompatActivity() {
+
+    private companion object {
+        private const val EXTRA_ALREADY_REDIRECTED = "com.android.linkaloo.EXTRA_ALREADY_REDIRECTED"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         when (intent?.action) {
             Intent.ACTION_SEND -> {
-                when (intent.type) {
-                    "text/plain" -> {
-                        val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
-                        sharedText?.let { handleLink(it) }
-                    }
-                    else -> {
-                        val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                        stream?.toString()?.let { handleLink(it) }
-                    }
+                val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                if (!sharedText.isNullOrBlank()) {
+                    handleLink(sharedText, alreadyRedirected = false)
+                } else {
+                    val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                    stream?.toString()?.let { handleLink(it, alreadyRedirected = false) }
                 }
             }
             Intent.ACTION_VIEW -> {
                 val data: Uri? = intent.data
-                data?.toString()?.let { handleLink(it) }
+                val alreadyRedirected = intent.getBooleanExtra(EXTRA_ALREADY_REDIRECTED, false)
+                data?.toString()?.let { handleLink(it, alreadyRedirected) }
             }
         }
 
@@ -35,7 +39,7 @@ class ShareReceiverActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun handleLink(link: String) {
+    private fun handleLink(link: String, alreadyRedirected: Boolean) {
         val matcher = Patterns.WEB_URL.matcher(link)
         if (!matcher.find()) {
             Log.w("ShareReceiver", "No valid URL found in shared content")
@@ -54,7 +58,7 @@ class ShareReceiverActivity : AppCompatActivity() {
 
         if (host != null && (host == "linkaloo.com" || host.endsWith(".linkaloo.com"))) {
             Log.d("ShareReceiver", "Opening Linkaloo URL directly: $sharedUrl")
-            startActivity(Intent(Intent.ACTION_VIEW, sharedUri))
+            openInBrowser(sharedUri, alreadyRedirected)
             return
         }
 
@@ -62,6 +66,27 @@ class ShareReceiverActivity : AppCompatActivity() {
         val targetUri = Uri.parse("https://linkaloo.com/agregar_favolink.php").buildUpon()
             .appendQueryParameter("shared", sharedUrl)
             .build()
-        startActivity(Intent(Intent.ACTION_VIEW, targetUri))
+        openInBrowser(targetUri, alreadyRedirected = false)
+    }
+
+    private fun openInBrowser(uri: Uri, alreadyRedirected: Boolean) {
+        val viewIntent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
+
+        if (!alreadyRedirected) {
+            viewIntent.putExtra(EXTRA_ALREADY_REDIRECTED, true)
+            startActivity(viewIntent)
+            return
+        }
+
+        val alternatives = packageManager.queryIntentActivities(viewIntent, PackageManager.MATCH_DEFAULT_ONLY)
+        val nonSelf = alternatives.firstOrNull { it.activityInfo.packageName != packageName }
+        if (nonSelf != null) {
+            val explicit = Intent(viewIntent).apply {
+                setClassName(nonSelf.activityInfo.packageName, nonSelf.activityInfo.name)
+            }
+            startActivity(explicit)
+        } else {
+            startActivity(viewIntent)
+        }
     }
 }
