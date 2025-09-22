@@ -13,6 +13,7 @@ class ShareReceiverActivity : AppCompatActivity() {
 
     private companion object {
         private const val EXTRA_ALREADY_REDIRECTED = "com.android.linkaloo.EXTRA_ALREADY_REDIRECTED"
+        private const val LINKALOO_DEEP_LINK_TARGET = "//linkaloo.com/agregar_favolink.php"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +64,7 @@ class ShareReceiverActivity : AppCompatActivity() {
         }
 
         Log.d("ShareReceiver", "Forwarding shared link: $sharedUrl")
-        val targetUri = Uri.parse("https://linkaloo.com/agregar_favolink.php").buildUpon()
+        val targetUri = Uri.parse("https:$LINKALOO_DEEP_LINK_TARGET").buildUpon()
             .appendQueryParameter("shared", sharedUrl)
             .build()
         openInBrowser(targetUri, alreadyRedirected = false)
