@@ -25,7 +25,7 @@ if ($provider === 'google') {
         'prompt' => 'select_account',
         'state' => $stateToken,
     ];
-    $authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($queryParams);
+    $authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($queryParams, '', '&', PHP_QUERY_RFC3986);
     header('Location: ' . $authUrl);
     exit;
 }

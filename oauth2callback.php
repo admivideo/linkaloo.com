@@ -2,6 +2,39 @@
 require 'config.php';
 require_once 'session.php';
 
+if (!function_exists('linkalooBase64UrlDecode')) {
+    function linkalooBase64UrlDecode(string $input): string
+    {
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $input .= str_repeat('=', 4 - $remainder);
+        }
+
+        $decoded = base64_decode(strtr($input, '-_', '+/'), true);
+
+        return $decoded === false ? '' : $decoded;
+    }
+}
+
+if (!function_exists('linkalooDecodeGoogleIdToken')) {
+    function linkalooDecodeGoogleIdToken(string $idToken): array
+    {
+        $parts = explode('.', $idToken);
+        if (count($parts) !== 3) {
+            return [];
+        }
+
+        $payload = linkalooBase64UrlDecode($parts[1]);
+        if ($payload === '') {
+            return [];
+        }
+
+        $claims = json_decode($payload, true);
+
+        return is_array($claims) ? $claims : [];
+    }
+}
+
 if (!isset($_GET['code'])) {
     echo 'Código de autorización no proporcionado';
     exit;
@@ -35,7 +68,7 @@ curl_setopt_array($ch, [
         'client_secret' => $googleClientSecret,
         'redirect_uri'  => $googleRedirectUri,
         'grant_type'    => 'authorization_code',
-    ]),
+    ], '', '&', PHP_QUERY_RFC3986),
 ]);
 
 $tokenResponse = curl_exec($ch);
@@ -49,33 +82,46 @@ curl_close($ch);
 
 $tokenData = json_decode($tokenResponse, true) ?: [];
 
-if (!isset($tokenData['access_token'])) {
-    error_log('Respuesta de token no válida: ' . $tokenResponse);
-    echo 'Error al obtener token de Google';
-    exit;
-}
+$email    = '';
+$name     = '';
+$verified = false;
 
-$ch = curl_init('https://www.googleapis.com/oauth2/v2/userinfo');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $tokenData['access_token']],
-    CURLOPT_TIMEOUT        => 10,
-    CURLOPT_CONNECTTIMEOUT => 5,
-]);
+if (isset($tokenData['access_token'])) {
+    $ch = curl_init('https://www.googleapis.com/oauth2/v2/userinfo');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $tokenData['access_token']],
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_CONNECTTIMEOUT => 5,
+    ]);
 
-$userInfoResponse = curl_exec($ch);
-if ($userInfoResponse === false) {
-    error_log('Error de cURL al obtener información de usuario: ' . curl_error($ch));
+    $userInfoResponse = curl_exec($ch);
+    if ($userInfoResponse === false) {
+        error_log('Error de cURL al obtener información de usuario: ' . curl_error($ch));
+        curl_close($ch);
+        echo 'Error al obtener información de usuario de Google';
+        exit;
+    }
     curl_close($ch);
-    echo 'Error al obtener información de usuario de Google';
-    exit;
-}
-curl_close($ch);
 
-$userInfo = json_decode($userInfoResponse, true) ?: [];
-$email    = trim($userInfo['email'] ?? '');
-$name     = trim($userInfo['name'] ?? '');
-$verified = (bool) ($userInfo['verified_email'] ?? false);
+    $userInfo = json_decode($userInfoResponse, true) ?: [];
+    $email    = trim($userInfo['email'] ?? '');
+    $name     = trim($userInfo['name'] ?? '');
+    $verified = (bool) ($userInfo['verified_email'] ?? false);
+} else {
+    $idToken = isset($tokenData['id_token']) ? (string) $tokenData['id_token'] : '';
+    $claims  = $idToken !== '' ? linkalooDecodeGoogleIdToken($idToken) : [];
+
+    if (!$claims) {
+        error_log('Respuesta de token no válida: ' . $tokenResponse);
+        echo 'Error al obtener token de Google';
+        exit;
+    }
+
+    $email    = trim((string) ($claims['email'] ?? ''));
+    $name     = trim((string) ($claims['name'] ?? ($claims['given_name'] ?? '')));
+    $verified = (bool) ($claims['email_verified'] ?? false);
+}
 
 if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo 'Error al obtener información de usuario de Google';
