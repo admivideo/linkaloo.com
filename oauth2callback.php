@@ -12,10 +12,12 @@ $stateParam = $_GET['state'] ?? '';
 $expectedState = $_SESSION['oauth_state_token'] ?? '';
 $sharedParam = $_SESSION['oauth_state_shared'] ?? '';
 unset($_SESSION['oauth_state_token'], $_SESSION['oauth_state_shared']);
-if (!isValidSharedUrl($sharedParam)) {
-    $sharedParam = '';
-}
 if (!$expectedState || !$stateParam || !hash_equals($expectedState, $stateParam)) {
+    error_log('Intento de OAuth de Google con token de estado inválido.');
+    echo 'Solicitud de autenticación no válida';
+    exit;
+}
+if (!isValidSharedUrl($sharedParam)) {
     $sharedParam = '';
 }
 $encodedShared = $sharedParam !== '' ? rawurlencode($sharedParam) : '';
@@ -25,6 +27,8 @@ curl_setopt_array($ch, [
     CURLOPT_POST           => true,
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+    CURLOPT_TIMEOUT        => 10,
+    CURLOPT_CONNECTTIMEOUT => 5,
     CURLOPT_POSTFIELDS     => http_build_query([
         'code'          => $code,
         'client_id'     => $googleClientId,
@@ -37,6 +41,9 @@ curl_setopt_array($ch, [
 $tokenResponse = curl_exec($ch);
 if ($tokenResponse === false) {
     error_log('Error de cURL al obtener token: ' . curl_error($ch));
+    curl_close($ch);
+    echo 'Error al obtener token de Google';
+    exit;
 }
 curl_close($ch);
 
@@ -52,20 +59,31 @@ $ch = curl_init('https://www.googleapis.com/oauth2/v2/userinfo');
 curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $tokenData['access_token']],
+    CURLOPT_TIMEOUT        => 10,
+    CURLOPT_CONNECTTIMEOUT => 5,
 ]);
 
 $userInfoResponse = curl_exec($ch);
 if ($userInfoResponse === false) {
     error_log('Error de cURL al obtener información de usuario: ' . curl_error($ch));
+    curl_close($ch);
+    echo 'Error al obtener información de usuario de Google';
+    exit;
 }
 curl_close($ch);
 
 $userInfo = json_decode($userInfoResponse, true) ?: [];
-$email    = $userInfo['email'] ?? '';
-$name     = $userInfo['name'] ?? '';
+$email    = trim($userInfo['email'] ?? '');
+$name     = trim($userInfo['name'] ?? '');
+$verified = (bool) ($userInfo['verified_email'] ?? false);
 
-if (!$email) {
+if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo 'Error al obtener información de usuario de Google';
+    exit;
+}
+
+if (!$verified) {
+    echo 'La dirección de correo electrónico de Google no está verificada.';
     exit;
 }
 
