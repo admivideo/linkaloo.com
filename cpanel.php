@@ -38,6 +38,7 @@ include 'header.php';
         </form>
         <div class="login-links">
             <a href="cambiar_password.php">Cambiar contraseña</a>
+            <a href="eliminar_cuenta.php" class="danger-link">Eliminar cuenta</a>
             <a href="logout.php">Salir</a>
         </div>
     </div>

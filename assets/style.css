@@ -167,6 +167,14 @@ textarea {
 .login-form {display:flex;flex-direction:column;gap:10px;}
 .login-form input {padding:8px;}
 .login-form button {background:#1DA1F2;color:#fff;border:none;padding:10px;border-radius:4px;cursor:pointer;text-align:center;}
+.login-form input[type="checkbox"]{width:auto;padding:0;margin:0;}
+.login-form label.checkbox-label{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#555;text-align:left;line-height:1.4;}
+.login-form label.checkbox-label span{flex:1;}
+.warning-text{font-size:14px;color:#555;line-height:1.5;text-align:left;margin-bottom:10px;}
+.login-form button.danger{background:#dc3545;}
+.login-form button.danger:hover{background:#c82333;}
+.login-links .danger-link{color:#dc3545;}
+.login-links .danger-link:hover{color:#bd2130;}
 .login-links {display:flex;justify-content:space-between;margin-top:10px;}
 .login-links a {color:#1DA1F2;text-decoration:none;font-size:14px;}
 .social-block {text-align:center;}
