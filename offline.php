@@ -35,7 +35,7 @@
 </head>
 <body>
     <main class="offline-wrapper">
-        <img src="/img/Trabajando%20Desconectado_500.jpg" alt="Ilustración de linkaloo trabajando sin conexión">
+        <img src="/img/Trabajando_Desconectado_500.jpg" alt="Ilustración de linkaloo trabajando sin conexión">
         <p>No podemos conectar con linkaloo en este momento.<br>Revisa tu conexión a internet e inténtalo de nuevo.</p>
     </main>
 </body>
