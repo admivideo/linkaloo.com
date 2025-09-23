@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sin conexión - linkaloo</title>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f8fa;
+            font-family: 'Rambla', 'Helvetica Neue', Arial, sans-serif;
+            color: #1f2933;
+        }
+        .offline-wrapper {
+            width: min(420px, 100%);
+            padding: 40px 20px;
+        }
+        .offline-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 36px 32px;
+            text-align: center;
+            box-shadow: 0 18px 55px rgba(15, 23, 42, 0.12);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .offline-title {
+            margin: 0;
+            font-size: 1.75rem;
+            color: #1da1f2;
+            letter-spacing: 0.02em;
+        }
+        .offline-message {
+            margin: 18px 0 0;
+            font-size: 1.1rem;
+            line-height: 1.55;
+        }
+        .offline-action {
+            margin-top: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 28px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 1rem;
+            background: #1da1f2;
+            color: #fff;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 12px 24px rgba(29, 161, 242, 0.25);
+        }
+        .offline-action:focus,
+        .offline-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px rgba(29, 161, 242, 0.3);
+        }
+        .offline-footnote {
+            margin: 24px 0 0;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        @media (max-width: 480px) {
+            .offline-card {
+                padding: 32px 24px;
+            }
+            .offline-title {
+                font-size: 1.5rem;
+            }
+            .offline-message {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="offline-wrapper">
+        <section class="offline-card" aria-labelledby="offline-title">
+            <h1 id="offline-title" class="offline-title">Sin conexión</h1>
+            <p class="offline-message">No podemos conectar con linkaloo en este momento. Revisa tu conexión a internet e inténtalo de nuevo.</p>
+            <a class="offline-action" href="/">Reintentar</a>
+            <p class="offline-footnote">Si el problema persiste, vuelve a intentarlo más tarde.</p>
+        </section>
+    </main>
+</body>
+</html>
