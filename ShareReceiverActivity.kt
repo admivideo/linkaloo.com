@@ -1,4 +1,4 @@
-package com.android.linkaloo
+package com.linka2025.linkaloo
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
