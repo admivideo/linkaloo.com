@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.android.linkaloo">
+    package="com.linka2025.linkaloo">
 
     <application
         android:icon="@mipmap/ic_launcher"
