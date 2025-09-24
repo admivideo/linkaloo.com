@@ -6,7 +6,7 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.android.linkaloo",
+      "package_name": "com.linka2025.linkaloo",
       "sha256_cert_fingerprints": [
         "69:32:D5:82:6E:9B:D1:79:96:48:5D:90:7F:5C:75:4F:42:8F:BD:28:FE:2F:15:AC:FE:25:6C:56:C6:1D:C8:16"
       ]
