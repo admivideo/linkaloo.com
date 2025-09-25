@@ -142,5 +142,6 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
 });
 </script>
 <?php endif; ?>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

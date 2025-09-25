@@ -84,5 +84,6 @@ include 'header.php';
 <p>No hay links en este tablero.</p>
 <?php endif; ?>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

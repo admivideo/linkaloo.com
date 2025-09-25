@@ -16,5 +16,6 @@
 <p>Podemos actualizar esta política para reflejar cambios legislativos o en el servicio. Te recomendamos revisarla periódicamente.</p>
 <p>Si tienes dudas, escríbenos a <a href="mailto:info@linkaloo.com">info@linkaloo.com</a>.</p>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

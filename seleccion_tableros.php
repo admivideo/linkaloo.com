@@ -78,5 +78,6 @@ include 'header.php';
     </form>
 </div>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

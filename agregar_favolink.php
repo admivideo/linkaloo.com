@@ -193,5 +193,6 @@ include 'header.php';
     </div>
 </div>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

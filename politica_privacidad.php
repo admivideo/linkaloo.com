@@ -21,5 +21,6 @@
 <h2>Cambios en la política</h2>
 <p>Podemos modificar esta política para adaptarla a novedades legislativas o de funcionamiento. Te avisaremos de los cambios significativos a través del servicio.</p>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

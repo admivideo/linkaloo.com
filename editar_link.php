@@ -64,5 +64,6 @@ $favicon = $domain ? getLocalFavicon($domain) : '';
     </div>
 </div>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>
