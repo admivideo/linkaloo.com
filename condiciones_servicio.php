@@ -13,5 +13,6 @@
 <p>Podemos modificar estas condiciones en cualquier momento. Las versiones actualizadas estarán disponibles en esta página.</p>
 <p>Para cualquier consulta puedes contactar con nosotros en <a href="mailto:info@linkaloo.com">info@linkaloo.com</a>.</p>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

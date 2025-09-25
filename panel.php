@@ -143,5 +143,6 @@ foreach ($links as $link):
 </div>
 
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

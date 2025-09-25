@@ -5,5 +5,6 @@
 <p>El proyecto es desarrollado por un pequeño equipo independiente que valora la privacidad y la experiencia de usuario.</p>
 <p>Si quieres ponerte en contacto con nosotros, escríbenos a <a href="mailto:info@linkaloo.com">info@linkaloo.com</a>.</p>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

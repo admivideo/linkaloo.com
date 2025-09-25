@@ -38,5 +38,6 @@
         <img src="/img/Trabajando_Desconectado_500.jpg" alt="Ilustración de linkaloo trabajando sin conexión">
         <p>No podemos conectar con linkaloo en este momento.<br>Revisa tu conexión a internet e inténtalo de nuevo.</p>
     </main>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

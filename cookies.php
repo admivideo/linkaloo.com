@@ -3,5 +3,6 @@
 <p>linkaloo utiliza cookies propias y de terceros para recordar tus preferencias, medir el uso del sitio y mejorar nuestros servicios.</p>
 <p>Al continuar navegando aceptas su uso. Puedes obtener más información o gestionar tus preferencias en nuestra <a href="/politica_cookies.php">Política de cookies</a>.</p>
 </div>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>

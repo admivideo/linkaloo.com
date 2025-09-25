@@ -100,5 +100,6 @@ document.getElementById('register-form').addEventListener('submit', function(e) 
 });
 </script>
 <?php endif; ?>
+<?php include 'firebase_scripts.php'; ?>
 </body>
 </html>
