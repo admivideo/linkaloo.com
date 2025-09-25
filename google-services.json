@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "116634429179",
+    "project_id": "linkaloo-1c4e2",
+    "storage_bucket": "linkaloo-1c4e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:116634429179:android:3da94587076711ff85325e",
+        "android_client_info": {
+          "package_name": "com.linka2025.linkaloo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnBwV1_ypF1t21w59TB-N0LzwXDuasynw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
