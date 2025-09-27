@@ -1,36 +1,12 @@
 [
   {
-    "relation": [
-      "delegate_permission/common.handle_all_urls",
-      "delegate_permission/common.get_login_creds"
-    ],
+    "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
       "package_name": "com.linka2025.linkaloo",
       "sha256_cert_fingerprints": [
-        "69:32:D5:82:6E:9B:D1:79:96:48:5D:90:7F:5C:75:4F:42:8F:BD:28:FE:2F:15:AC:FE:25:6C:56:C6:1D:C8:16"
+        "49:64:D8:22:C4:E9:30:3D:65:93:FF:E3:8D:78:AB:5A:72:38:B2:2D:66:D1:9B:82:99:20:50:4D:22:3B:B3:47"
       ]
-    }
-  },
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "web",
-      "site": "https://linkaloo.com/"
-    }
-  },
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "web",
-      "site": "https://www.linkaloo.com/"
-    }
-  },
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "web",
-      "site": "https://app.linkaloo.com/"
     }
   }
 ]
