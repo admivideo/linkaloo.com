@@ -28,11 +28,11 @@ $categoryId = isset($requestData['categoria_id']) ? (int) $requestData['categori
 $url        = trim($requestData['url'] ?? '');
 $title      = trim($requestData['titulo'] ?? '');
 
-if ($userId <= 0 || $categoryId <= 0 || $url === '' || $title === '') {
+if ($userId <= 0 || $categoryId <= 0 || $url === '') {
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'error'   => 'Debe proporcionar usuario_id, categoria_id, url y titulo.',
+        'error'   => 'Debe proporcionar usuario_id, categoria_id y url.',
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -46,7 +46,9 @@ if (!filter_var($url, FILTER_VALIDATE_URL)) {
     exit;
 }
 
-if (mb_strlen($title) > 50) {
+if ($title === '') {
+    $title = null;
+} elseif (mb_strlen($title) > 50) {
     $title = mb_substr($title, 0, 50);
 }
 
