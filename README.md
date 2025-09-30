@@ -1,67 +1,100 @@
 # linkaloo
 
-Aplicación web simple para guardar enlaces en tableros personales. Requiere PHP 8 y MySQL.
+linkaloo es una aplicación web para guardar enlaces en tableros personales, organizarlos por temas y
+compartirlos con otras personas. El backend está escrito en PHP 8 con MySQL y el front-end combina
+HTML, CSS y JavaScript sin frameworks.
 
-## Documentación
+## Tabla rápida de contenidos
 
-Consulta el índice [docs/README.md](docs/README.md) para una visión general de la arquitectura, una guía de instalación paso a paso, una guía de uso y otras referencias.
+- [Características principales](#características-principales)
+- [Requisitos previos](#requisitos-previos)
+- [Instalación rápida](#instalación-rápida)
+- [Configuración](#configuración)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Flujo básico de uso](#flujo-básico-de-uso)
+- [Tareas comunes de desarrollo](#tareas-comunes-de-desarrollo)
+- [Documentación ampliada](#documentación-ampliada)
 
-## Características
+## Características principales
 
-- Autenticación de usuarios (`login.php`, `register.php`, `logout.php`).
-- Gestión completa de tableros: creación, renombrado, notas y eliminación.
-- Cada ficha muestra título (máx. 50 caracteres), descripción (máx. 250 con `...`) y favicon.
-- Buscador de enlaces y filtros por tablero.
-- Menú inferior para mover rápidamente un enlace a otro tablero.
-- Botón para compartir por ficha que usa la Web Share API o copia al portapapeles.
-- Icono de configuración con acceso a Cookies, Política de cookies, Condiciones de servicio, Política de privacidad y Quiénes somos, todas con contenido estándar.
-- Diseño responsivo: dos columnas en móvil y altura adaptable sin separación vertical.
-- Carga progresiva de enlaces (scroll infinito) a partir de la ficha 18.
-- Todas las tablas y la conexión MySQL usan `utf8mb4` para soportar caracteres especiales.
+- Autenticación de usuarios mediante formulario propio u OAuth con Google.
+- Gestión completa de tableros privados: creación, renombrado, notas, eliminación y token de
+  compartición pública.
+- Guardado de enlaces con metadatos: título, descripción truncada automáticamente, favicon e imagen
+  descargada cuando está disponible.
+- Filtros y búsqueda rápida en el panel, con acciones de mover o eliminar cada enlace sin recargar la
+  página.
+- Compartición de enlaces o tableros con la Web Share API y AddToAny como alternativa.
+- Páginas legales preconfiguradas (cookies, privacidad, condiciones y quiénes somos).
+- Base de datos `utf8mb4` y utilidades para gestionar favicons e imágenes de forma local.
 
-## Instalación
+## Requisitos previos
 
-1. Clona el repositorio.
-2. Crea una base de datos MySQL y ejecuta `database.sql`.
-3. Ajusta las credenciales en `config.php`.
-4. Coloca el logo `img/linkaloo_white.png` (y los favicons en el servidor).
-5. Inicia un servidor PHP en la raíz del proyecto (`php -S localhost:8000`).
+- PHP 8.1 o superior con extensiones PDO (MySQL), cURL, mbstring, DOM, GD y JSON.
+- MySQL 8 o compatible.
+- Node.js 18+ (solo para ejecutar Stylelint en desarrollo).
+- Servidor web o `php -S` para servir la aplicación.
 
-## Uso
+## Instalación rápida
 
-1. Regístrate y accede al panel.
-2. Crea uno o más tableros.
-3. Guarda enlaces mediante el formulario “+”.
-4. Busca, filtra, mueve, comparte o elimina cada enlace desde su tarjeta.
+1. Clona el repositorio: `git clone https://github.com/…/linkaloo.com.git`.
+2. Crea una base de datos vacía y ejecuta [database.sql](database.sql).
+3. Copia `.env.example` si existe o edita [config.php](config.php) con tus credenciales (ver
+   [Configuración](#configuración)).
+4. Instala las dependencias opcionales de desarrollo: `npm install`.
+5. Inicia un servidor PHP en la raíz del proyecto: `php -S localhost:8000`.
 
-## Páginas legales
+## Configuración
 
-El proyecto incluye contenido legal listo para usar y enlazado desde el icono de configuración:
+Los valores necesarios para conectar con la base de datos, Google OAuth, reCAPTCHA v3 y el correo de
+recuperación se documentan en detalle en [docs/configuracion.md](docs/configuracion.md). El archivo
+[config.php](config.php) incluye valores por defecto pensados para desarrollo, pero se recomienda
+sobrescribirlos mediante variables de entorno antes de desplegar en producción.
 
-- `cookies.php` y `politica_cookies.php`
-- `politica_privacidad.php`
-- `condiciones_servicio.php`
-- `quienes_somos.php`
+## Estructura del proyecto
 
-Cualquier texto puede adaptarse editando los archivos correspondientes.
+| Ubicación | Descripción |
+| --- | --- |
+| `assets/` | JavaScript (`main.js`) y hoja de estilos principal (`style.css`). |
+| `docs/` | Documentación técnica, guías de uso e índice general. |
+| `fichas/` | Imágenes descargadas de los enlaces guardados. |
+| `img/` | Recursos gráficos estáticos. |
+| `local_favicons/` | Favicons cacheados por `favicon_utils.php`. |
+| `*.php` | Scripts PHP que renderizan vistas o actúan como endpoints JSON. |
+| `database.sql` | Definición del esquema inicial de la base de datos. |
+| `ShareReceiverActivity.kt` | Receptor Android que permite compartir URLs del sistema a linkaloo. |
 
-## Desarrollo
+Para más detalles consulta [docs/estructura.md](docs/estructura.md) y
+[docs/manual_tecnico.md](docs/manual_tecnico.md).
 
-- JavaScript principal en `assets/main.js`.
-- Estilos en `assets/style.css`.
-- Para comprobar el código:
-  - `php -l config.php panel.php move_link.php load_links.php`
-  - `node --check assets/main.js`
-  - `npm run lint:css`
+## Flujo básico de uso
 
+1. Regístrate (`register.php`) o inicia sesión (`login.php`).
+2. Crea tableros desde el panel (`panel.php` / `tableros.php`).
+3. Guarda enlaces con el formulario “+” (`agregar_favolink.php`).
+4. Utiliza los filtros y el buscador para encontrar enlaces, moverlos entre tableros o eliminarlos.
+5. Comparte un enlace o tablero con otras personas mediante los botones de compartición.
 
-## Login con Google
+## Tareas comunes de desarrollo
 
-1. Ve a [Google Cloud Console](https://console.cloud.google.com/) y crea un proyecto.
-2. Configura la pantalla de consentimiento en **APIs & Services → OAuth consent screen**.
-3. En **Credentials** crea un **OAuth client ID** de tipo "Web application".
-4. Añade `http://localhost:8000/oauth2callback.php` (el endpoint de backend que maneja el callback OAuth) y `https://linkaloo.com/oauth2callback.php` en **Authorized redirect URIs**.
-5. Copia el *Client ID* y el *Client Secret*.
-6. Define `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` como variables de entorno (no hay fallback en `config.php`).
-7. Usa el enlace "Google" en `login.php` para autenticarte.
+Ejecuta estas comprobaciones antes de publicar cambios:
+
+```bash
+php -l config.php panel.php move_link.php load_links.php
+node --check assets/main.js
+npm run lint:css
+```
+
+Los estilos y patrones de arquitectura principales se describen en el
+[manual técnico](docs/manual_tecnico.md).
+
+## Documentación ampliada
+
+- [docs/README.md](docs/README.md) – índice general de la documentación.
+- [docs/instalacion.md](docs/instalacion.md) – instalación paso a paso con capturas y comandos.
+- [docs/uso.md](docs/uso.md) – guía práctica para personas usuarias finales.
+- [docs/estructura.md](docs/estructura.md) – descripción detallada del repositorio y la base de datos.
+- [docs/endpoints.md](docs/endpoints.md) – referencia de endpoints JSON y vistas públicas.
+- [docs/manual_tecnico.md](docs/manual_tecnico.md) – visión completa de arquitectura, flujos y buenas prácticas.
+- [docs/configuracion.md](docs/configuracion.md) – variables de entorno, ajustes avanzados y consejos de despliegue.
 
