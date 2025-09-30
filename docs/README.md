@@ -23,6 +23,7 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 | Documento | Descripción |
 | --- | --- |
 | [manual_tecnico.md](manual_tecnico.md) | Panorama completo de arquitectura, flujos de negocio, servicios externos y prácticas recomendadas. |
+| [arquitectura.md](arquitectura.md) | Visión por capas del sistema, flujos de datos e integraciones clave. |
 | [estructura.md](estructura.md) | Resumen de directorios, archivos clave y esquema de la base de datos. |
 | [instalacion.md](instalacion.md) | Pasos detallados para preparar un entorno local de desarrollo o pruebas. |
 | [uso.md](uso.md) | Guía paso a paso para operar la aplicación desde la interfaz web. |
