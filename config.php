@@ -38,9 +38,7 @@ try {
 }
 
 // Configuración de Google OAuth
-if (!defined('GOOGLE_CLIENT_ID')) {
-    define('GOOGLE_CLIENT_ID', '170566271159-49eodgubg84ff3nn4b0b3j7l1trfar1u.apps.googleusercontent.com');
-}
+define('GOOGLE_CLIENT_ID', '170566271159-49eodgubg84ff3nn4b0b3j7l1trfar1u.apps.googleusercontent.com');
 
 // Configuración de sesiones
 ini_set('session.cookie_httponly', 1);
@@ -48,31 +46,23 @@ ini_set('session.cookie_secure', 1);
 ini_set('session.use_strict_mode', 1);
 
 // Función helper para obtener conexión a la base de datos
-if (!function_exists('getDatabaseConnection')) {
-    function getDatabaseConnection()
-    {
-        try {
-            $pdo = new PDO(
-                "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
-                DB_USER,
-                DB_PASS,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
-                ]
-            );
-            return $pdo;
-        } catch (PDOException $e) {
-            error_log("Database connection error: " . $e->getMessage());
-            return false;
-        }
+function getDatabaseConnection() {
+    try {
+        $pdo = new PDO(
+            "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
+            DB_USER,
+            DB_PASS,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]
+        );
+        return $pdo;
+    } catch (PDOException $e) {
+        error_log("Database connection error: " . $e->getMessage());
+        return false;
     }
 }
 
-// reCAPTCHA v3 configuration (set your keys in environment variables)
-// Use environment variables `RECAPTCHA_SITE_KEY` and `RECAPTCHA_SECRET_KEY` or
-// fall back to hard-coded keys if provided.
-$recaptchaSiteKey   = getenv('RECAPTCHA_SITE_KEY') ?: '6Lf8pckrAAAAAE5BqEQKcugNtA_34k6-ErygC4vB';
-$recaptchaSecretKey = getenv('RECAPTCHA_SECRET_KEY') ?: '6Lf8pckrAAAAAGdoqnT9mw0PwMzBB9VIuKuxsN-_';
 ?>
