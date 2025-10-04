@@ -67,6 +67,10 @@ try {
             getUrlMetadata($pdo, $input);
             break;
             
+        case 'debug_links':
+            debugLinks($pdo, $input);
+            break;
+            
         default:
             throw new Exception('Acción no válida');
     }
@@ -590,6 +594,62 @@ function getUrlMetadata($pdo, $input) {
             'success' => false,
             'url' => $url,
             'error' => 'No se pudieron obtener los metadatos de la URL'
+        ]);
+    }
+}
+
+function debugLinks($pdo, $input) {
+    try {
+        // Verificar si la tabla links existe
+        $stmt = $pdo->query("SHOW TABLES LIKE 'links'");
+        $tableExists = $stmt->fetch();
+        
+        $debug = [
+            'success' => true,
+            'debug_info' => []
+        ];
+        
+        if ($tableExists) {
+            $debug['debug_info']['table_exists'] = true;
+            
+            // Contar total de links
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM links");
+            $totalLinks = $stmt->fetch();
+            $debug['debug_info']['total_links'] = (int)$totalLinks['total'];
+            
+            // Obtener estructura de la tabla
+            $stmt = $pdo->query("DESCRIBE links");
+            $columns = $stmt->fetchAll();
+            $debug['debug_info']['columns'] = array_map(function($col) {
+                return $col['Field'] . ' (' . $col['Type'] . ')';
+            }, $columns);
+            
+            // Obtener algunos links de ejemplo
+            $stmt = $pdo->query("SELECT id, usuario_id, categoria_id, titulo, url FROM links LIMIT 5");
+            $sampleLinks = $stmt->fetchAll();
+            $debug['debug_info']['sample_links'] = $sampleLinks;
+            
+            // Obtener estadísticas por usuario
+            $stmt = $pdo->query("SELECT usuario_id, COUNT(*) as count FROM links GROUP BY usuario_id");
+            $userStats = $stmt->fetchAll();
+            $debug['debug_info']['links_by_user'] = $userStats;
+            
+            // Obtener estadísticas por categoría
+            $stmt = $pdo->query("SELECT categoria_id, COUNT(*) as count FROM links GROUP BY categoria_id");
+            $categoryStats = $stmt->fetchAll();
+            $debug['debug_info']['links_by_category'] = $categoryStats;
+            
+        } else {
+            $debug['debug_info']['table_exists'] = false;
+            $debug['debug_info']['error'] = 'La tabla links no existe';
+        }
+        
+        echo json_encode($debug);
+        
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
         ]);
     }
 }
