@@ -4,7 +4,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Configuración de la base de datos
+// Configuración de la base de datos //
 $host = '82.223.84.165';
 $port = '3306';
 $database = 'smartlinks';
