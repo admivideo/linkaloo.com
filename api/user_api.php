@@ -260,13 +260,32 @@ function getLinks($pdo, $input) {
     }
     
     // Verificar que la categoría existe y pertenece al usuario
-    $stmt = $pdo->prepare("SELECT id FROM categorias WHERE id = ? AND usuario_id = ?");
+    $stmt = $pdo->prepare("SELECT id, usuario_id FROM categorias WHERE id = ? AND usuario_id = ?");
     $stmt->execute([$categoriaId, $userId]);
     $categoria = $stmt->fetch();
     
     if (!$categoria) {
-        throw new Exception('Categoría no encontrada o no pertenece al usuario');
+        // Debug: verificar si la categoría existe pero pertenece a otro usuario
+        $stmt = $pdo->prepare("SELECT id, usuario_id FROM categorias WHERE id = ?");
+        $stmt->execute([$categoriaId]);
+        $categoriaExistente = $stmt->fetch();
+        
+        if ($categoriaExistente) {
+            throw new Exception('Categoría existe pero pertenece al usuario ' . $categoriaExistente['usuario_id'] . ', no al usuario ' . $userId);
+        } else {
+            throw new Exception('Categoría no encontrada');
+        }
     }
+    
+    // Debug: verificar cuántos links tiene el usuario en total
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE usuario_id = ?");
+    $stmt->execute([$userId]);
+    $totalUsuario = $stmt->fetch();
+    
+    // Debug: verificar cuántos links tiene la categoría en total
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE categoria_id = ?");
+    $stmt->execute([$categoriaId]);
+    $totalCategoria = $stmt->fetch();
     
     // Obtener links de la categoría
     $stmt = $pdo->prepare("SELECT * FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY creado_en DESC");
@@ -278,6 +297,11 @@ function getLinks($pdo, $input) {
         'user_id' => (int)$userId,
         'categoria_id' => (int)$categoriaId,
         'total_links' => count($links),
+        'debug_info' => [
+            'total_links_usuario' => (int)$totalUsuario['total'],
+            'total_links_categoria' => (int)$totalCategoria['total'],
+            'categoria_usuario_id' => (int)$categoria['usuario_id']
+        ],
         'links' => array_map(function($link) {
             return [
                 'id' => (int)$link['id'],
