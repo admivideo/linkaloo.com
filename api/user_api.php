@@ -51,6 +51,10 @@ try {
             getLinks($pdo, $input);
             break;
             
+        case 'get_links_paginated':
+            getLinksPaginated($pdo, $input);
+            break;
+            
         case 'create_link':
             createLink($pdo, $input);
             break;
@@ -319,6 +323,105 @@ function getLinks($pdo, $input) {
             ];
         }, $links)
     ]);
+}
+
+function getLinksPaginated($pdo, $input) {
+    try {
+        // Log de entrada para debug
+        error_log("getLinksPaginated called with input: " . json_encode($input));
+        
+        $userId = $input['user_id'] ?? 0;
+        $categoriaId = $input['categoria_id'] ?? 0;
+        $page = max(1, (int)($input['page'] ?? 1));
+        $limit = max(1, min(100, (int)($input['limit'] ?? 20))); // Límite entre 1 y 100
+        
+        error_log("Parsed parameters - userId: $userId, categoriaId: $categoriaId, page: $page, limit: $limit");
+        
+        if ($userId <= 0) {
+            throw new Exception('ID de usuario válido es requerido');
+        }
+        
+        if ($categoriaId <= 0) {
+            throw new Exception('ID de categoría válido es requerido');
+        }
+    
+    // Verificar que el usuario existe
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+    
+    if (!$user) {
+        throw new Exception('Usuario no encontrado');
+    }
+    
+    // Verificar que la categoría existe y pertenece al usuario
+    $stmt = $pdo->prepare("SELECT id, usuario_id FROM categorias WHERE id = ? AND usuario_id = ?");
+    $stmt->execute([$categoriaId, $userId]);
+    $categoria = $stmt->fetch();
+    
+    if (!$categoria) {
+        throw new Exception('Categoría no encontrada o no pertenece al usuario');
+    }
+    
+    // Calcular offset
+    $offset = ($page - 1) * $limit;
+    
+    // Obtener total de links para esta categoría
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE usuario_id = ? AND categoria_id = ?");
+    $stmt->execute([$userId, $categoriaId]);
+    $totalResult = $stmt->fetch();
+    $totalLinks = (int)$totalResult['total'];
+    
+        // Obtener links paginados - usar string concatenation para LIMIT y OFFSET
+        $query = "SELECT * FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY creado_en DESC LIMIT $limit OFFSET $offset";
+        error_log("Executing query: $query with params: userId=$userId, categoriaId=$categoriaId");
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$userId, $categoriaId]);
+        $links = $stmt->fetchAll();
+        
+        error_log("Query executed successfully, found " . count($links) . " links");
+    
+        echo json_encode([
+            'success' => true,
+            'user_id' => (int)$userId,
+            'categoria_id' => (int)$categoriaId,
+            'page' => $page,
+            'limit' => $limit,
+            'offset' => $offset,
+            'total_links' => count($links),
+            'total_links_categoria' => $totalLinks,
+            'has_more' => ($offset + count($links)) < $totalLinks,
+            'links' => array_map(function($link) {
+                return [
+                    'id' => (int)$link['id'],
+                    'usuario_id' => (int)$link['usuario_id'],
+                    'categoria_id' => (int)$link['categoria_id'],
+                    'url' => $link['url'],
+                    'url_canonica' => $link['url_canonica'],
+                    'titulo' => $link['titulo'],
+                    'descripcion' => $link['descripcion'],
+                    'imagen' => $link['imagen'],
+                    'creado_en' => $link['creado_en'],
+                    'actualizado_en' => $link['actualizado_en'],
+                    'nota_link' => $link['nota_link'],
+                    'hash_url' => $link['hash_url']
+                ];
+            }, $links)
+        ]);
+        
+        error_log("getLinksPaginated completed successfully");
+        
+    } catch (Exception $e) {
+        error_log("Error in getLinksPaginated: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error interno del servidor: ' . $e->getMessage()
+        ]);
+    }
 }
 
 function createLink($pdo, $input) {
