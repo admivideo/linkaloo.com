@@ -75,6 +75,10 @@ try {
             debugLinks($pdo, $input);
             break;
             
+        case 'upload_image':
+            uploadImage($pdo, $input);
+            break;
+            
         default:
             throw new Exception('Acción no válida');
     }
@@ -774,6 +778,166 @@ function debugLinks($pdo, $input) {
         echo json_encode($debug);
         
     } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+}
+
+function uploadImage($pdo, $input) {
+    try {
+        error_log("=== INICIANDO SUBIDA DE IMAGEN ===");
+        error_log("Input recibido: " . json_encode($input));
+        
+        // Validar datos requeridos
+        if (!isset($input['image_data']) || empty($input['image_data'])) {
+            throw new Exception('Datos de imagen requeridos');
+        }
+        
+        if (!isset($input['user_id']) || empty($input['user_id'])) {
+            throw new Exception('ID de usuario requerido');
+        }
+        
+        $imageData = $input['image_data'];
+        $userId = intval($input['user_id']);
+        $originalUrl = $input['original_url'] ?? '';
+        $title = $input['title'] ?? '';
+        $description = $input['description'] ?? '';
+        $imageType = $input['image_type'] ?? 'link_thumbnail';
+        
+        error_log("Datos validados - User ID: " . $userId);
+        error_log("Original URL: " . $originalUrl);
+        error_log("Título: " . $title);
+        error_log("Tipo de imagen: " . $imageType);
+        
+        // Decodificar imagen base64
+        $decodedImage = base64_decode($imageData);
+        if ($decodedImage === false) {
+            throw new Exception('Error decodificando imagen base64');
+        }
+        
+        $imageSize = strlen($decodedImage);
+        error_log("Tamaño de imagen decodificada: " . $imageSize . " bytes");
+        
+        // Validar tamaño de imagen
+        $maxSize = 5 * 1024 * 1024; // 5MB
+        if ($imageSize > $maxSize) {
+            throw new Exception('Imagen demasiado grande (máximo 5MB)');
+        }
+        
+        // Crear directorio específico del usuario: /fichas/(id_usuario)/
+        $userDir = '../fichas/' . $userId . '/';
+        if (!file_exists($userDir)) {
+            mkdir($userDir, 0755, true);
+            error_log("Directorio de usuario creado: " . $userDir);
+        }
+        
+        // Generar nombre de archivo único
+        $timestamp = time();
+        $urlHash = crc32($originalUrl);
+        $fileName = 'archivo_' . $timestamp . '_' . abs($urlHash) . '.jpg';
+        $filePath = $userDir . $fileName;
+        
+        error_log("Archivo a guardar: " . $filePath);
+        
+        // Crear imagen desde datos decodificados
+        $sourceImage = imagecreatefromstring($decodedImage);
+        if ($sourceImage === false) {
+            throw new Exception('No se pudo crear imagen desde los datos');
+        }
+        
+        // Obtener dimensiones originales
+        $originalWidth = imagesx($sourceImage);
+        $originalHeight = imagesy($sourceImage);
+        error_log("Dimensiones originales: " . $originalWidth . "x" . $originalHeight);
+        
+        // Calcular nuevas dimensiones (300px de ancho, altura proporcional)
+        $newWidth = 300;
+        $newHeight = intval(($originalHeight * $newWidth) / $originalWidth);
+        error_log("Nuevas dimensiones: " . $newWidth . "x" . $newHeight);
+        
+        // Crear imagen redimensionada
+        $resizedImage = imagecreatetruecolor($newWidth, $newHeight);
+        if ($resizedImage === false) {
+            imagedestroy($sourceImage);
+            throw new Exception('No se pudo crear imagen redimensionada');
+        }
+        
+        // Preservar transparencia para PNG y GIF
+        imagealphablending($resizedImage, false);
+        imagesavealpha($resizedImage, true);
+        
+        // Redimensionar imagen
+        $resizeSuccess = imagecopyresampled(
+            $resizedImage, $sourceImage,
+            0, 0, 0, 0,
+            $newWidth, $newHeight,
+            $originalWidth, $originalHeight
+        );
+        
+        if (!$resizeSuccess) {
+            imagedestroy($sourceImage);
+            imagedestroy($resizedImage);
+            throw new Exception('Error redimensionando imagen');
+        }
+        
+        // Guardar imagen redimensionada como JPG
+        $saveSuccess = imagejpeg($resizedImage, $filePath, 90); // 90% de calidad
+        
+        // Limpiar memoria
+        imagedestroy($sourceImage);
+        imagedestroy($resizedImage);
+        
+        if (!$saveSuccess) {
+            throw new Exception('Error guardando imagen redimensionada');
+        }
+        
+        error_log("Imagen redimensionada y guardada exitosamente");
+        
+        // Crear URL relativa para la imagen
+        $relativePath = 'fichas/' . $userId . '/' . $fileName;
+        
+        // Verificar que el archivo se guardó correctamente
+        if (!file_exists($filePath)) {
+            throw new Exception('Archivo no encontrado después de guardar');
+        }
+        
+        $actualSize = filesize($filePath);
+        error_log("Tamaño real del archivo guardado: " . $actualSize . " bytes");
+        
+        // Validar que es una imagen válida
+        $imageInfo = getimagesize($filePath);
+        if ($imageInfo === false) {
+            unlink($filePath); // Eliminar archivo inválido
+            throw new Exception('Archivo no es una imagen válida');
+        }
+        
+        error_log("Imagen válida - Dimensiones finales: " . $imageInfo[0] . "x" . $imageInfo[1]);
+        error_log("Tipo MIME: " . $imageInfo['mime']);
+        
+        // Respuesta exitosa
+        $response = [
+            'success' => true,
+            'message' => 'Imagen subida y redimensionada exitosamente',
+            'local_image_url' => $relativePath,
+            'original_url' => $originalUrl,
+            'file_name' => $fileName,
+            'file_size' => $actualSize,
+            'original_dimensions' => $originalWidth . 'x' . $originalHeight,
+            'resized_dimensions' => $imageInfo[0] . 'x' . $imageInfo[1],
+            'mime_type' => $imageInfo['mime'],
+            'upload_timestamp' => $timestamp,
+            'user_id' => $userId
+        ];
+        
+        error_log("=== SUBIDA DE IMAGEN COMPLETADA ===");
+        error_log("Respuesta: " . json_encode($response));
+        
+        echo json_encode($response);
+        
+    } catch (Exception $e) {
+        error_log("ERROR en uploadImage: " . $e->getMessage());
         echo json_encode([
             'success' => false,
             'error' => $e->getMessage()
