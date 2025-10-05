@@ -435,6 +435,7 @@ function createLink($pdo, $input) {
     $titulo = $input['titulo'] ?? '';
     $descripcion = $input['descripcion'] ?? '';
     $notaLink = $input['nota_link'] ?? '';
+    $imagen = $input['imagen'] ?? ''; // Obtener imagen del input
     
     if ($userId <= 0) {
         throw new Exception('ID de usuario válido es requerido');
@@ -478,19 +479,19 @@ function createLink($pdo, $input) {
     $stmt = $pdo->prepare("SELECT id FROM links WHERE usuario_id = ? AND categoria_id = ? AND hash_url = ?");
     $stmt->execute([$userId, $categoriaId, $hashUrl]);
     $existingLink = $stmt->fetch();
-    
+
     if ($existingLink) {
         throw new Exception('Ya existe un link con esta URL en esta categoría');
     }
     
-    // Obtener metadatos de la URL si no se proporcionan título y descripción
+    // Obtener metadatos de la URL solo si no se proporcionan título, descripción o imagen
     $urlCanonica = $url;
-    if (empty($titulo) || empty($descripcion)) {
+    if (empty($titulo) || empty($descripcion) || empty($imagen)) {
         $metadata = getUrlMetadataFromUrl($url);
         if ($metadata) {
             if (empty($titulo)) $titulo = $metadata['titulo'] ?? '';
             if (empty($descripcion)) $descripcion = $metadata['descripcion'] ?? '';
-            if (!empty($metadata['imagen'])) $imagen = $metadata['imagen'];
+            if (empty($imagen)) $imagen = $metadata['imagen'] ?? ''; // Solo usar metadatos si no hay imagen
             $urlCanonica = $metadata['url_canonica'] ?? $url;
         }
     }
