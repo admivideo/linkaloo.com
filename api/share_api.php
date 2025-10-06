@@ -338,6 +338,12 @@ function scrapeMetadata($url) {
     error_log("=== INICIANDO SCRAPE DE METADATOS (Versión Web) ===");
     error_log("URL objetivo: " . $url);
     
+    // Detectar si es Pinterest y usar función específica
+    if (strpos($url, 'pinterest.com') !== false || strpos($url, 'pinterest.es') !== false) {
+        error_log("Detectado Pinterest, usando función específica");
+        return scrapePinterestMetadata($url);
+    }
+    
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -393,6 +399,138 @@ function scrapeMetadata($url) {
     unset($value);
     
     error_log("Metadatos extraídos:");
+    error_log("  Título: " . ($meta['title'] ?? ''));
+    error_log("  Descripción: " . ($meta['description'] ?? ''));
+    error_log("  Imagen: " . ($meta['image'] ?? ''));
+    
+    return $meta;
+}
+
+// Función específica para Pinterest
+function scrapePinterestMetadata($url) {
+    error_log("=== SCRAPE ESPECÍFICO PARA PINTEREST ===");
+    error_log("URL Pinterest: " . $url);
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate',
+            'Cache-Control: no-cache',
+            'Pragma: no-cache'
+        ]
+    ]);
+    
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if (!$html || $httpCode !== 200) {
+        error_log("Error obteniendo Pinterest: HTTP " . $httpCode);
+        return [];
+    }
+    
+    $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if ($enc) {
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
+    }
+    
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    $doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+    
+    $meta = [];
+    
+    // Extraer título - Pinterest usa diferentes selectores
+    $titleSelectors = [
+        '//h1[@data-test-id="pin-title"]',
+        '//h1[contains(@class, "pin-title")]',
+        '//h1[contains(@class, "title")]',
+        '//title',
+        '//meta[@property="og:title"]/@content',
+        '//meta[@name="twitter:title"]/@content'
+    ];
+    
+    foreach ($titleSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $title = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
+            if (!empty($title)) {
+                $meta['title'] = $title;
+                break;
+            }
+        }
+    }
+    
+    // Extraer descripción - Pinterest tiene estructura específica
+    $descSelectors = [
+        '//div[@data-test-id="pin-description"]',
+        '//div[contains(@class, "pin-description")]',
+        '//div[contains(@class, "description")]',
+        '//meta[@property="og:description"]/@content',
+        '//meta[@name="description"]/@content'
+    ];
+    
+    foreach ($descSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $desc = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
+            if (!empty($desc)) {
+                $meta['description'] = $desc;
+                break;
+            }
+        }
+    }
+    
+    // Extraer imagen - Pinterest usa estructura específica
+    $imageSelectors = [
+        '//img[@data-test-id="pin-image"]/@src',
+        '//img[contains(@class, "pin-image")]/@src',
+        '//img[contains(@class, "pin-img")]/@src',
+        '//meta[@property="og:image"]/@content',
+        '//meta[@name="twitter:image"]/@content'
+    ];
+    
+    foreach ($imageSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $img = trim($nodes->item(0)->nodeValue ?? '');
+            if (!empty($img)) {
+                $meta['image'] = $img;
+                break;
+            }
+        }
+    }
+    
+    // Si no encontramos imagen, buscar en el JSON embebido de Pinterest
+    if (empty($meta['image'])) {
+        if (preg_match('/"image":\s*"([^"]+)"/', $html, $matches)) {
+            $meta['image'] = $matches[1];
+        }
+    }
+    
+    // Limpiar y normalizar datos
+    foreach ($meta as &$value) {
+        $value = ensureUtf8($value);
+        $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    }
+    unset($value);
+    
+    // Limpiar título específico de Pinterest
+    if (!empty($meta['title'])) {
+        // Remover "Pin de" y "en" del título
+        $meta['title'] = preg_replace('/^Pin de\s+[^|]+\s+en\s+/', '', $meta['title']);
+        $meta['title'] = preg_replace('/\s+\|\s+.*$/', '', $meta['title']);
+        $meta['title'] = trim($meta['title']);
+    }
+    
+    error_log("Metadatos Pinterest extraídos:");
     error_log("  Título: " . ($meta['title'] ?? ''));
     error_log("  Descripción: " . ($meta['description'] ?? ''));
     error_log("  Imagen: " . ($meta['image'] ?? ''));
