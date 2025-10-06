@@ -655,16 +655,71 @@ function scrapeWallapopMetadata($url) {
         }
     }
     
-    // Si no encontramos imagen, buscar en el JSON embebido de Wallapop
-    if (empty($meta['image'])) {
-        if (preg_match('/"image":\s*"([^"]+)"/', $html, $matches)) {
-            $meta['image'] = $matches[1];
-        }
-        // Buscar en datos estructurados
-        if (preg_match('/"@type":\s*"Product".*?"image":\s*"([^"]+)"/s', $html, $matches)) {
-            $meta['image'] = $matches[1];
-        }
-    }
+     // Si no encontramos imagen, buscar en el JSON embebido de Wallapop
+     if (empty($meta['image'])) {
+         // Buscar en JSON embebido con diferentes patrones
+         $jsonPatterns = [
+             '/"image":\s*"([^"]+)"/',
+             '/"imageUrl":\s*"([^"]+)"/',
+             '/"photo":\s*"([^"]+)"/',
+             '/"thumbnail":\s*"([^"]+)"/',
+             '/"og:image":\s*"([^"]+)"/',
+             '/"twitter:image":\s*"([^"]+)"/'
+         ];
+         
+         foreach ($jsonPatterns as $pattern) {
+             if (preg_match($pattern, $html, $matches)) {
+                 $meta['image'] = $matches[1];
+                 break;
+             }
+         }
+         
+         // Buscar en datos estructurados
+         if (empty($meta['image'])) {
+             $structuredPatterns = [
+                 '/"@type":\s*"Product".*?"image":\s*"([^"]+)"/s',
+                 '/"@type":\s*"ItemList".*?"image":\s*"([^"]+)"/s',
+                 '/"@type":\s*"Thing".*?"image":\s*"([^"]+)"/s'
+             ];
+             
+             foreach ($structuredPatterns as $pattern) {
+                 if (preg_match($pattern, $html, $matches)) {
+                     $meta['image'] = $matches[1];
+                     break;
+                 }
+             }
+         }
+         
+         // Buscar en scripts de JavaScript
+         if (empty($meta['image'])) {
+             if (preg_match('/window\.__INITIAL_STATE__\s*=\s*({.*?});/s', $html, $matches)) {
+                 $jsonData = json_decode($matches[1], true);
+                 if ($jsonData && isset($jsonData['item']['images'][0]['url'])) {
+                     $meta['image'] = $jsonData['item']['images'][0]['url'];
+                 }
+             }
+         }
+         
+         // Buscar en meta tags adicionales
+         if (empty($meta['image'])) {
+             $additionalMetaSelectors = [
+                 '//meta[@property="og:image:url"]/@content',
+                 '//meta[@name="twitter:image:src"]/@content',
+                 '//meta[@name="image"]/@content'
+             ];
+             
+             foreach ($additionalMetaSelectors as $selector) {
+                 $nodes = $xpath->query($selector);
+                 if ($nodes->length > 0) {
+                     $img = trim($nodes->item(0)->nodeValue ?? '');
+                     if (!empty($img)) {
+                         $meta['image'] = $img;
+                         break;
+                     }
+                 }
+             }
+         }
+     }
     
      // Extraer precio si está disponible
      $priceSelectors = [
@@ -723,48 +778,99 @@ function downloadAndProcessWallapopImage($userId, $imageUrl, $titulo) {
         error_log("URL de imagen: " . $imageUrl);
         error_log("User ID: " . $userId);
         
-        // Configurar cURL para descargar la imagen
-        $ch = curl_init($imageUrl);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            CURLOPT_TIMEOUT => 15,
-            CURLOPT_HTTPHEADER => [
-                'Accept: image/webp,image/apng,image/*,*/*;q=0.8',
-                'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
-                'Accept-Encoding: gzip, deflate',
-                'Cache-Control: no-cache',
-                'Pragma: no-cache'
+        // Intentar diferentes estrategias de descarga
+        $strategies = [
+            // Estrategia 1: User agent móvil
+            [
+                'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+                'headers' => [
+                    'Accept: image/webp,image/apng,image/*,*/*;q=0.8',
+                    'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+                    'Accept-Encoding: gzip, deflate',
+                    'Cache-Control: no-cache',
+                    'Pragma: no-cache'
+                ]
+            ],
+            // Estrategia 2: User agent de escritorio
+            [
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'headers' => [
+                    'Accept: image/webp,image/apng,image/*,*/*;q=0.8',
+                    'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+                    'Accept-Encoding: gzip, deflate',
+                    'Cache-Control: no-cache',
+                    'Pragma: no-cache'
+                ]
+            ],
+            // Estrategia 3: User agent de bot
+            [
+                'user_agent' => 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                'headers' => [
+                    'Accept: */*',
+                    'Accept-Language: es-ES,es;q=0.9,en;q=0.8'
+                ]
             ]
-        ]);
+        ];
         
-        $imageData = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-        curl_close($ch);
-        
-        if (!$imageData || $httpCode !== 200) {
-            error_log("Error descargando imagen de Wallapop: HTTP " . $httpCode);
-            return $imageUrl; // Devolver URL original si falla
+        foreach ($strategies as $index => $strategy) {
+            error_log("Intentando estrategia " . ($index + 1) . " para descargar imagen...");
+            
+            $ch = curl_init($imageUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_USERAGENT => $strategy['user_agent'],
+                CURLOPT_TIMEOUT => 15,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_HTTPHEADER => $strategy['headers'],
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false
+            ]);
+            
+            $imageData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+            curl_close($ch);
+            
+            error_log("Estrategia " . ($index + 1) . " - HTTP Code: " . $httpCode);
+            error_log("Estrategia " . ($index + 1) . " - Content-Type: " . $contentType);
+            error_log("Estrategia " . ($index + 1) . " - Final URL: " . $finalUrl);
+            
+            if ($imageData && $httpCode === 200) {
+                error_log("Imagen descargada exitosamente con estrategia " . ($index + 1));
+                error_log("Tamaño de imagen: " . strlen($imageData) . " bytes");
+                
+                // Validar que es realmente una imagen
+                $imageInfo = getimagesizefromstring($imageData);
+                if ($imageInfo === false) {
+                    error_log("Los datos descargados no son una imagen válida, intentando siguiente estrategia...");
+                    continue;
+                }
+                
+                error_log("Imagen válida - Dimensiones: " . $imageInfo[0] . "x" . $imageInfo[1]);
+                error_log("Tipo MIME: " . $imageInfo['mime']);
+                
+                // Convertir a base64 para procesar
+                $base64Image = base64_encode($imageData);
+                
+                // Usar la función existente de procesamiento de imágenes
+                $processedImage = processSharedImage($userId, $imageUrl, $base64Image, $titulo, '');
+                
+                if ($processedImage) {
+                    error_log("Imagen de Wallapop procesada exitosamente: " . $processedImage);
+                    return $processedImage;
+                } else {
+                    error_log("Error procesando imagen de Wallapop, intentando siguiente estrategia...");
+                    continue;
+                }
+            } else {
+                error_log("Estrategia " . ($index + 1) . " falló - HTTP " . $httpCode);
+            }
         }
         
-        error_log("Imagen descargada exitosamente. Content-Type: " . $contentType);
-        error_log("Tamaño de imagen: " . strlen($imageData) . " bytes");
-        
-        // Convertir a base64 para procesar
-        $base64Image = base64_encode($imageData);
-        
-        // Usar la función existente de procesamiento de imágenes
-        $processedImage = processSharedImage($userId, $imageUrl, $base64Image, $titulo, '');
-        
-        if ($processedImage) {
-            error_log("Imagen de Wallapop procesada exitosamente: " . $processedImage);
-            return $processedImage;
-        } else {
-            error_log("Error procesando imagen de Wallapop, usando URL original");
-            return $imageUrl;
-        }
+        error_log("Todas las estrategias fallaron, usando URL original");
+        return $imageUrl;
         
     } catch (Exception $e) {
         error_log("Error en downloadAndProcessWallapopImage: " . $e->getMessage());
