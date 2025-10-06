@@ -756,10 +756,20 @@ function debugLinks($pdo, $input) {
                 return $col['Field'] . ' (' . $col['Type'] . ')';
             }, $columns);
             
-            // Obtener algunos links de ejemplo
-            $stmt = $pdo->query("SELECT id, usuario_id, categoria_id, titulo, url FROM links LIMIT 5");
+            // Obtener algunos links de ejemplo con imágenes
+            $stmt = $pdo->query("SELECT id, usuario_id, categoria_id, titulo, url, imagen FROM links ORDER BY id DESC LIMIT 10");
             $sampleLinks = $stmt->fetchAll();
             $debug['debug_info']['sample_links'] = $sampleLinks;
+            
+            // Contar links con imágenes
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM links WHERE imagen IS NOT NULL AND imagen != ''");
+            $linksWithImages = $stmt->fetch();
+            $debug['debug_info']['links_with_images'] = (int)$linksWithImages['total'];
+            
+            // Obtener links con imágenes específicamente
+            $stmt = $pdo->query("SELECT id, usuario_id, titulo, imagen FROM links WHERE imagen IS NOT NULL AND imagen != '' ORDER BY id DESC LIMIT 5");
+            $linksWithImagesData = $stmt->fetchAll();
+            $debug['debug_info']['links_with_images_data'] = $linksWithImagesData;
             
             // Obtener estadísticas por usuario
             $stmt = $pdo->query("SELECT usuario_id, COUNT(*) as count FROM links GROUP BY usuario_id");
