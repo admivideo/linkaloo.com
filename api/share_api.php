@@ -312,47 +312,127 @@ function getUrlMetadata($pdo, $input) {
     }
 }
 
-// Función auxiliar para obtener metadatos de URL
+// Función auxiliar para obtener metadatos de URL (mejorada como la versión web)
 function getUrlMetadataFromUrl($url) {
     try {
-        $context = stream_context_create([
-            'http' => [
-                'timeout' => 10,
-                'user_agent' => 'Mozilla/5.0 (compatible; Linkaloo/1.0)',
-                'follow_location' => true,
-                'max_redirects' => 3
+        error_log("=== INICIANDO SCRAPE DE METADATOS ===");
+        error_log("URL objetivo: " . $url);
+        
+        // Configurar cURL con user agent propio y seguir redirecciones
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Linkaloo/1.0; +https://linkaloo.com)',
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_HTTPHEADER => [
+                'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+                'Accept-Encoding: gzip, deflate',
+                'Cache-Control: no-cache',
+                'Pragma: no-cache'
             ]
         ]);
         
-        $html = @file_get_contents($url, false, $context);
+        $html = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         
-        if ($html === false) {
+        curl_close($ch);
+        
+        error_log("HTTP Code: " . $httpCode);
+        error_log("Final URL: " . $finalUrl);
+        error_log("Content-Type: " . $contentType);
+        
+        if ($html === false || $httpCode !== 200) {
+            error_log("Error obteniendo contenido: HTTP " . $httpCode);
             return null;
         }
         
-        // Obtener URL final después de redirecciones
-        $headers = get_headers($url, 1);
-        $finalUrl = is_array($headers['Location']) ? end($headers['Location']) : ($headers['Location'] ?? $url);
+        // Normalizar a UTF-8
+        $html = mb_convert_encoding($html, 'UTF-8', 'auto');
         
-        // Extraer metadatos usando expresiones regulares simples
+        // Cargar en DOMDocument para extracción robusta
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+        
+        $xpath = new DOMXPath($dom);
+        
+        // Extraer título
         $titulo = '';
+        $titleNodes = $xpath->query('//title');
+        if ($titleNodes->length > 0) {
+            $titulo = trim($titleNodes->item(0)->textContent);
+        }
+        
+        // Extraer descripción (Open Graph primero, luego meta description)
         $descripcion = '';
+        $ogDescNodes = $xpath->query('//meta[@property="og:description"]/@content');
+        if ($ogDescNodes->length > 0) {
+            $descripcion = trim($ogDescNodes->item(0)->textContent);
+        } else {
+            $metaDescNodes = $xpath->query('//meta[@name="description"]/@content');
+            if ($metaDescNodes->length > 0) {
+                $descripcion = trim($metaDescNodes->item(0)->textContent);
+            }
+        }
+        
+        // Extraer imagen (Open Graph primero, luego Twitter, luego meta image)
         $imagen = '';
-        
-        // Título
-        if (preg_match('/<title[^>]*>(.*?)<\/title>/is', $html, $matches)) {
-            $titulo = trim(strip_tags($matches[1]));
+        $ogImageNodes = $xpath->query('//meta[@property="og:image"]/@content');
+        if ($ogImageNodes->length > 0) {
+            $imagen = trim($ogImageNodes->item(0)->textContent);
+        } else {
+            $twitterImageNodes = $xpath->query('//meta[@name="twitter:image"]/@content');
+            if ($twitterImageNodes->length > 0) {
+                $imagen = trim($twitterImageNodes->item(0)->textContent);
+            } else {
+                $metaImageNodes = $xpath->query('//meta[@name="image"]/@content');
+                if ($metaImageNodes->length > 0) {
+                    $imagen = trim($metaImageNodes->item(0)->textContent);
+                }
+            }
         }
         
-        // Meta descripción
-        if (preg_match('/<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/is', $html, $matches)) {
-            $descripcion = trim($matches[1]);
+        // Si la imagen es relativa, reconstruir con el dominio original
+        if (!empty($imagen) && !filter_var($imagen, FILTER_VALIDATE_URL)) {
+            $parsedUrl = parse_url($finalUrl);
+            $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+            if (isset($parsedUrl['port'])) {
+                $baseUrl .= ':' . $parsedUrl['port'];
+            }
+            
+            if (strpos($imagen, '/') === 0) {
+                // Imagen absoluta desde la raíz
+                $imagen = $baseUrl . $imagen;
+            } else {
+                // Imagen relativa
+                $path = isset($parsedUrl['path']) ? dirname($parsedUrl['path']) : '';
+                $imagen = $baseUrl . $path . '/' . $imagen;
+            }
         }
         
-        // Meta imagen
-        if (preg_match('/<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/is', $html, $matches)) {
-            $imagen = trim($matches[1]);
-        }
+        // Limpiar y validar datos
+        $titulo = html_entity_decode($titulo, ENT_QUOTES, 'UTF-8');
+        $descripcion = html_entity_decode($descripcion, ENT_QUOTES, 'UTF-8');
+        
+        // Limitar longitud
+        $titulo = mb_substr($titulo, 0, 200);
+        $descripcion = mb_substr($descripcion, 0, 500);
+        
+        error_log("Metadatos extraídos:");
+        error_log("  Título: " . $titulo);
+        error_log("  Descripción: " . $descripcion);
+        error_log("  Imagen: " . $imagen);
+        error_log("  URL Final: " . $finalUrl);
         
         return [
             'titulo' => $titulo,
@@ -362,6 +442,7 @@ function getUrlMetadataFromUrl($url) {
         ];
         
     } catch (Exception $e) {
+        error_log("Error en scrapeMetadata: " . $e->getMessage());
         return null;
     }
 }
