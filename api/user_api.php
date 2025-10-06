@@ -1,35 +1,16 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Incluir archivo de configuración
+require_once 'config.php';
 
-// Función helper para JSON sin escape de barras
-function json_response($data) {
-    echo json_encode($data, JSON_UNESCAPED_SLASHES);
-}
-
-// Configuración de la base de datos //
-$host = '82.223.84.165';
-$port = '3306';
-$database = 'smartlinks';
-$username = '^A%Odbc%!IOn0s!';
-$password = '$Fw7Hen^S&*36#DbSit@85$';
+// Configurar headers CORS
+setCorsHeaders();
 
 // Manejar preflight requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+handlePreflightRequest();
 
 try {
-    // Conectar a la base de datos
-    $dsn = "mysql:host=$host;port=$port;dbname=$database;charset=utf8mb4";
-    $pdo = new PDO($dsn, $username, $password, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false
-    ]);
+    // Obtener conexión a la base de datos
+    $pdo = getDatabaseConnection();
     
     // Obtener datos del request
     $input = json_decode(file_get_contents('php://input'), true);
@@ -837,13 +818,13 @@ function uploadImage($pdo, $input) {
         error_log("Tamaño de imagen decodificada: " . $imageSize . " bytes");
         
         // Validar tamaño de imagen
-        $maxSize = 5 * 1024 * 1024; // 5MB
+        $maxSize = getServerConfig('max_image_size');
         if ($imageSize > $maxSize) {
-            throw new Exception('Imagen demasiado grande (máximo 5MB)');
+            throw new Exception('Imagen demasiado grande (máximo ' . ($maxSize / 1024 / 1024) . 'MB)');
         }
         
         // Crear directorio específico del usuario: /fichas/(id_usuario)/
-        $userDir = '../fichas/' . $userId . '/';
+        $userDir = getServerConfig('fichas_path') . $userId . '/';
         if (!file_exists($userDir)) {
             mkdir($userDir, 0755, true);
             error_log("Directorio de usuario creado: " . $userDir);
@@ -869,7 +850,7 @@ function uploadImage($pdo, $input) {
         error_log("Dimensiones originales: " . $originalWidth . "x" . $originalHeight);
         
         // Calcular nuevas dimensiones (300px de ancho, altura proporcional)
-        $newWidth = 300;
+        $newWidth = getServerConfig('image_width');
         $newHeight = intval(($originalHeight * $newWidth) / $originalWidth);
         error_log("Nuevas dimensiones: " . $newWidth . "x" . $newHeight);
         
@@ -899,7 +880,8 @@ function uploadImage($pdo, $input) {
         }
         
         // Guardar imagen redimensionada como JPG
-        $saveSuccess = imagejpeg($resizedImage, $filePath, 90); // 90% de calidad
+        $imageQuality = getServerConfig('image_quality');
+        $saveSuccess = imagejpeg($resizedImage, $filePath, $imageQuality);
         
         // Limpiar memoria
         imagedestroy($sourceImage);
