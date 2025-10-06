@@ -130,6 +130,16 @@ function saveSharedLink($pdo, $input) {
                  $urlCanonica = $metadata['url_canonica'] ?? $url;
              }
          }
+         
+         // Si aún no tenemos imagen, intentar obtener favicon del dominio
+         if (empty($imagenFinal)) {
+             error_log("No se encontró imagen, intentando obtener favicon del dominio...");
+             $faviconUrl = getFaviconFromDomain($url);
+             if ($faviconUrl) {
+                 $imagenFinal = $faviconUrl;
+                 error_log("Favicon del dominio encontrado: " . $imagenFinal);
+             }
+         }
         
         // Crear el link
         $stmt = $pdo->prepare("INSERT INTO links (usuario_id, categoria_id, url, url_canonica, titulo, descripcion, imagen, hash_url, creado_en, actualizado_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
@@ -355,6 +365,12 @@ function scrapeMetadata($url) {
     if (strpos($url, 'wallapop.com') !== false) {
         error_log("Detectado Wallapop, usando función específica");
         return scrapeWallapopMetadata($url);
+    }
+
+    // Detectar si es TikTok y usar función específica
+    if (strpos($url, 'tiktok.com') !== false) {
+        error_log("Detectado TikTok, usando función específica");
+        return scrapeTikTokMetadata($url);
     }
     
     $ch = curl_init($url);
@@ -1050,5 +1066,245 @@ function getUrlMetadataFromUrl($url) {
         error_log("Error en getUrlMetadataFromUrl: " . $e->getMessage());
         return null;
     }
+}
+
+// Función específica para extraer metadatos de TikTok
+function scrapeTikTokMetadata($url) {
+    error_log("=== SCRAPE ESPECÍFICO PARA TIKTOK ===");
+    error_log("URL TikTok: " . $url);
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate',
+            'Cache-Control: no-cache',
+            'Pragma: no-cache'
+        ]
+    ]);
+
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if (!$html || $httpCode !== 200) {
+        error_log("Error obteniendo TikTok: HTTP " . $httpCode);
+        return [];
+    }
+
+    $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if ($enc) {
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
+    }
+
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    $doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+
+    $meta = [];
+
+    // Extraer título - TikTok usa diferentes selectores
+    $titleSelectors = [
+        '//meta[@property="og:title"]/@content',
+        '//meta[@name="twitter:title"]/@content',
+        '//title',
+        '//h1[contains(@class, "video-title")]',
+        '//h1[contains(@class, "title")]'
+    ];
+
+    foreach ($titleSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $title = trim($nodes->item(0)->nodeValue ?? '');
+            if (!empty($title)) {
+                $meta['title'] = $title;
+                break;
+            }
+        }
+    }
+
+    // Extraer descripción - TikTok tiene estructura específica
+    $descSelectors = [
+        '//meta[@property="og:description"]/@content',
+        '//meta[@name="description"]/@content',
+        '//meta[@name="twitter:description"]/@content',
+        '//div[contains(@class, "video-description")]',
+        '//div[contains(@class, "description")]',
+        '//p[contains(@class, "video-desc")]'
+    ];
+
+    foreach ($descSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $desc = trim($nodes->item(0)->nodeValue ?? '');
+            if (!empty($desc)) {
+                $meta['description'] = $desc;
+                break;
+            }
+        }
+    }
+
+    // Extraer imagen - TikTok usa estructura específica para videos
+    $imageSelectors = [
+        '//meta[@property="og:image"]/@content',
+        '//meta[@name="twitter:image"]/@content',
+        '//meta[@name="twitter:image:src"]/@content',
+        '//img[contains(@class, "video-cover")]/@src',
+        '//img[contains(@class, "cover-image")]/@src',
+        '//img[contains(@class, "video-thumbnail")]/@src'
+    ];
+
+    foreach ($imageSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $img = trim($nodes->item(0)->nodeValue ?? '');
+            if (!empty($img)) {
+                $meta['image'] = $img;
+                break;
+            }
+        }
+    }
+
+    // Si no encontramos imagen, buscar en el JSON embebido de TikTok
+    if (empty($meta['image'])) {
+        // Buscar específicamente URLs de CDN de TikTok
+        $tiktokCdnPatterns = [
+            '/"@https:\/\/p16-sign-va\.tiktokcdn\.com\/([^"]+)"/',
+            '/"https:\/\/p16-sign-va\.tiktokcdn\.com\/([^"]+)"/',
+            '/@https:\/\/p16-sign-va\.tiktokcdn\.com\/([^"]+)/',
+            '/https:\/\/p16-sign-va\.tiktokcdn\.com\/([^"]+)/',
+            '/"@https:\/\/p77-sign\.tiktokcdn-us\.com\/([^"]+)"/',
+            '/"https:\/\/p77-sign\.tiktokcdn-us\.com\/([^"]+)"/'
+        ];
+
+        foreach ($tiktokCdnPatterns as $pattern) {
+            if (preg_match($pattern, $html, $matches)) {
+                $meta['image'] = 'https://p16-sign-va.tiktokcdn.com/' . $matches[1];
+                error_log("Imagen encontrada en CDN de TikTok: " . $meta['image']);
+                break;
+            }
+        }
+
+        // Si no encontramos en CDN, buscar en JSON embebido con diferentes patrones
+        if (empty($meta['image'])) {
+            $jsonPatterns = [
+                '/"image":\s*"([^"]+)"/',
+                '/"cover":\s*"([^"]+)"/',
+                '/"thumbnail":\s*"([^"]+)"/',
+                '/"videoCover":\s*"([^"]+)"/',
+                '/"og:image":\s*"([^"]+)"/',
+                '/"twitter:image":\s*"([^"]+)"/'
+            ];
+
+            foreach ($jsonPatterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $meta['image'] = $matches[1];
+                    break;
+                }
+            }
+        }
+
+        // Buscar en datos estructurados
+        if (empty($meta['image'])) {
+            $structuredPatterns = [
+                '/"@type":\s*"VideoObject".*?"thumbnailUrl":\s*"([^"]+)"/s',
+                '/"@type":\s*"SocialMediaPosting".*?"image":\s*"([^"]+)"/s',
+                '/"@type":\s*"Thing".*?"image":\s*"([^"]+)"/s'
+            ];
+
+            foreach ($structuredPatterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $meta['image'] = $matches[1];
+                    break;
+                }
+            }
+        }
+
+        // Buscar en scripts de JavaScript específicos de TikTok
+        if (empty($meta['image'])) {
+            if (preg_match('/window\.__INITIAL_STATE__\s*=\s*({.*?});/s', $html, $matches)) {
+                $jsonData = json_decode($matches[1], true);
+                if ($jsonData && isset($jsonData['video']['cover'])) {
+                    $meta['image'] = $jsonData['video']['cover'];
+                } elseif ($jsonData && isset($jsonData['video']['thumbnail'])) {
+                    $meta['image'] = $jsonData['video']['thumbnail'];
+                }
+            }
+        }
+
+        // Buscar en meta tags adicionales
+        if (empty($meta['image'])) {
+            $additionalMetaSelectors = [
+                '//meta[@property="og:image:url"]/@content',
+                '//meta[@name="twitter:image:src"]/@content',
+                '//meta[@name="image"]/@content'
+            ];
+
+            foreach ($additionalMetaSelectors as $selector) {
+                $nodes = $xpath->query($selector);
+                if ($nodes->length > 0) {
+                    $img = trim($nodes->item(0)->nodeValue ?? '');
+                    if (!empty($img)) {
+                        $meta['image'] = $img;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Extraer información adicional específica de TikTok
+    $authorSelectors = [
+        '//meta[@property="og:site_name"]/@content',
+        '//meta[@name="twitter:site"]/@content',
+        '//span[contains(@class, "author-name")]',
+        '//div[contains(@class, "username")]'
+    ];
+
+    $author = '';
+    foreach ($authorSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $author = trim($nodes->item(0)->nodeValue ?? '');
+            if (!empty($author)) {
+                break;
+            }
+        }
+    }
+
+    // Si encontramos autor, agregarlo al título o descripción
+    if (!empty($author) && !empty($meta['title'])) {
+        $meta['title'] = $author . ' - ' . $meta['title'];
+    } elseif (!empty($author)) {
+        $meta['title'] = $author;
+    }
+
+    // Limpiar y normalizar datos
+    foreach ($meta as &$value) {
+        $value = ensureUtf8($value);
+        $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    }
+    unset($value);
+
+    // Limpiar título específico de TikTok
+    if (!empty($meta['title'])) {
+        // Remover "TikTok" del título si está presente
+        $meta['title'] = preg_replace('/\s*-\s*TikTok$/', '', $meta['title']);
+        $meta['title'] = preg_replace('/\s*\|\s*TikTok$/', '', $meta['title']);
+        $meta['title'] = trim($meta['title']);
+    }
+
+    error_log("Metadatos TikTok extraídos:");
+    error_log("  Título: " . ($meta['title'] ?? ''));
+    error_log("  Descripción: " . ($meta['description'] ?? ''));
+    error_log("  Imagen: " . ($meta['image'] ?? ''));
+
+    return $meta;
 }
 ?>
