@@ -906,8 +906,8 @@ function uploadImage($pdo, $input) {
         
         error_log("Imagen redimensionada y guardada exitosamente");
         
-        // Crear URL relativa para la imagen
-        $relativePath = 'fichas/' . $userId . '/' . $fileName;
+        // Crear URL relativa para la imagen (con barra inicial)
+        $relativePath = '/fichas/' . $userId . '/' . $fileName;
         
         // Verificar que el archivo se guardó correctamente
         if (!file_exists($filePath)) {
