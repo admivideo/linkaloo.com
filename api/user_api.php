@@ -4,6 +4,11 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// Función helper para JSON sin escape de barras
+function json_response($data) {
+    echo json_encode($data, JSON_UNESCAPED_SLASHES);
+}
+
 // Configuración de la base de datos //
 $host = '82.223.84.165';
 $port = '3306';
@@ -507,7 +512,7 @@ function createLink($pdo, $input) {
     $stmt->execute([$linkId]);
     $link = $stmt->fetch();
     
-    echo json_encode([
+    json_response([
         'success' => true,
         'action' => 'created',
         'link' => [
@@ -945,11 +950,11 @@ function uploadImage($pdo, $input) {
         error_log("=== SUBIDA DE IMAGEN COMPLETADA ===");
         error_log("Respuesta: " . json_encode($response));
         
-        echo json_encode($response);
+        json_response($response);
         
     } catch (Exception $e) {
         error_log("ERROR en uploadImage: " . $e->getMessage());
-        echo json_encode([
+        json_response([
             'success' => false,
             'error' => $e->getMessage()
         ]);
