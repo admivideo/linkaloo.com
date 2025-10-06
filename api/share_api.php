@@ -121,9 +121,9 @@ function saveSharedLink($pdo, $input) {
                  if (empty($descripcion)) $descripcion = $metadata['descripcion'] ?? '';
                  if (empty($imagenFinal)) {
                      $imagenFinal = $metadata['imagen'] ?? '';
-                     // Si tenemos una URL de imagen de Wallapop, descargarla y procesarla
-                     if (!empty($imagenFinal) && strpos($imagenFinal, 'img.wallapop.com') !== false) {
-                         error_log("Detectada imagen de Wallapop, descargando y procesando...");
+                     // Si tenemos una URL de imagen de Wallapop (CDN o img), descargarla y procesarla
+                     if (!empty($imagenFinal) && (strpos($imagenFinal, 'cdn.wallapop.com') !== false || strpos($imagenFinal, 'img.wallapop.com') !== false)) {
+                         error_log("Detectada imagen de Wallapop (CDN o img), descargando y procesando...");
                          $imagenFinal = downloadAndProcessWallapopImage($userId, $imagenFinal, $titulo);
                      }
                  }
@@ -657,20 +657,38 @@ function scrapeWallapopMetadata($url) {
     
      // Si no encontramos imagen, buscar en el JSON embebido de Wallapop
      if (empty($meta['image'])) {
-         // Buscar en JSON embebido con diferentes patrones
-         $jsonPatterns = [
-             '/"image":\s*"([^"]+)"/',
-             '/"imageUrl":\s*"([^"]+)"/',
-             '/"photo":\s*"([^"]+)"/',
-             '/"thumbnail":\s*"([^"]+)"/',
-             '/"og:image":\s*"([^"]+)"/',
-             '/"twitter:image":\s*"([^"]+)"/'
+         // Buscar específicamente URLs de CDN de Wallapop
+         $wallapopCdnPatterns = [
+             '/"@https:\/\/cdn\.wallapop\.com\/images\/([^"]+)"/',
+             '/"https:\/\/cdn\.wallapop\.com\/images\/([^"]+)"/',
+             '/@https:\/\/cdn\.wallapop\.com\/images\/([^"]+)/',
+             '/https:\/\/cdn\.wallapop\.com\/images\/([^"]+)/'
          ];
          
-         foreach ($jsonPatterns as $pattern) {
+         foreach ($wallapopCdnPatterns as $pattern) {
              if (preg_match($pattern, $html, $matches)) {
-                 $meta['image'] = $matches[1];
+                 $meta['image'] = 'https://cdn.wallapop.com/images/' . $matches[1];
+                 error_log("Imagen encontrada en CDN de Wallapop: " . $meta['image']);
                  break;
+             }
+         }
+         
+         // Si no encontramos en CDN, buscar en JSON embebido con diferentes patrones
+         if (empty($meta['image'])) {
+             $jsonPatterns = [
+                 '/"image":\s*"([^"]+)"/',
+                 '/"imageUrl":\s*"([^"]+)"/',
+                 '/"photo":\s*"([^"]+)"/',
+                 '/"thumbnail":\s*"([^"]+)"/',
+                 '/"og:image":\s*"([^"]+)"/',
+                 '/"twitter:image":\s*"([^"]+)"/'
+             ];
+             
+             foreach ($jsonPatterns as $pattern) {
+                 if (preg_match($pattern, $html, $matches)) {
+                     $meta['image'] = $matches[1];
+                     break;
+                 }
              }
          }
          
