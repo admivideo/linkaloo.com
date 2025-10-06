@@ -887,12 +887,145 @@ function downloadAndProcessWallapopImage($userId, $imageUrl, $titulo) {
             }
         }
         
-        error_log("Todas las estrategias fallaron, usando URL original");
-        return $imageUrl;
+         error_log("Todas las estrategias fallaron, intentando obtener favicon del dominio...");
+         
+         // Obtener favicon del dominio como fallback
+         $faviconUrl = getFaviconFromDomain($imageUrl);
+         if ($faviconUrl) {
+             error_log("Favicon encontrado: " . $faviconUrl);
+             return $faviconUrl;
+         }
+         
+         error_log("No se pudo obtener favicon, usando URL original");
+         return $imageUrl;
         
     } catch (Exception $e) {
         error_log("Error en downloadAndProcessWallapopImage: " . $e->getMessage());
         return $imageUrl; // Devolver URL original si falla
+    }
+}
+
+// Función para obtener favicon del dominio (igual que la versión web)
+function getFaviconFromDomain($imageUrl) {
+    try {
+        error_log("=== OBTENIENDO FAVICON DEL DOMINIO ===");
+        
+        // Extraer dominio de la URL de imagen
+        $parsedUrl = parse_url($imageUrl);
+        if (!$parsedUrl || empty($parsedUrl['host'])) {
+            error_log("No se pudo extraer dominio de la URL: " . $imageUrl);
+            return null;
+        }
+        
+        $domain = $parsedUrl['host'];
+        error_log("Dominio extraído: " . $domain);
+        
+        // Crear nombre de archivo del favicon (nombre del dominio)
+        $faviconName = preg_replace('/\..*$/', '', $domain); // Remover extensión del dominio
+        $faviconFileName = $faviconName . '.png';
+        
+        // Ruta del favicon local
+        $faviconPath = '../local_favicons/' . $faviconFileName;
+        $faviconUrl = '/local_favicons/' . $faviconFileName;
+        
+        error_log("Buscando favicon en: " . $faviconPath);
+        
+        // Verificar si el favicon ya existe localmente
+        if (file_exists($faviconPath)) {
+            error_log("Favicon encontrado localmente: " . $faviconUrl);
+            return $faviconUrl;
+        }
+        
+        // Crear directorio si no existe
+        $faviconDir = '../local_favicons/';
+        if (!file_exists($faviconDir)) {
+            mkdir($faviconDir, 0755, true);
+            error_log("Directorio de favicons creado: " . $faviconDir);
+        }
+        
+        // Intentar descargar favicon desde diferentes fuentes
+        $faviconSources = [
+            'https://' . $domain . '/favicon.ico',
+            'https://' . $domain . '/favicon.png',
+            'https://' . $domain . '/apple-touch-icon.png',
+            'https://www.google.com/s2/favicons?domain=' . $domain,
+            'https://favicons.githubusercontent.com/' . $domain
+        ];
+        
+        foreach ($faviconSources as $source) {
+            error_log("Intentando descargar favicon desde: " . $source);
+            
+            $ch = curl_init($source);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; linkalooBot/1.0)',
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false
+            ]);
+            
+            $faviconData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            curl_close($ch);
+            
+            if ($faviconData && $httpCode === 200) {
+                error_log("Favicon descargado exitosamente desde: " . $source);
+                error_log("Content-Type: " . $contentType);
+                error_log("Tamaño: " . strlen($faviconData) . " bytes");
+                
+                // Validar que es una imagen válida
+                $imageInfo = getimagesizefromstring($faviconData);
+                if ($imageInfo === false) {
+                    error_log("Los datos descargados no son una imagen válida, intentando siguiente fuente...");
+                    continue;
+                }
+                
+                error_log("Favicon válido - Dimensiones: " . $imageInfo[0] . "x" . $imageInfo[1]);
+                error_log("Tipo MIME: " . $imageInfo['mime']);
+                
+                // Convertir a PNG si es necesario
+                $sourceImage = imagecreatefromstring($faviconData);
+                if ($sourceImage === false) {
+                    error_log("No se pudo crear imagen desde los datos, intentando siguiente fuente...");
+                    continue;
+                }
+                
+                // Crear imagen PNG
+                $pngImage = imagecreatetruecolor($imageInfo[0], $imageInfo[1]);
+                imagealphablending($pngImage, false);
+                imagesavealpha($pngImage, true);
+                
+                // Copiar imagen
+                imagecopy($pngImage, $sourceImage, 0, 0, 0, 0, $imageInfo[0], $imageInfo[1]);
+                
+                // Guardar como PNG
+                $saveSuccess = imagepng($pngImage, $faviconPath);
+                
+                // Limpiar memoria
+                imagedestroy($sourceImage);
+                imagedestroy($pngImage);
+                
+                if ($saveSuccess) {
+                    error_log("Favicon guardado exitosamente: " . $faviconPath);
+                    return $faviconUrl;
+                } else {
+                    error_log("Error guardando favicon, intentando siguiente fuente...");
+                    continue;
+                }
+            } else {
+                error_log("Error descargando favicon desde " . $source . " - HTTP " . $httpCode);
+            }
+        }
+        
+        error_log("No se pudo obtener favicon de ninguna fuente");
+        return null;
+        
+    } catch (Exception $e) {
+        error_log("Error en getFaviconFromDomain: " . $e->getMessage());
+        return null;
     }
 }
 
