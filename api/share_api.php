@@ -112,17 +112,24 @@ function saveSharedLink($pdo, $input) {
             $imagenFinal = processSharedImage($userId, $url, $imageData, $titulo, $descripcion);
         }
         
-        // Obtener metadatos de la URL si no se proporcionan título, descripción o imagen
-        $urlCanonica = $url;
-        if (empty($titulo) || empty($descripcion) || empty($imagenFinal)) {
-            $metadata = getUrlMetadataFromUrl($url);
-            if ($metadata) {
-                if (empty($titulo)) $titulo = $metadata['titulo'] ?? '';
-                if (empty($descripcion)) $descripcion = $metadata['descripcion'] ?? '';
-                if (empty($imagenFinal)) $imagenFinal = $metadata['imagen'] ?? '';
-                $urlCanonica = $metadata['url_canonica'] ?? $url;
-            }
-        }
+         // Obtener metadatos de la URL si no se proporcionan título, descripción o imagen
+         $urlCanonica = $url;
+         if (empty($titulo) || empty($descripcion) || empty($imagenFinal)) {
+             $metadata = getUrlMetadataFromUrl($url);
+             if ($metadata) {
+                 if (empty($titulo)) $titulo = $metadata['titulo'] ?? '';
+                 if (empty($descripcion)) $descripcion = $metadata['descripcion'] ?? '';
+                 if (empty($imagenFinal)) {
+                     $imagenFinal = $metadata['imagen'] ?? '';
+                     // Si tenemos una URL de imagen de Wallapop, descargarla y procesarla
+                     if (!empty($imagenFinal) && strpos($imagenFinal, 'img.wallapop.com') !== false) {
+                         error_log("Detectada imagen de Wallapop, descargando y procesando...");
+                         $imagenFinal = downloadAndProcessWallapopImage($userId, $imagenFinal, $titulo);
+                     }
+                 }
+                 $urlCanonica = $metadata['url_canonica'] ?? $url;
+             }
+         }
         
         // Crear el link
         $stmt = $pdo->prepare("INSERT INTO links (usuario_id, categoria_id, url, url_canonica, titulo, descripcion, imagen, hash_url, creado_en, actualizado_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
@@ -345,7 +352,7 @@ function scrapeMetadata($url) {
     }
     
     // Detectar si es Wallapop y usar función específica
-    if (strpos($url, 'wallapop.com') !== false || strpos($url, 'es.wallapop.com') !== false) {
+    if (strpos($url, 'wallapop.com') !== false) {
         error_log("Detectado Wallapop, usando función específica");
         return scrapeWallapopMetadata($url);
     }
@@ -659,26 +666,26 @@ function scrapeWallapopMetadata($url) {
         }
     }
     
-    // Extraer precio si está disponible
-    $priceSelectors = [
-        '//span[contains(@class, "ItemPrice")]',
-        '//span[contains(@class, "item-price")]',
-        '//span[contains(@class, "price")]',
-        '//div[contains(@class, "ItemPrice")]',
-        '//span[contains(text(), "€")]',
-        '//div[contains(text(), "€")]'
-    ];
-    
-    $price = '';
-    foreach ($priceSelectors as $selector) {
-        $nodes = $xpath->query($selector);
-        if ($nodes->length > 0) {
-            $price = trim($nodes->item(0)->textContent ?? '');
-            if (!empty($price) && (strpos($price, '€') !== false || strpos($price, '$') !== false || strpos($price, '£') !== false)) {
-                break;
-            }
-        }
-    }
+     // Extraer precio si está disponible
+     $priceSelectors = [
+         '//span[contains(@class, "ItemPrice")]',
+         '//span[contains(@class, "item-price")]',
+         '//span[contains(@class, "price")]',
+         '//div[contains(@class, "ItemPrice")]',
+         '//span[contains(text(), "€")]',
+         '//div[contains(text(), "€")]'
+     ];
+     
+     $price = '';
+     foreach ($priceSelectors as $selector) {
+         $nodes = $xpath->query($selector);
+         if ($nodes->length > 0) {
+             $price = trim($nodes->item(0)->textContent ?? '');
+             if (!empty($price) && (strpos($price, '€') !== false || strpos($price, '$') !== false || strpos($price, '£') !== false)) {
+                 break;
+             }
+         }
+     }
     
     // Si encontramos precio, agregarlo a la descripción
     if (!empty($price) && !empty($meta['description'])) {
@@ -706,7 +713,63 @@ function scrapeWallapopMetadata($url) {
     error_log("  Descripción: " . ($meta['description'] ?? ''));
     error_log("  Imagen: " . ($meta['image'] ?? ''));
     
-    return $meta;
+     return $meta;
+}
+
+// Función específica para descargar y procesar imágenes de Wallapop
+function downloadAndProcessWallapopImage($userId, $imageUrl, $titulo) {
+    try {
+        error_log("=== DESCARGANDO IMAGEN DE WALLAPOP ===");
+        error_log("URL de imagen: " . $imageUrl);
+        error_log("User ID: " . $userId);
+        
+        // Configurar cURL para descargar la imagen
+        $ch = curl_init($imageUrl);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_HTTPHEADER => [
+                'Accept: image/webp,image/apng,image/*,*/*;q=0.8',
+                'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+                'Accept-Encoding: gzip, deflate',
+                'Cache-Control: no-cache',
+                'Pragma: no-cache'
+            ]
+        ]);
+        
+        $imageData = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+        
+        if (!$imageData || $httpCode !== 200) {
+            error_log("Error descargando imagen de Wallapop: HTTP " . $httpCode);
+            return $imageUrl; // Devolver URL original si falla
+        }
+        
+        error_log("Imagen descargada exitosamente. Content-Type: " . $contentType);
+        error_log("Tamaño de imagen: " . strlen($imageData) . " bytes");
+        
+        // Convertir a base64 para procesar
+        $base64Image = base64_encode($imageData);
+        
+        // Usar la función existente de procesamiento de imágenes
+        $processedImage = processSharedImage($userId, $imageUrl, $base64Image, $titulo, '');
+        
+        if ($processedImage) {
+            error_log("Imagen de Wallapop procesada exitosamente: " . $processedImage);
+            return $processedImage;
+        } else {
+            error_log("Error procesando imagen de Wallapop, usando URL original");
+            return $imageUrl;
+        }
+        
+    } catch (Exception $e) {
+        error_log("Error en downloadAndProcessWallapopImage: " . $e->getMessage());
+        return $imageUrl; // Devolver URL original si falla
+    }
 }
 
 // Función auxiliar para obtener metadatos de URL (usando la misma lógica que la versión web)
