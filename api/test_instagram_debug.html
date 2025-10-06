@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Instagram Debug - Linkaloo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .url-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            border: 1px solid #ccffcc;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            border: 1px solid #ffcccc;
+        }
+        .info {
+            color: blue;
+            background: #e6f3ff;
+            border: 1px solid #cce6ff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .meta-tag {
+            background: #f8f9fa;
+            padding: 8px;
+            border-left: 3px solid #007bff;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .image-preview {
+            max-width: 300px;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📷 Test Instagram Debug - Linkaloo</h1>
+        <p>Esta página te permite probar la extracción de metadatos de Instagram directamente desde el navegador.</p>
+        
+        <div class="test-section">
+            <h3>🔍 Probar URL de Instagram</h3>
+            <input type="text" id="instagramUrl" placeholder="Pega aquí la URL de Instagram (ej: https://www.instagram.com/p/ABC123/)">
+            <br><br>
+            <button onclick="testInstagramUrl()">🔍 Analizar Instagram</button>
+            <button onclick="clearResults()">🧹 Limpiar</button>
+        </div>
+        
+        <div id="results"></div>
+        
+        <div class="test-section">
+            <h3>📋 URLs de Ejemplo para Probar</h3>
+            <p>Prueba con estos ejemplos de Instagram:</p>
+            
+            <div class="url-display">https://www.instagram.com/p/ABC123/</div>
+            <button onclick="testSpecificUrl('https://www.instagram.com/p/ABC123/')">Probar Post</button>
+            
+            <div class="url-display">https://www.instagram.com/reel/ABC123/</div>
+            <button onclick="testSpecificUrl('https://www.instagram.com/reel/ABC123/')">Probar Reel</button>
+            
+            <div class="url-display">https://www.instagram.com/tv/ABC123/</div>
+            <button onclick="testSpecificUrl('https://www.instagram.com/tv/ABC123/')">Probar IGTV</button>
+        </div>
+    </div>
+
+    <script>
+        async function testInstagramUrl() {
+            const url = document.getElementById('instagramUrl').value.trim();
+            if (url) {
+                await testSpecificUrl(url);
+            } else {
+                showResult('Por favor ingresa una URL de Instagram', 'error');
+            }
+        }
+        
+        async function testSpecificUrl(url) {
+            showResult('🔄 Analizando URL de Instagram: ' + url, 'info');
+            
+            try {
+                // Usar un proxy CORS para evitar problemas de CORS con Instagram
+                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+                
+                showResult('📡 Obteniendo HTML desde: ' + proxyUrl, 'info');
+                
+                const response = await fetch(proxyUrl);
+                const html = await response.text();
+                
+                showResult('✅ HTML obtenido, tamaño: ' + html.length + ' caracteres', 'success');
+                
+                // Analizar metadatos
+                analyzeInstagramMetadata(html, url);
+                
+            } catch (error) {
+                showResult('❌ Error obteniendo HTML: ' + error.message, 'error');
+                
+                // Intentar con método alternativo
+                tryAlternativeMethod(url);
+            }
+        }
+        
+        function analyzeInstagramMetadata(html, url) {
+            showResult('🔍 Analizando metadatos de Instagram...', 'info');
+            
+            // Buscar título
+            const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+            const title = titleMatch ? titleMatch[1] : 'No encontrado';
+            showResult('📝 Título: ' + title, title !== 'No encontrado' ? 'success' : 'error');
+            
+            // Buscar descripción
+            const descMatch = html.match(/<meta property="og:description" content="([^"]+)"/i);
+            const description = descMatch ? descMatch[1] : 'No encontrado';
+            showResult('📄 Descripción: ' + description, description !== 'No encontrado' ? 'success' : 'error');
+            
+            // Buscar imagen - múltiples patrones
+            let image = null;
+            const imagePatterns = [
+                /<meta property="og:image" content="([^"]+)"/i,
+                /<meta name="twitter:image" content="([^"]+)"/i,
+                /<meta property="og:image:url" content="([^"]+)"/i,
+                /<meta name="og:image" content="([^"]+)"/i
+            ];
+            
+            for (let pattern of imagePatterns) {
+                const match = html.match(pattern);
+                if (match) {
+                    image = match[1];
+                    break;
+                }
+            }
+            
+            if (image) {
+                showResult('🖼️ Imagen encontrada: ' + image, 'success');
+                showImagePreview(image);
+            } else {
+                showResult('❌ No se encontró imagen con meta tags', 'error');
+                
+                // Buscar patrones alternativos
+                const altPatterns = [
+                    /https:\/\/[^"'\s]+\.jpg/gi,
+                    /https:\/\/[^"'\s]+\.jpeg/gi,
+                    /https:\/\/[^"'\s]+\.png/gi,
+                    /https:\/\/[^"'\s]+\.webp/gi
+                ];
+                
+                let foundImages = [];
+                for (let pattern of altPatterns) {
+                    const matches = html.match(pattern);
+                    if (matches) {
+                        foundImages = foundImages.concat(matches);
+                    }
+                }
+                
+                if (foundImages.length > 0) {
+                    showResult('🔍 Imágenes encontradas con patrones alternativos:', 'info');
+                    foundImages.slice(0, 5).forEach(img => {
+                        showResult('   📷 ' + img, 'info');
+                    });
+                    showImagePreview(foundImages[0]);
+                } else {
+                    showResult('❌ No se encontraron imágenes en el HTML', 'error');
+                }
+            }
+            
+            // Mostrar meta tags relevantes
+            showRelevantMetaTags(html);
+        }
+        
+        function showImagePreview(imageUrl) {
+            const resultsDiv = document.getElementById('results');
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'test-section';
+            imageDiv.innerHTML = '<h4>🖼️ Vista Previa de Imagen:</h4><img src="' + imageUrl + '" alt="Vista previa" class="image-preview" onerror="this.style.display=\'none\'">';
+            resultsDiv.appendChild(imageDiv);
+        }
+        
+        function showRelevantMetaTags(html) {
+            const resultsDiv = document.getElementById('results');
+            const metaDiv = document.createElement('div');
+            metaDiv.className = 'test-section';
+            metaDiv.innerHTML = '<h4>🏷️ Meta Tags Relevantes:</h4>';
+            
+            const relevantTags = [
+                'og:title', 'og:description', 'og:image', 'og:image:url',
+                'twitter:title', 'twitter:description', 'twitter:image',
+                'title'
+            ];
+            
+            relevantTags.forEach(tag => {
+                const patterns = [
+                    new RegExp(`<meta property="${tag}" content="([^"]+)"`, 'i'),
+                    new RegExp(`<meta name="${tag}" content="([^"]+)"`, 'i'),
+                    new RegExp(`<title>([^<]+)</title>`, 'i')
+                ];
+                
+                for (let pattern of patterns) {
+                    const match = html.match(pattern);
+                    if (match) {
+                        metaDiv.innerHTML += `<div class="meta-tag">${tag}: ${match[1]}</div>`;
+                        break;
+                    }
+                }
+            });
+            
+            resultsDiv.appendChild(metaDiv);
+        }
+        
+        async function tryAlternativeMethod(url) {
+            showResult('🔄 Intentando método alternativo...', 'info');
+            
+            try {
+                // Usar un proxy diferente
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/' + url;
+                const response = await fetch(proxyUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const html = await response.text();
+                showResult('✅ HTML obtenido con método alternativo', 'success');
+                analyzeInstagramMetadata(html, url);
+            } catch (error) {
+                showResult('❌ Método alternativo también falló: ' + error.message, 'error');
+                showResult('💡 Posibles causas:<br>• Instagram bloquea requests automatizados<br>• Necesita autenticación<br>• Requiere JavaScript para cargar contenido', 'info');
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('instagramUrl').value = '';
+        }
+    </script>
+</body>
+</html>
