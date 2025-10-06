@@ -344,6 +344,12 @@ function scrapeMetadata($url) {
         return scrapePinterestMetadata($url);
     }
     
+    // Detectar si es Wallapop y usar función específica
+    if (strpos($url, 'wallapop.com') !== false) {
+        error_log("Detectado Wallapop, usando función específica");
+        return scrapeWallapopMetadata($url);
+    }
+    
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -531,6 +537,169 @@ function scrapePinterestMetadata($url) {
     }
     
     error_log("Metadatos Pinterest extraídos:");
+    error_log("  Título: " . ($meta['title'] ?? ''));
+    error_log("  Descripción: " . ($meta['description'] ?? ''));
+    error_log("  Imagen: " . ($meta['image'] ?? ''));
+    
+    return $meta;
+}
+
+// Función específica para Wallapop
+function scrapeWallapopMetadata($url) {
+    error_log("=== SCRAPE ESPECÍFICO PARA WALLAPOP ===");
+    error_log("URL Wallapop: " . $url);
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate',
+            'Cache-Control: no-cache',
+            'Pragma: no-cache'
+        ]
+    ]);
+    
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if (!$html || $httpCode !== 200) {
+        error_log("Error obteniendo Wallapop: HTTP " . $httpCode);
+        return [];
+    }
+    
+    $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if ($enc) {
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
+    }
+    
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    $doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+    
+    $meta = [];
+    
+    // Extraer título - Wallapop usa diferentes selectores
+    $titleSelectors = [
+        '//h1[contains(@class, "ItemTitle")]',
+        '//h1[contains(@class, "item-title")]',
+        '//h1[contains(@class, "title")]',
+        '//h1',
+        '//meta[@property="og:title"]/@content',
+        '//meta[@name="twitter:title"]/@content'
+    ];
+    
+    foreach ($titleSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $title = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
+            if (!empty($title)) {
+                $meta['title'] = $title;
+                break;
+            }
+        }
+    }
+    
+    // Extraer descripción - Wallapop tiene estructura específica para productos
+    $descSelectors = [
+        '//div[contains(@class, "ItemDescription")]',
+        '//div[contains(@class, "item-description")]',
+        '//div[contains(@class, "description")]',
+        '//p[contains(@class, "ItemDescription")]',
+        '//meta[@property="og:description"]/@content',
+        '//meta[@name="description"]/@content'
+    ];
+    
+    foreach ($descSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $desc = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
+            if (!empty($desc)) {
+                $meta['description'] = $desc;
+                break;
+            }
+        }
+    }
+    
+    // Extraer imagen - Wallapop usa estructura específica para productos
+    $imageSelectors = [
+        '//img[contains(@class, "ItemImage")]/@src',
+        '//img[contains(@class, "item-image")]/@src',
+        '//img[contains(@class, "product-image")]/@src',
+        '//img[contains(@class, "ItemGallery")]/@src',
+        '//meta[@property="og:image"]/@content',
+        '//meta[@name="twitter:image"]/@content'
+    ];
+    
+    foreach ($imageSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $img = trim($nodes->item(0)->nodeValue ?? '');
+            if (!empty($img)) {
+                $meta['image'] = $img;
+                break;
+            }
+        }
+    }
+    
+    // Si no encontramos imagen, buscar en el JSON embebido de Wallapop
+    if (empty($meta['image'])) {
+        if (preg_match('/"image":\s*"([^"]+)"/', $html, $matches)) {
+            $meta['image'] = $matches[1];
+        }
+        // Buscar en datos estructurados
+        if (preg_match('/"@type":\s*"Product".*?"image":\s*"([^"]+)"/s', $html, $matches)) {
+            $meta['image'] = $matches[1];
+        }
+    }
+    
+    // Extraer precio si está disponible
+    $priceSelectors = [
+        '//span[contains(@class, "ItemPrice")]',
+        '//span[contains(@class, "item-price")]',
+        '//span[contains(@class, "price")]',
+        '//div[contains(@class, "ItemPrice")]'
+    ];
+    
+    $price = '';
+    foreach ($priceSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $price = trim($nodes->item(0)->textContent ?? '');
+            if (!empty($price)) {
+                break;
+            }
+        }
+    }
+    
+    // Si encontramos precio, agregarlo a la descripción
+    if (!empty($price) && !empty($meta['description'])) {
+        $meta['description'] = $price . ' - ' . $meta['description'];
+    } elseif (!empty($price)) {
+        $meta['description'] = $price;
+    }
+    
+    // Limpiar y normalizar datos
+    foreach ($meta as &$value) {
+        $value = ensureUtf8($value);
+        $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+    }
+    unset($value);
+    
+    // Limpiar título específico de Wallapop
+    if (!empty($meta['title'])) {
+        // Remover "Wallapop" del título si está presente
+        $meta['title'] = preg_replace('/\s*-\s*Wallapop$/', '', $meta['title']);
+        $meta['title'] = trim($meta['title']);
+    }
+    
+    error_log("Metadatos Wallapop extraídos:");
     error_log("  Título: " . ($meta['title'] ?? ''));
     error_log("  Descripción: " . ($meta['description'] ?? ''));
     error_log("  Imagen: " . ($meta['image'] ?? ''));
