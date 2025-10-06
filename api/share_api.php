@@ -345,7 +345,7 @@ function scrapeMetadata($url) {
     }
     
     // Detectar si es Wallapop y usar función específica
-    if (strpos($url, 'wallapop.com') !== false) {
+    if (strpos($url, 'wallapop.com') !== false || strpos($url, 'es.wallapop.com') !== false) {
         error_log("Detectado Wallapop, usando función específica");
         return scrapeWallapopMetadata($url);
     }
@@ -664,7 +664,9 @@ function scrapeWallapopMetadata($url) {
         '//span[contains(@class, "ItemPrice")]',
         '//span[contains(@class, "item-price")]',
         '//span[contains(@class, "price")]',
-        '//div[contains(@class, "ItemPrice")]'
+        '//div[contains(@class, "ItemPrice")]',
+        '//span[contains(text(), "€")]',
+        '//div[contains(text(), "€")]'
     ];
     
     $price = '';
@@ -672,7 +674,7 @@ function scrapeWallapopMetadata($url) {
         $nodes = $xpath->query($selector);
         if ($nodes->length > 0) {
             $price = trim($nodes->item(0)->textContent ?? '');
-            if (!empty($price)) {
+            if (!empty($price) && (strpos($price, '€') !== false || strpos($price, '$') !== false || strpos($price, '£') !== false)) {
                 break;
             }
         }
