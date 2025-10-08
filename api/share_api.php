@@ -25,6 +25,10 @@ try {
             getUrlMetadata($pdo, $input);
             break;
             
+        case 'update_link_category':
+            updateLinkCategory($pdo, $input);
+            break;
+            
         default:
             throw new Exception('Acción no válida');
     }
@@ -1306,5 +1310,61 @@ function scrapeTikTokMetadata($url) {
     error_log("  Imagen: " . ($meta['image'] ?? ''));
 
     return $meta;
+}
+
+function updateLinkCategory($pdo, $input) {
+    $linkId = $input['link_id'] ?? 0;
+    $categoriaId = $input['categoria_id'] ?? 0;
+    
+    if ($linkId <= 0) {
+        throw new Exception('ID de link válido es requerido');
+    }
+    
+    if ($categoriaId <= 0) {
+        throw new Exception('ID de categoría válido es requerido');
+    }
+    
+    // Verificar que el link existe
+    $stmt = $pdo->prepare("SELECT * FROM links WHERE id = ?");
+    $stmt->execute([$linkId]);
+    $link = $stmt->fetch();
+    
+    if (!$link) {
+        throw new Exception('Link no encontrado');
+    }
+    
+    $userId = $link['usuario_id'];
+    
+    // Verificar que la nueva categoría existe y pertenece al usuario
+    $stmt = $pdo->prepare("SELECT id FROM categorias WHERE id = ? AND usuario_id = ?");
+    $stmt->execute([$categoriaId, $userId]);
+    $categoria = $stmt->fetch();
+    
+    if (!$categoria) {
+        throw new Exception('Categoría no encontrada o no pertenece al usuario');
+    }
+    
+    // Actualizar la categoría del link
+    $stmt = $pdo->prepare("UPDATE links SET categoria_id = ?, actualizado_en = NOW() WHERE id = ? AND usuario_id = ?");
+    $stmt->execute([$categoriaId, $linkId, $userId]);
+    
+    // Verificar que se actualizó correctamente
+    $stmt = $pdo->prepare("SELECT * FROM links WHERE id = ?");
+    $stmt->execute([$linkId]);
+    $updatedLink = $stmt->fetch();
+    
+    echo json_encode([
+        'success' => true,
+        'action' => 'category_updated',
+        'link' => [
+            'id' => (int)$updatedLink['id'],
+            'usuario_id' => (int)$updatedLink['usuario_id'],
+            'categoria_id' => (int)$updatedLink['categoria_id'],
+            'url' => $updatedLink['url'],
+            'titulo' => $updatedLink['titulo'],
+            'actualizado_en' => $updatedLink['actualizado_en']
+        ],
+        'message' => 'Categoría del enlace actualizada exitosamente'
+    ]);
 }
 ?>
