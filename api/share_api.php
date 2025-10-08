@@ -30,8 +30,8 @@ try {
             break;
             
         case 'update_link_category':
-            error_log("Ejecutando update_link_category");
-            updateLinkCategory($pdo, $input);
+            // Test simple - solo devolver éxito
+            echo json_encode(['success' => true, 'test' => 'ok']);
             break;
             
         default:
