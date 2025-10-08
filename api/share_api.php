@@ -16,21 +16,27 @@ try {
     $input = json_decode(file_get_contents('php://input'), true);
     $action = $input['action'] ?? '';
     
+    error_log("=== RECIBIDA ACCIÓN: " . $action . " ===");
+    
     switch ($action) {
         case 'save_shared_link':
+            error_log("Ejecutando save_shared_link");
             saveSharedLink($pdo, $input);
             break;
             
         case 'get_url_metadata':
+            error_log("Ejecutando get_url_metadata");
             getUrlMetadata($pdo, $input);
             break;
             
         case 'update_link_category':
+            error_log("Ejecutando update_link_category");
             updateLinkCategory($pdo, $input);
             break;
             
         default:
-            throw new Exception('Acción no válida');
+            error_log("Acción no válida: " . $action);
+            throw new Exception('Acción no válida: ' . $action);
     }
     
 } catch (Exception $e) {
@@ -1313,8 +1319,13 @@ function scrapeTikTokMetadata($url) {
 }
 
 function updateLinkCategory($pdo, $input) {
+    error_log("=== FUNCIÓN updateLinkCategory LLAMADA ===");
+    error_log("Input recibido: " . json_encode($input));
+    
     $linkId = $input['link_id'] ?? 0;
     $categoriaId = $input['categoria_id'] ?? 0;
+    
+    error_log("Link ID: " . $linkId . ", Categoría ID: " . $categoriaId);
     
     if ($linkId <= 0) {
         throw new Exception('ID de link válido es requerido');
@@ -1325,34 +1336,44 @@ function updateLinkCategory($pdo, $input) {
     }
     
     // Verificar que el link existe
+    error_log("Buscando link con ID: " . $linkId);
     $stmt = $pdo->prepare("SELECT * FROM links WHERE id = ?");
     $stmt->execute([$linkId]);
     $link = $stmt->fetch();
     
     if (!$link) {
+        error_log("ERROR: Link no encontrado con ID: " . $linkId);
         throw new Exception('Link no encontrado');
     }
     
     $userId = $link['usuario_id'];
+    error_log("Link encontrado - Usuario ID: " . $userId);
     
     // Verificar que la nueva categoría existe y pertenece al usuario
+    error_log("Verificando categoría " . $categoriaId . " para usuario " . $userId);
     $stmt = $pdo->prepare("SELECT id FROM categorias WHERE id = ? AND usuario_id = ?");
     $stmt->execute([$categoriaId, $userId]);
     $categoria = $stmt->fetch();
     
     if (!$categoria) {
+        error_log("ERROR: Categoría no encontrada o no pertenece al usuario");
         throw new Exception('Categoría no encontrada o no pertenece al usuario');
     }
     
+    error_log("Categoría verificada correctamente");
+    
     // Actualizar la categoría del link
+    error_log("Actualizando link " . $linkId . " a categoría " . $categoriaId);
     $stmt = $pdo->prepare("UPDATE links SET categoria_id = ?, actualizado_en = NOW() WHERE id = ? AND usuario_id = ?");
     $stmt->execute([$categoriaId, $linkId, $userId]);
+    error_log("Link actualizado exitosamente");
     
     // Verificar que se actualizó correctamente
     $stmt = $pdo->prepare("SELECT * FROM links WHERE id = ?");
     $stmt->execute([$linkId]);
     $updatedLink = $stmt->fetch();
     
+    error_log("Enviando respuesta exitosa");
     echo json_encode([
         'success' => true,
         'action' => 'category_updated',
@@ -1366,5 +1387,6 @@ function updateLinkCategory($pdo, $input) {
         ],
         'message' => 'Categoría del enlace actualizada exitosamente'
     ]);
+    error_log("=== FUNCIÓN updateLinkCategory COMPLETADA EXITOSAMENTE ===");
 }
 ?>
