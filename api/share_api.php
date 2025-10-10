@@ -1,43 +1,29 @@
 <?php
-// Incluir archivo de configuración
-require_once 'config.php';
-
-// Configurar headers CORS
-setCorsHeaders();
+// Test básico para diagnosticar el problema
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
 // Manejar preflight requests
-handlePreflightRequest();
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 try {
-    // Obtener conexión a la base de datos
-    $pdo = getDatabaseConnection();
-    
     // Obtener datos del request
     $input = json_decode(file_get_contents('php://input'), true);
     $action = $input['action'] ?? '';
     
-    error_log("=== RECIBIDA ACCIÓN: " . $action . " ===");
-    
-    switch ($action) {
-        case 'save_shared_link':
-            error_log("Ejecutando save_shared_link");
-            saveSharedLink($pdo, $input);
-            break;
-            
-        case 'get_url_metadata':
-            error_log("Ejecutando get_url_metadata");
-            getUrlMetadata($pdo, $input);
-            break;
-            
-        case 'update_link_category':
-            // Test simple - solo devolver éxito
-            echo json_encode(['success' => true, 'test' => 'ok']);
-            break;
-            
-        default:
-            error_log("Acción no válida: " . $action);
-            throw new Exception('Acción no válida: ' . $action);
+    if ($action === 'update_link_category') {
+        // Test simple - solo devolver éxito
+        echo json_encode(['success' => true, 'test' => 'ok', 'action' => $action]);
+        exit();
     }
+    
+    // Si no es la acción que esperamos, devolver error
+    echo json_encode(['success' => false, 'error' => 'Acción no reconocida: ' . $action]);
     
 } catch (Exception $e) {
     http_response_code(500);
