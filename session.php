@@ -10,13 +10,16 @@ if (!defined('LINKALOO_REMEMBER_COOKIE_NAME')) {
 ini_set('session.gc_maxlifetime', LINKALOO_SESSION_LIFETIME);
 ini_set('session.cookie_lifetime', LINKALOO_SESSION_LIFETIME);
 
+$isHttpsRequest = !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off';
+$sessionSameSite = $isHttpsRequest ? 'None' : 'Lax';
+
 session_set_cookie_params([
     'lifetime' => LINKALOO_SESSION_LIFETIME,
     'path'     => '/',
     'domain'   => '',
-    'secure'   => !empty($_SERVER['HTTPS']),
+    'secure'   => $isHttpsRequest,
     'httponly' => true,
-    'samesite' => 'Lax',
+    'samesite' => $sessionSameSite,
 ]);
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -113,13 +116,16 @@ if (!function_exists('isValidSharedUrl')) {
 if (!function_exists('linkalooRememberCookieOptions')) {
     function linkalooRememberCookieOptions(int $expires): array
     {
+        $isHttpsRequest = !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off';
+        $sameSite       = $isHttpsRequest ? 'None' : 'Lax';
+
         return [
             'expires'  => $expires,
             'path'     => '/',
             'domain'   => '',
-            'secure'   => !empty($_SERVER['HTTPS']),
+            'secure'   => $isHttpsRequest,
             'httponly' => true,
-            'samesite' => 'Lax',
+            'samesite' => $sameSite,
         ];
     }
 }
