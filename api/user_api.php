@@ -203,9 +203,6 @@ function getCategories($pdo, $input) {
     $categories = $stmt->fetchAll();
     
     // Ordenar en PHP por fecha de modificación
-    error_log("=== INICIANDO ORDENAMIENTO PHP ===");
-    error_log("Total categorías antes de ordenar: " . count($categories));
-    
     usort($categories, function($a, $b) {
         $dateA = $a['modificado_en'] ?: $a['creado_en'];
         $dateB = $b['modificado_en'] ?: $b['creado_en'];
@@ -220,9 +217,6 @@ function getCategories($pdo, $input) {
         
         return $result;
     });
-    
-    error_log("Total categorías después de ordenar: " . count($categories));
-    error_log("=== FIN ORDENAMIENTO PHP ===");
     
     echo json_encode([
         'success' => true,
