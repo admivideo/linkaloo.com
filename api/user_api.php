@@ -33,6 +33,7 @@ try {
             testConnection($pdo);
             break;
             
+            
         case 'get_links':
             getLinks($pdo, $input);
             break;
@@ -193,9 +194,35 @@ function getCategories($pdo, $input) {
     }
     
     // Obtener categorías del usuario
-    $stmt = $pdo->prepare("SELECT * FROM categorias WHERE usuario_id = ? ORDER BY nombre ASC");
+    $stmt = $pdo->prepare("
+        SELECT c.*
+        FROM categorias c 
+        WHERE c.usuario_id = ? 
+    ");
     $stmt->execute([$userId]);
     $categories = $stmt->fetchAll();
+    
+    // Ordenar en PHP por fecha de modificación
+    error_log("=== INICIANDO ORDENAMIENTO PHP ===");
+    error_log("Total categorías antes de ordenar: " . count($categories));
+    
+    usort($categories, function($a, $b) {
+        $dateA = $a['modificado_en'] ?: $a['creado_en'];
+        $dateB = $b['modificado_en'] ?: $b['creado_en'];
+        
+        // Ordenar por fecha descendente (más reciente primero)
+        $result = strtotime($dateB) - strtotime($dateA);
+        
+        // Si las fechas son iguales, ordenar por nombre
+        if ($result === 0) {
+            return strcmp($a['nombre'], $b['nombre']);
+        }
+        
+        return $result;
+    });
+    
+    error_log("Total categorías después de ordenar: " . count($categories));
+    error_log("=== FIN ORDENAMIENTO PHP ===");
     
     echo json_encode([
         'success' => true,
@@ -208,11 +235,12 @@ function getCategories($pdo, $input) {
                 'nombre' => $cat['nombre'],
                 'creado_en' => $cat['creado_en'],
                 'modificado_en' => $cat['modificado_en'],
-                'share_token' => $cat['share_token']
+                'share_token' => $cat['share_token'] ?? null
             ];
         }, $categories)
     ]);
 }
+
 
 function testConnection($pdo) {
     // Probar conexión con consultas simples
@@ -942,4 +970,5 @@ function uploadImage($pdo, $input) {
         ]);
     }
 }
+
 ?>
