@@ -983,13 +983,14 @@ function updateCategory($pdo, $input) {
     try {
         error_log("=== UPDATE CATEGORY INICIADO ===");
         error_log("Input recibido: " . json_encode($input));
-    
-    $userId = $input['user_id'] ?? 0;
-    $categoryId = $input['category_id'] ?? 0;
-    $nombre = $input['nombre'] ?? null;
-    $nota = $input['nota'] ?? null;
-    
-    error_log("Datos procesados - UserID: $userId, CategoryID: $categoryId, Nombre: " . ($nombre ?? 'null') . ", Nota: " . ($nota ?? 'null'));
+        
+        $userId = $input['user_id'] ?? 0;
+        $categoryId = $input['category_id'] ?? 0;
+        $nombre = $input['nombre'] ?? null;
+        $nota = $input['nota'] ?? null;
+        $compartirPublico = $input['compartir_publico'] ?? false;
+        
+        error_log("Datos procesados - UserID: $userId, CategoryID: $categoryId, Nombre: " . ($nombre ?? 'null') . ", Nota: " . ($nota ?? 'null') . ", Compartir público: " . ($compartirPublico ? 'true' : 'false'));
     
     if ($userId <= 0) {
         error_log("ERROR: ID de usuario no válido: $userId");
@@ -1029,6 +1030,7 @@ function updateCategory($pdo, $input) {
     error_log("Preparando query de actualización...");
     $updateFields = [];
     $params = [];
+    $shareToken = null;
     
     if ($nombre !== null) {
         $updateFields[] = "nombre = ?";
@@ -1040,6 +1042,29 @@ function updateCategory($pdo, $input) {
         $updateFields[] = "nota = ?";
         $params[] = $nota;
         error_log("Campo 'nota' añadido: '$nota'");
+    }
+    
+    // Manejar compartir público
+    if ($compartirPublico) {
+        // Verificar si ya tiene share_token
+        $stmt = $pdo->prepare("SELECT share_token FROM categorias WHERE id = ? AND usuario_id = ?");
+        $stmt->execute([$categoryId, $userId]);
+        $currentCategory = $stmt->fetch();
+        
+        if (!$currentCategory || !$currentCategory['share_token']) {
+            // Generar nuevo share_token
+            $shareToken = bin2hex(random_bytes(16)); // 32 caracteres hexadecimales
+            $updateFields[] = "share_token = ?";
+            $params[] = $shareToken;
+            error_log("Nuevo share_token generado: '$shareToken'");
+        } else {
+            $shareToken = $currentCategory['share_token'];
+            error_log("Share_token existente: '$shareToken'");
+        }
+    } else {
+        // Si se desactiva compartir público, eliminar share_token
+        $updateFields[] = "share_token = NULL";
+        error_log("Share_token eliminado (compartir público desactivado)");
     }
     
     if (empty($updateFields)) {
@@ -1070,9 +1095,19 @@ function updateCategory($pdo, $input) {
             'category_id' => (int)$categoryId,
             'updated_fields' => array_keys(array_filter([
                 'nombre' => $nombre !== null,
-                'nota' => $nota !== null
+                'nota' => $nota !== null,
+                'compartir_publico' => true
             ]))
         ];
+        
+        // Añadir información de compartir si está activado
+        if ($compartirPublico && $shareToken) {
+            $publicUrl = "https://linkaloo.com/tablero_publico.php?token=" . $shareToken;
+            $response['share_token'] = $shareToken;
+            $response['public_url'] = $publicUrl;
+            error_log("URL pública generada: '$publicUrl'");
+        }
+        
         error_log("✅ UPDATE CATEGORY EXITOSO: " . json_encode($response));
         echo json_encode($response);
     } else {
