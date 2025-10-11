@@ -34,6 +34,11 @@ try {
             updateLinkCategory($pdo, $input);
             break;
             
+        case 'get_all_user_links':
+            error_log("Ejecutando get_all_user_links");
+            getAllUserLinks($pdo, $input);
+            break;
+            
         default:
             error_log("Acción no válida: " . $action);
             throw new Exception('Acción no válida: ' . $action);
@@ -1398,5 +1403,74 @@ function updateLinkCategory($pdo, $input) {
         'message' => 'Categoría del enlace actualizada exitosamente'
     ]);
     error_log("=== FUNCIÓN updateLinkCategory COMPLETADA EXITOSAMENTE ===");
+}
+
+function getAllUserLinks($pdo, $input) {
+    error_log("=== FUNCIÓN getAllUserLinks LLAMADA ===");
+    error_log("Input recibido: " . json_encode($input));
+    
+    $userId = $input['user_id'] ?? 0;
+    
+    error_log("User ID: " . $userId);
+    
+    if ($userId <= 0) {
+        throw new Exception('ID de usuario válido es requerido');
+    }
+    
+    // Verificar que el usuario existe
+    error_log("Verificando usuario con ID: " . $userId);
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+    
+    if (!$user) {
+        error_log("ERROR: Usuario no encontrado con ID: " . $userId);
+        throw new Exception('Usuario no encontrado');
+    }
+    
+    error_log("Usuario verificado correctamente");
+    
+    // Obtener todos los links del usuario ordenados cronológicamente (más recientes primero)
+    error_log("Obteniendo todos los links para usuario: " . $userId);
+    $stmt = $pdo->prepare("
+        SELECT l.*, c.nombre as categoria_nombre 
+        FROM links l 
+        LEFT JOIN categorias c ON l.categoria_id = c.id 
+        WHERE l.usuario_id = ? 
+        ORDER BY l.actualizado_en DESC, l.creado_en DESC, l.id DESC
+    ");
+    $stmt->execute([$userId]);
+    $links = $stmt->fetchAll();
+    
+    error_log("Links obtenidos: " . count($links));
+    
+    // Procesar los links para el formato de respuesta
+    $processedLinks = [];
+    foreach ($links as $link) {
+        $processedLinks[] = [
+            'id' => (int)$link['id'],
+            'usuario_id' => (int)$link['usuario_id'],
+            'categoria_id' => (int)$link['categoria_id'],
+            'categoria_nombre' => $link['categoria_nombre'] ?? 'Sin categoría',
+            'url' => $link['url'],
+            'url_canonica' => $link['url_canonica'],
+            'titulo' => $link['titulo'],
+            'descripcion' => $link['descripcion'],
+            'imagen_url' => $link['imagen'],
+            'creado_en' => $link['creado_en'],
+            'modificado_en' => $link['actualizado_en'],
+            'nota' => $link['nota'],
+            'hash_url' => $link['hash_url']
+        ];
+    }
+    
+    error_log("Enviando respuesta exitosa con " . count($processedLinks) . " links");
+    echo json_encode([
+        'success' => true,
+        'user_id' => (int)$userId,
+        'total_links' => count($processedLinks),
+        'links' => $processedLinks
+    ]);
+    error_log("=== FUNCIÓN getAllUserLinks COMPLETADA EXITOSAMENTE ===");
 }
 ?>
