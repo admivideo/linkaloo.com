@@ -229,7 +229,8 @@ function getCategories($pdo, $input) {
                 'nombre' => $cat['nombre'],
                 'creado_en' => $cat['creado_en'],
                 'modificado_en' => $cat['modificado_en'],
-                'share_token' => $cat['share_token'] ?? null
+                'share_token' => $cat['share_token'] ?? null,
+                'nota' => $cat['nota'] ?? null
             ];
         }, $categories)
     ]);
