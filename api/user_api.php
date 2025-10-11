@@ -202,6 +202,12 @@ function getCategories($pdo, $input) {
     $stmt->execute([$userId]);
     $categories = $stmt->fetchAll();
     
+    // Debug: Log de las categorías obtenidas
+    error_log("DEBUG: Categorías obtenidas para usuario $userId:");
+    foreach ($categories as $cat) {
+        error_log("  ID: {$cat['id']}, Nombre: {$cat['nombre']}, Nota: " . ($cat['nota'] ? "'{$cat['nota']}'" : "NULL"));
+    }
+    
     // Ordenar en PHP por fecha de modificación
     usort($categories, function($a, $b) {
         $dateA = $a['modificado_en'] ?: $a['creado_en'];
@@ -218,7 +224,7 @@ function getCategories($pdo, $input) {
         return $result;
     });
     
-    echo json_encode([
+    $response = [
         'success' => true,
         'user_id' => (int)$userId,
         'total_categories' => count($categories),
@@ -233,7 +239,12 @@ function getCategories($pdo, $input) {
                 'nota' => $cat['nota'] ?? null
             ];
         }, $categories)
-    ]);
+    ];
+    
+    // Debug: Log de la respuesta completa
+    error_log("DEBUG: Respuesta JSON completa: " . json_encode($response));
+    
+    echo json_encode($response);
 }
 
 
