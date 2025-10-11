@@ -157,6 +157,11 @@ function saveSharedLink($pdo, $input) {
         
         $linkId = $pdo->lastInsertId();
         
+        // Actualizar la fecha de modificación de la categoría
+        $stmt = $pdo->prepare("UPDATE categorias SET modificado_en = NOW() WHERE id = ? AND usuario_id = ?");
+        $stmt->execute([$categoriaId, $userId]);
+        error_log("✅ Categoría actualizada - modificado_en actualizado para categoría ID: " . $categoriaId);
+        
         // Obtener el link creado
         $stmt = $pdo->prepare("SELECT * FROM links WHERE id = ?");
         $stmt->execute([$linkId]);
@@ -1367,6 +1372,11 @@ function updateLinkCategory($pdo, $input) {
     $stmt = $pdo->prepare("UPDATE links SET categoria_id = ?, actualizado_en = NOW() WHERE id = ? AND usuario_id = ?");
     $stmt->execute([$categoriaId, $linkId, $userId]);
     error_log("Link actualizado exitosamente");
+    
+    // Actualizar la fecha de modificación de la categoría de destino
+    $stmt = $pdo->prepare("UPDATE categorias SET modificado_en = NOW() WHERE id = ? AND usuario_id = ?");
+    $stmt->execute([$categoriaId, $userId]);
+    error_log("✅ Categoría de destino actualizada - modificado_en actualizado para categoría ID: " . $categoriaId);
     
     // Verificar que se actualizó correctamente
     $stmt = $pdo->prepare("SELECT * FROM links WHERE id = ?");
