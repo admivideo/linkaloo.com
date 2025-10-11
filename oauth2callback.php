@@ -8,6 +8,13 @@ if (!isset($_GET['code'])) {
 }
 
 $code = $_GET['code'];
+// Algunas implementaciones (como Google en ciertos navegadores) pueden
+// devolver el parámetro `code` con signos "+" que PHP convierte en
+// espacios al poblar $_GET. Esto provoca que el intercambio de token
+// falle con "invalid_grant". Restituimos los "+" originales.
+if (strpos($code, ' ') !== false) {
+    $code = str_replace(' ', '+', $code);
+}
 $stateParam = $_GET['state'] ?? '';
 $expectedState = $_SESSION['oauth_state_token'] ?? '';
 $sharedParam = $_SESSION['oauth_state_shared'] ?? '';
