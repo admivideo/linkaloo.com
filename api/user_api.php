@@ -1,4 +1,9 @@
 <?php
+// Configurar logging de errores
+error_reporting(E_ALL);
+ini_set('log_errors', 1);
+ini_set('display_errors', 0);
+
 // Incluir archivo de configuración
 require_once 'config.php';
 
@@ -31,6 +36,10 @@ try {
             
         case 'update_category':
             updateCategory($pdo, $input);
+            break;
+            
+        case 'debug_table_structure':
+            debugTableStructure($pdo);
             break;
             
         case 'test_connection':
@@ -971,69 +980,91 @@ function uploadImage($pdo, $input) {
 }
 
 function updateCategory($pdo, $input) {
+    try {
+        error_log("=== UPDATE CATEGORY INICIADO ===");
+        error_log("Input recibido: " . json_encode($input));
+    
     $userId = $input['user_id'] ?? 0;
     $categoryId = $input['category_id'] ?? 0;
     $nombre = $input['nombre'] ?? null;
     $nota = $input['nota'] ?? null;
     
+    error_log("Datos procesados - UserID: $userId, CategoryID: $categoryId, Nombre: " . ($nombre ?? 'null') . ", Nota: " . ($nota ?? 'null'));
+    
     if ($userId <= 0) {
+        error_log("ERROR: ID de usuario no válido: $userId");
         throw new Exception('ID de usuario válido es requerido');
     }
     
     if ($categoryId <= 0) {
+        error_log("ERROR: ID de categoría no válido: $categoryId");
         throw new Exception('ID de categoría válido es requerido');
     }
     
     // Verificar que el usuario existe
+    error_log("Verificando usuario ID: $userId");
     $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     
     if (!$user) {
+        error_log("ERROR: Usuario no encontrado con ID: $userId");
         throw new Exception('Usuario no encontrado');
     }
+    error_log("Usuario verificado correctamente");
     
     // Verificar que la categoría existe y pertenece al usuario
+    error_log("Verificando categoría ID: $categoryId para usuario: $userId");
     $stmt = $pdo->prepare("SELECT id FROM categorias WHERE id = ? AND usuario_id = ?");
     $stmt->execute([$categoryId, $userId]);
     $category = $stmt->fetch();
     
     if (!$category) {
+        error_log("ERROR: Categoría no encontrada o no pertenece al usuario - CategoryID: $categoryId, UserID: $userId");
         throw new Exception('Categoría no encontrada o no pertenece al usuario');
     }
+    error_log("Categoría verificada correctamente");
     
     // Preparar la query de actualización
+    error_log("Preparando query de actualización...");
     $updateFields = [];
     $params = [];
     
     if ($nombre !== null) {
         $updateFields[] = "nombre = ?";
         $params[] = $nombre;
+        error_log("Campo 'nombre' añadido: '$nombre'");
     }
     
     if ($nota !== null) {
         $updateFields[] = "nota = ?";
         $params[] = $nota;
+        error_log("Campo 'nota' añadido: '$nota'");
     }
     
     if (empty($updateFields)) {
+        error_log("ERROR: No hay campos para actualizar");
         throw new Exception('No hay campos para actualizar');
     }
     
     // Añadir fecha de modificación
     $updateFields[] = "modificado_en = NOW()";
+    error_log("Campo 'modificado_en' añadido");
     
     // Añadir parámetros para la condición WHERE
     $params[] = $categoryId;
     $params[] = $userId;
     
     $sql = "UPDATE categorias SET " . implode(', ', $updateFields) . " WHERE id = ? AND usuario_id = ?";
+    error_log("SQL Query: $sql");
+    error_log("Parámetros: " . json_encode($params));
     
     $stmt = $pdo->prepare($sql);
     $result = $stmt->execute($params);
+    error_log("Resultado de execute: " . ($result ? 'true' : 'false'));
     
     if ($result) {
-        echo json_encode([
+        $response = [
             'success' => true,
             'message' => 'Categoría actualizada exitosamente',
             'category_id' => (int)$categoryId,
@@ -1041,9 +1072,63 @@ function updateCategory($pdo, $input) {
                 'nombre' => $nombre !== null,
                 'nota' => $nota !== null
             ]))
-        ]);
+        ];
+        error_log("✅ UPDATE CATEGORY EXITOSO: " . json_encode($response));
+        echo json_encode($response);
     } else {
+        error_log("ERROR: Error al actualizar la categoría - result es false");
         throw new Exception('Error al actualizar la categoría');
+    }
+    } catch (Exception $e) {
+        error_log("❌ ERROR EN UPDATE CATEGORY: " . $e->getMessage());
+        error_log("❌ STACK TRACE: " . $e->getTraceAsString());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+}
+
+function debugTableStructure($pdo) {
+    try {
+        error_log("=== DEBUG TABLE STRUCTURE ===");
+        
+        // Verificar estructura de tabla categorias
+        $stmt = $pdo->query("DESCRIBE categorias");
+        $columns = $stmt->fetchAll();
+        
+        error_log("Columnas de la tabla 'categorias':");
+        foreach ($columns as $column) {
+            error_log("  - " . $column['Field'] . " (" . $column['Type'] . ")");
+        }
+        
+        // Verificar si existe la columna 'nota'
+        $notaExists = false;
+        foreach ($columns as $column) {
+            if ($column['Field'] === 'nota') {
+                $notaExists = true;
+                error_log("✅ Columna 'nota' encontrada: " . $column['Type']);
+                break;
+            }
+        }
+        
+        if (!$notaExists) {
+            error_log("❌ Columna 'nota' NO encontrada en la tabla 'categorias'");
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'table_structure' => $columns,
+            'nota_column_exists' => $notaExists
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("ERROR en debugTableStructure: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
     }
 }
 
