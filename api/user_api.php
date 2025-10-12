@@ -1222,7 +1222,12 @@ function updateCategory($pdo, $input) {
        } catch (Exception $e) {
            error_log("❌ ERROR EN CREATE CATEGORY: " . $e->getMessage());
            error_log("❌ STACK TRACE: " . $e->getTraceAsString());
-           throw $e;
+           
+           http_response_code(500);
+           echo json_encode([
+               'success' => false,
+               'error' => $e->getMessage()
+           ]);
        }
    }
 
@@ -1322,7 +1327,12 @@ function updateCategory($pdo, $input) {
        } catch (Exception $e) {
            error_log("❌ ERROR EN DELETE CATEGORY: " . $e->getMessage());
            error_log("❌ STACK TRACE: " . $e->getTraceAsString());
-           throw $e;
+           
+           http_response_code(500);
+           echo json_encode([
+               'success' => false,
+               'error' => $e->getMessage()
+           ]);
        }
    }
 
