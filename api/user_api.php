@@ -459,13 +459,19 @@ function getLinksPaginated($pdo, $input) {
 }
 
 function createLink($pdo, $input) {
-    $userId = $input['user_id'] ?? 0;
-    $categoriaId = $input['categoria_id'] ?? 0;
-    $url = $input['url'] ?? '';
-    $titulo = $input['titulo'] ?? '';
-    $descripcion = $input['descripcion'] ?? '';
-    $notaLink = $input['nota_link'] ?? '';
-    $imagen = $input['imagen'] ?? ''; // Obtener imagen del input
+    try {
+        error_log("=== INICIANDO createLink ===");
+        error_log("Input recibido: " . json_encode($input));
+        
+        $userId = $input['user_id'] ?? 0;
+        $categoriaId = $input['categoria_id'] ?? 0;
+        $url = $input['url'] ?? '';
+        $titulo = $input['titulo'] ?? '';
+        $descripcion = $input['descripcion'] ?? '';
+        $notaLink = $input['nota_link'] ?? '';
+        $imagen = $input['imagen'] ?? ''; // Obtener imagen del input
+        
+        error_log("Parámetros procesados - userId: $userId, categoriaId: $categoriaId, url: $url, titulo: $titulo");
     
     if ($userId <= 0) {
         throw new Exception('ID de usuario válido es requerido');
@@ -537,6 +543,9 @@ function createLink($pdo, $input) {
     $stmt->execute([$linkId]);
     $link = $stmt->fetch();
     
+    error_log("Link creado exitosamente con ID: $linkId");
+    error_log("Datos del link: " . json_encode($link));
+    
     json_response([
         'success' => true,
         'action' => 'created',
@@ -555,6 +564,18 @@ function createLink($pdo, $input) {
             'hash_url' => $link['hash_url']
         ]
     ]);
+    
+    error_log("=== FINALIZANDO createLink - Respuesta enviada ===");
+    
+    } catch (Exception $e) {
+        error_log("ERROR en createLink: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        
+        json_response([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
 }
 
 // Función auxiliar para obtener metadatos de URL
