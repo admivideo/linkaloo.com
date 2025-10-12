@@ -38,6 +38,10 @@ try {
             updateCategory($pdo, $input);
             break;
             
+        case 'create_category':
+            createCategory($pdo, $input);
+            break;
+            
         case 'debug_table_structure':
             debugTableStructure($pdo);
             break;
@@ -1122,10 +1126,59 @@ function updateCategory($pdo, $input) {
             'success' => false,
             'error' => $e->getMessage()
         ]);
-    }
-}
+       }
+   }
 
-function debugTableStructure($pdo) {
+   function createCategory($pdo, $input) {
+       $userId = $input['user_id'] ?? 0;
+       $nombre = $input['nombre'] ?? '';
+
+       if ($userId <= 0) {
+           throw new Exception('ID de usuario válido es requerido');
+       }
+
+       if (empty($nombre) || trim($nombre) === '') {
+           throw new Exception('Nombre de categoría es requerido');
+       }
+
+       $nombre = trim($nombre);
+
+       // Verificar que el usuario existe
+       $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
+       $stmt->execute([$userId]);
+       $user = $stmt->fetch();
+
+       if (!$user) {
+           throw new Exception('Usuario no encontrado');
+       }
+
+       // Verificar si ya existe una categoría con el mismo nombre para este usuario
+       $stmt = $pdo->prepare("SELECT id FROM categorias WHERE usuario_id = ? AND nombre = ?");
+       $stmt->execute([$userId, $nombre]);
+       $existingCategory = $stmt->fetch();
+
+       if ($existingCategory) {
+           throw new Exception('Ya existe un tablero con ese nombre');
+       }
+
+       // Crear la nueva categoría
+       $stmt = $pdo->prepare("INSERT INTO categorias (usuario_id, nombre, creado_en, modificado_en) VALUES (?, ?, NOW(), NOW())");
+       $result = $stmt->execute([$userId, $nombre]);
+
+       if ($result) {
+           $categoryId = $pdo->lastInsertId();
+           echo json_encode([
+               'success' => true,
+               'message' => 'Tablero creado exitosamente',
+               'category_id' => (int)$categoryId,
+               'category_name' => $nombre
+           ]);
+       } else {
+           throw new Exception('Error al crear el tablero en la base de datos');
+       }
+   }
+
+   function debugTableStructure($pdo) {
     try {
         error_log("=== DEBUG TABLE STRUCTURE ===");
         
