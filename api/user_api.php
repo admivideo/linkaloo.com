@@ -1130,51 +1130,74 @@ function updateCategory($pdo, $input) {
    }
 
    function createCategory($pdo, $input) {
-       $userId = $input['user_id'] ?? 0;
-       $nombre = $input['nombre'] ?? '';
+       try {
+           error_log("=== CREATE CATEGORY INICIADO ===");
+           error_log("Input recibido: " . json_encode($input));
 
-       if ($userId <= 0) {
-           throw new Exception('ID de usuario válido es requerido');
-       }
+           $userId = $input['user_id'] ?? 0;
+           $nombre = $input['nombre'] ?? '';
 
-       if (empty($nombre) || trim($nombre) === '') {
-           throw new Exception('Nombre de categoría es requerido');
-       }
+           error_log("Datos procesados - UserID: $userId, Nombre: " . ($nombre ?: 'null'));
 
-       $nombre = trim($nombre);
+           if ($userId <= 0) {
+               error_log("ERROR: ID de usuario no válido: $userId");
+               throw new Exception('ID de usuario válido es requerido');
+           }
 
-       // Verificar que el usuario existe
-       $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
-       $stmt->execute([$userId]);
-       $user = $stmt->fetch();
+           if (empty($nombre) || trim($nombre) === '') {
+               error_log("ERROR: Nombre de categoría vacío");
+               throw new Exception('Nombre de categoría es requerido');
+           }
 
-       if (!$user) {
-           throw new Exception('Usuario no encontrado');
-       }
+           $nombre = trim($nombre);
 
-       // Verificar si ya existe una categoría con el mismo nombre para este usuario
-       $stmt = $pdo->prepare("SELECT id FROM categorias WHERE usuario_id = ? AND nombre = ?");
-       $stmt->execute([$userId, $nombre]);
-       $existingCategory = $stmt->fetch();
+           // Verificar que el usuario existe
+           error_log("Verificando usuario ID: $userId");
+           $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
+           $stmt->execute([$userId]);
+           $user = $stmt->fetch();
 
-       if ($existingCategory) {
-           throw new Exception('Ya existe un tablero con ese nombre');
-       }
+           if (!$user) {
+               error_log("ERROR: Usuario no encontrado con ID: $userId");
+               throw new Exception('Usuario no encontrado');
+           }
+           error_log("Usuario verificado correctamente");
 
-       // Crear la nueva categoría
-       $stmt = $pdo->prepare("INSERT INTO categorias (usuario_id, nombre, creado_en, modificado_en) VALUES (?, ?, NOW(), NOW())");
-       $result = $stmt->execute([$userId, $nombre]);
+           // Verificar si ya existe una categoría con el mismo nombre para este usuario
+           error_log("Verificando si ya existe categoría con nombre: '$nombre'");
+           $stmt = $pdo->prepare("SELECT id FROM categorias WHERE usuario_id = ? AND nombre = ?");
+           $stmt->execute([$userId, $nombre]);
+           $existingCategory = $stmt->fetch();
 
-       if ($result) {
-           $categoryId = $pdo->lastInsertId();
-           echo json_encode([
-               'success' => true,
-               'message' => 'Tablero creado exitosamente',
-               'category_id' => (int)$categoryId,
-               'category_name' => $nombre
-           ]);
-       } else {
-           throw new Exception('Error al crear el tablero en la base de datos');
+           if ($existingCategory) {
+               error_log("ERROR: Ya existe una categoría con el nombre '$nombre' para el usuario $userId");
+               throw new Exception('Ya existe un tablero con ese nombre');
+           }
+
+           // Crear la nueva categoría
+           error_log("Creando nueva categoría...");
+           $stmt = $pdo->prepare("INSERT INTO categorias (usuario_id, nombre, creado_en, modificado_en) VALUES (?, ?, NOW(), NOW())");
+           $result = $stmt->execute([$userId, $nombre]);
+
+           if ($result) {
+               $categoryId = $pdo->lastInsertId();
+               error_log("✅ Categoría creada exitosamente con ID: $categoryId");
+
+               echo json_encode([
+                   'success' => true,
+                   'message' => 'Tablero creado exitosamente',
+                   'category_id' => (int)$categoryId,
+                   'category_name' => $nombre
+               ]);
+           } else {
+               error_log("ERROR: Error al insertar la categoría en la base de datos");
+               throw new Exception('Error al crear el tablero en la base de datos');
+           }
+
+       } catch (Exception $e) {
+           error_log("❌ ERROR EN CREATE CATEGORY: " . $e->getMessage());
+           error_log("❌ STACK TRACE: " . $e->getTraceAsString());
+           throw $e;
        }
    }
 
