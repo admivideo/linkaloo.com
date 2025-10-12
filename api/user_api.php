@@ -42,6 +42,10 @@ try {
             createCategory($pdo, $input);
             break;
             
+        case 'delete_category':
+            deleteCategory($pdo, $input);
+            break;
+            
         case 'debug_table_structure':
             debugTableStructure($pdo);
             break;
@@ -1196,6 +1200,106 @@ function updateCategory($pdo, $input) {
 
        } catch (Exception $e) {
            error_log("❌ ERROR EN CREATE CATEGORY: " . $e->getMessage());
+           error_log("❌ STACK TRACE: " . $e->getTraceAsString());
+           throw $e;
+       }
+   }
+
+   function deleteCategory($pdo, $input) {
+       try {
+           error_log("=== DELETE CATEGORY INICIADO ===");
+           error_log("Input recibido: " . json_encode($input));
+
+           $userId = $input['user_id'] ?? 0;
+           $categoryId = $input['category_id'] ?? 0;
+
+           error_log("Datos procesados - UserID: $userId, CategoryID: $categoryId");
+
+           if ($userId <= 0) {
+               error_log("ERROR: ID de usuario no válido: $userId");
+               throw new Exception('ID de usuario válido es requerido');
+           }
+
+           if ($categoryId <= 0) {
+               error_log("ERROR: ID de categoría no válido: $categoryId");
+               throw new Exception('ID de categoría válido es requerido');
+           }
+
+           // Verificar que el usuario existe
+           error_log("Verificando usuario ID: $userId");
+           $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
+           $stmt->execute([$userId]);
+           $user = $stmt->fetch();
+
+           if (!$user) {
+               error_log("ERROR: Usuario no encontrado con ID: $userId");
+               throw new Exception('Usuario no encontrado');
+           }
+           error_log("Usuario verificado correctamente");
+
+           // Verificar que la categoría existe y pertenece al usuario
+           error_log("Verificando categoría ID: $categoryId para usuario: $userId");
+           $stmt = $pdo->prepare("SELECT id, nombre FROM categorias WHERE id = ? AND usuario_id = ?");
+           $stmt->execute([$categoryId, $userId]);
+           $category = $stmt->fetch();
+
+           if (!$category) {
+               error_log("ERROR: Categoría no encontrada o no pertenece al usuario - CategoryID: $categoryId, UserID: $userId");
+               throw new Exception('Categoría no encontrada o no pertenece al usuario');
+           }
+           error_log("Categoría verificada correctamente: " . $category['nombre']);
+
+           // Obtener o crear tablero "Sin Categoría"
+           error_log("Buscando tablero 'Sin Categoría' para usuario: $userId");
+           $stmt = $pdo->prepare("SELECT id FROM categorias WHERE usuario_id = ? AND nombre = 'Sin Categoría'");
+           $stmt->execute([$userId]);
+           $sinCategoria = $stmt->fetch();
+
+           if (!$sinCategoria) {
+               error_log("Tablero 'Sin Categoría' no existe, creándolo...");
+               $stmt = $pdo->prepare("INSERT INTO categorias (usuario_id, nombre, creado_en, modificado_en) VALUES (?, 'Sin Categoría', NOW(), NOW())");
+               $stmt->execute([$userId]);
+               $sinCategoriaId = $pdo->lastInsertId();
+               error_log("Tablero 'Sin Categoría' creado con ID: $sinCategoriaId");
+           } else {
+               $sinCategoriaId = $sinCategoria['id'];
+               error_log("Tablero 'Sin Categoría' encontrado con ID: $sinCategoriaId");
+           }
+
+           // Mover todos los links del tablero a "Sin Categoría"
+           error_log("Moviendo links de categoría $categoryId a 'Sin Categoría' ($sinCategoriaId)");
+           $stmt = $pdo->prepare("UPDATE links SET categoria_id = ? WHERE categoria_id = ? AND usuario_id = ?");
+           $result = $stmt->execute([$sinCategoriaId, $categoryId, $userId]);
+           
+           if ($result) {
+               $linksMoved = $stmt->rowCount();
+               error_log("✅ $linksMoved links movidos a 'Sin Categoría'");
+           } else {
+               error_log("⚠️ No se pudieron mover los links, pero continuando con la eliminación");
+           }
+
+           // Eliminar la categoría
+           error_log("Eliminando categoría ID: $categoryId");
+           $stmt = $pdo->prepare("DELETE FROM categorias WHERE id = ? AND usuario_id = ?");
+           $result = $stmt->execute([$categoryId, $userId]);
+
+           if ($result) {
+               error_log("✅ Categoría eliminada exitosamente");
+
+               echo json_encode([
+                   'success' => true,
+                   'message' => 'Tablero eliminado exitosamente',
+                   'category_id' => (int)$categoryId,
+                   'category_name' => $category['nombre'],
+                   'links_moved_to_sin_categoria' => $linksMoved ?? 0
+               ]);
+           } else {
+               error_log("ERROR: Error al eliminar la categoría de la base de datos");
+               throw new Exception('Error al eliminar el tablero de la base de datos');
+           }
+
+       } catch (Exception $e) {
+           error_log("❌ ERROR EN DELETE CATEGORY: " . $e->getMessage());
            error_log("❌ STACK TRACE: " . $e->getTraceAsString());
            throw $e;
        }
