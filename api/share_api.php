@@ -1437,7 +1437,7 @@ function getAllUserLinks($pdo, $input) {
         FROM links l 
         LEFT JOIN categorias c ON l.categoria_id = c.id 
         WHERE l.usuario_id = ? 
-        ORDER BY l.actualizado_en DESC, l.creado_en DESC, l.id DESC
+        ORDER BY COALESCE(l.actualizado_en, l.creado_en) DESC, l.id DESC
     ");
     $stmt->execute([$userId]);
     $links = $stmt->fetchAll();
