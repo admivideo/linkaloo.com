@@ -1446,31 +1446,51 @@ function getAllUserLinks($pdo, $input) {
     
     // Procesar los links para el formato de respuesta
     $processedLinks = [];
+    $linkCount = 0;
     foreach ($links as $link) {
-        $processedLinks[] = [
-            'id' => (int)$link['id'],
-            'usuario_id' => (int)$link['usuario_id'],
-            'categoria_id' => (int)$link['categoria_id'],
-            'categoria_nombre' => $link['categoria_nombre'] ?? 'Sin categoría',
-            'url' => $link['url'],
-            'url_canonica' => $link['url_canonica'],
-            'titulo' => $link['titulo'],
-            'descripcion' => $link['descripcion'],
-            'imagen_url' => $link['imagen'],
-            'creado_en' => $link['creado_en'],
-            'modificado_en' => $link['actualizado_en'],
-            'nota' => $link['nota'],
-            'hash_url' => $link['hash_url']
-        ];
+        $linkCount++;
+        error_log("Procesando link $linkCount - ID: " . $link['id']);
+        
+        try {
+            $processedLinks[] = [
+                'id' => (int)$link['id'],
+                'usuario_id' => (int)$link['usuario_id'],
+                'categoria_id' => (int)$link['categoria_id'],
+                'categoria_nombre' => $link['categoria_nombre'] ?? 'Sin categoría',
+                'url' => $link['url'] ?? '',
+                'url_canonica' => $link['url_canonica'] ?? '',
+                'titulo' => $link['titulo'] ?? '',
+                'descripcion' => $link['descripcion'] ?? '',
+                'imagen_url' => $link['imagen'] ?? '',
+                'creado_en' => $link['creado_en'] ?? '',
+                'modificado_en' => $link['actualizado_en'] ?? '',
+                'nota' => $link['nota_link'] ?? '',
+                'hash_url' => $link['hash_url'] ?? ''
+            ];
+        } catch (Exception $e) {
+            error_log("ERROR procesando link ID " . $link['id'] . ": " . $e->getMessage());
+            throw $e;
+        }
     }
     
-    error_log("Enviando respuesta exitosa con " . count($processedLinks) . " links");
-    echo json_encode([
+    error_log("Links procesados exitosamente: " . count($processedLinks));
+    
+    // Validar que el JSON se puede codificar
+    $jsonData = [
         'success' => true,
         'user_id' => (int)$userId,
         'total_links' => count($processedLinks),
         'links' => $processedLinks
-    ]);
+    ];
+    
+    $jsonString = json_encode($jsonData);
+    if ($jsonString === false) {
+        error_log("ERROR: No se pudo codificar JSON - " . json_last_error_msg());
+        throw new Exception('Error al codificar respuesta JSON: ' . json_last_error_msg());
+    }
+    
+    error_log("Enviando respuesta exitosa con " . count($processedLinks) . " links");
+    echo $jsonString;
     error_log("=== FUNCIÓN getAllUserLinks COMPLETADA EXITOSAMENTE ===");
 }
 ?>
