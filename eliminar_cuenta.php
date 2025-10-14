@@ -60,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include 'header.php';
 ?>
+<div class="app-logo"><img src="https://linkaloo.com/img/logo_linkaloo_blue.png" alt="Logotipo de Linkaloo"></div>
 <div class="login-wrapper">
     <div class="login-block">
         <h2>Eliminar cuenta</h2>
