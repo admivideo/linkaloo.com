@@ -10,14 +10,13 @@ $message = '';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $nombre = trim($_POST['nombre'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    if($nombre && $email){
-        $stmt = $pdo->prepare('UPDATE usuarios SET nombre = ?, email = ? WHERE id = ?');
-        $stmt->execute([$nombre, $email, $user_id]);
+    if($nombre){
+        $stmt = $pdo->prepare('UPDATE usuarios SET nombre = ? WHERE id = ?');
+        $stmt->execute([$nombre, $user_id]);
         $_SESSION['user_name'] = $nombre;
         $message = 'Datos actualizados';
     } else {
-        $message = 'Rellena todos los campos';
+        $message = 'Introduce tu nombre';
     }
 }
 
@@ -33,7 +32,7 @@ include 'header.php';
         <?php if($message): ?><p class="notice"><?= htmlspecialchars($message) ?></p><?php endif; ?>
         <form method="post" class="login-form">
             <input type="text" name="nombre" value="<?= htmlspecialchars($user['nombre'] ?? '') ?>" placeholder="Nombre">
-            <input type="email" name="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" placeholder="Email">
+            <input type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" placeholder="Email" disabled>
             <button type="submit">Guardar</button>
         </form>
         <div class="login-links">
