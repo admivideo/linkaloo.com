@@ -394,7 +394,7 @@ function scrapeMetadata($url) {
     }
     
     // Detectar si es Amazon y usar función específica
-    if (strpos($url, 'amazon.') !== false) {
+    if (strpos($url, 'amazon.') !== false || strpos($url, 'amzn.') !== false) {
         error_log("Detectado Amazon, usando función específica");
         return scrapeAmazonMetadata($url);
     }
@@ -1567,9 +1567,47 @@ function getAllUserLinks($pdo, $input) {
 }
 
 /**
+ * Expandir URL corta de Amazon (amzn.eu, a.co, etc.)
+ */
+function expandAmazonShortUrl($url) {
+    error_log("Expandiendo URL corta de Amazon: " . $url);
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_NOBODY => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8'
+        ]
+    ]);
+    
+    curl_exec($ch);
+    $expandedUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode >= 200 && $httpCode < 400 && $expandedUrl) {
+        error_log("URL expandida: " . $expandedUrl);
+        return $expandedUrl;
+    }
+    
+    error_log("No se pudo expandir URL corta, usando original");
+    return $url;
+}
+
+/**
  * Limpiar URL de Amazon (remover parámetros de tracking y extraer ASIN)
  */
 function cleanAmazonUrl($url) {
+    // Si es una URL corta de Amazon (amzn.eu, a.co), expandirla primero
+    if (strpos($url, 'amzn.') !== false || strpos($url, 'a.co') !== false) {
+        $url = expandAmazonShortUrl($url);
+    }
+    
     // Extraer ASIN (Amazon Standard Identification Number)
     // Patrón: /dp/ASIN o /gp/product/ASIN
     if (preg_match('/\/(dp|gp\/product)\/([A-Z0-9]{10})/', $url, $matches)) {
