@@ -1658,6 +1658,7 @@ function scrapeAmazonMetadata($url) {
     
     // Limpiar URL de Amazon (remover parámetros de tracking)
     $cleanUrl = cleanAmazonUrl($url);
+    error_log("Usando URL para scraping: " . $cleanUrl);
     
     $ch = curl_init($cleanUrl);
     curl_setopt_array($ch, [
@@ -1665,20 +1666,30 @@ function scrapeAmazonMetadata($url) {
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         CURLOPT_TIMEOUT => 15,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => false,
+        CURLOPT_ENCODING => 'gzip, deflate',
         CURLOPT_HTTPHEADER => [
             'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
-            'Accept-Encoding: gzip, deflate, br',
             'Cache-Control: no-cache',
             'Pragma: no-cache',
-            'Upgrade-Insecure-Requests: 1'
+            'Upgrade-Insecure-Requests: 1',
+            'Sec-Fetch-Dest: document',
+            'Sec-Fetch-Mode: navigate',
+            'Sec-Fetch-Site: none'
         ]
     ]);
     
     $html = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
+    $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     curl_close($ch);
+    
+    error_log("Amazon HTTP Code: " . $httpCode);
+    error_log("Amazon Final URL: " . $finalUrl);
+    error_log("Amazon HTML length: " . strlen($html ?? ''));
     
     if ($error) {
         error_log("Error cURL en Amazon: " . $error);
@@ -1687,6 +1698,7 @@ function scrapeAmazonMetadata($url) {
     
     if (!$html || $httpCode !== 200) {
         error_log("Error obteniendo Amazon: HTTP " . $httpCode);
+        error_log("HTML snippet: " . substr($html ?? '', 0, 500));
         return [];
     }
     
