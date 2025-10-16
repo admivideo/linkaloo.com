@@ -1669,7 +1669,7 @@ function scrapeAmazonMetadata($url) {
     if ($isEuropeanAmazon) {
         error_log("Detectado Amazon europeo, usando estrategia anti-bloqueo...");
         
-        // ESTRATEGIA: Hacer request a página principal primero para obtener cookies reales
+        // ESTRATEGIA: Rate limiting con archivo de timestamp
         $domain = '';
         if (strpos($cleanUrl, 'amazon.es') !== false) $domain = 'amazon.es';
         else if (strpos($cleanUrl, 'amazon.de') !== false) $domain = 'amazon.de';
@@ -1677,30 +1677,58 @@ function scrapeAmazonMetadata($url) {
         else if (strpos($cleanUrl, 'amazon.it') !== false) $domain = 'amazon.it';
         
         if ($domain) {
-            error_log("Obteniendo cookies de https://www.$domain ...");
-            $cookieJar = tempnam(sys_get_temp_dir(), 'amazon_cookies');
+            // Verificar último request a Amazon
+            $timestampFile = sys_get_temp_dir() . '/amazon_last_request_' . str_replace('.', '_', $domain);
             
-            // Request inicial a la homepage para obtener cookies
-            $chInit = curl_init("https://www.$domain");
-            curl_setopt_array($chInit, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                CURLOPT_TIMEOUT => 10,
-                CURLOPT_COOKIEJAR => $cookieJar,
-                CURLOPT_COOKIEFILE => $cookieJar,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_HTTPHEADER => [
-                    'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language: es-ES,es;q=0.9'
-                ]
-            ]);
-            curl_exec($chInit);
-            curl_close($chInit);
-            error_log("Cookies obtenidas de Amazon");
+            if (file_exists($timestampFile)) {
+                $lastRequest = (int)file_get_contents($timestampFile);
+                $timeSinceLastRequest = time() - $lastRequest;
+                
+                error_log("Último request a $domain hace $timeSinceLastRequest segundos");
+                
+                // Esperar mínimo 3 segundos entre requests
+                if ($timeSinceLastRequest < 3) {
+                    $waitTime = 3 - $timeSinceLastRequest;
+                    error_log("Esperando $waitTime segundos para evitar rate limit...");
+                    sleep($waitTime);
+                }
+            }
             
-            // Pequeño delay para parecer más humano
-            usleep(500000); // 0.5 segundos
+            // Actualizar timestamp
+            file_put_contents($timestampFile, time());
+            
+            // Usar archivo de cookies persistente por dominio
+            $cookieJar = sys_get_temp_dir() . '/amazon_cookies_' . str_replace('.', '_', $domain) . '.txt';
+            
+            // Si las cookies tienen más de 1 hora, obtener nuevas
+            $refreshCookies = !file_exists($cookieJar) || (time() - filemtime($cookieJar) > 3600);
+            
+            if ($refreshCookies) {
+                error_log("Obteniendo cookies frescas de https://www.$domain ...");
+                
+                // Request inicial a la homepage para obtener cookies
+                $chInit = curl_init("https://www.$domain");
+                curl_setopt_array($chInit, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    CURLOPT_TIMEOUT => 10,
+                    CURLOPT_COOKIEJAR => $cookieJar,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_HTTPHEADER => [
+                        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                        'Accept-Language: es-ES,es;q=0.9'
+                    ]
+                ]);
+                curl_exec($chInit);
+                curl_close($chInit);
+                error_log("Cookies frescas obtenidas de Amazon");
+                
+                // Delay obligatorio después de obtener cookies
+                sleep(2);
+            } else {
+                error_log("Usando cookies existentes de $domain (edad: " . (time() - filemtime($cookieJar)) . "s)");
+            }
         }
     }
     
@@ -1883,11 +1911,8 @@ function scrapeAmazonMetadata($url) {
     error_log("Descripción: " . substr($meta['description'] ?? 'N/A', 0, 100) . "...");
     error_log("Imagen: " . ($meta['image'] ?? 'N/A'));
     
-    // Limpiar archivo de cookies temporal
-    if (isset($cookieJar) && file_exists($cookieJar)) {
-        @unlink($cookieJar);
-        error_log("Cookie jar temporal eliminado");
-    }
+    // NO eliminamos cookies - las mantenemos en caché para reutilizar
+    // Se auto-eliminan después de 1 hora (ver código arriba)
     
     return $meta;
 }
