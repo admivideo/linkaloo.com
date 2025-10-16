@@ -33,9 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const scrollRight = document.querySelector('.board-scroll.right');
   let currentCat = 'all';
   const filter = (cat, query = '') => {
+    const normalizedQuery = query.trim();
     cards.forEach(card => {
       const inCat = (cat === 'all' || card.dataset.cat === cat);
-      const matches = card.classList.contains('ad-card') || card.textContent.toLowerCase().includes(query);
+      const isAd = card.classList.contains('ad-card');
+      let matches;
+      if (normalizedQuery === '') {
+        matches = true;
+      } else {
+        matches = !isAd && card.textContent.toLowerCase().includes(normalizedQuery);
+      }
       card.style.display = (inCat && matches) ? '' : 'none';
     });
   };
