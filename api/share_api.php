@@ -393,6 +393,12 @@ function scrapeMetadata($url) {
         return scrapeTikTokMetadata($url);
     }
     
+    // Detectar si es Amazon y usar función específica
+    if (strpos($url, 'amazon.') !== false) {
+        error_log("Detectado Amazon, usando función específica");
+        return scrapeAmazonMetadata($url);
+    }
+    
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -1558,5 +1564,194 @@ function getAllUserLinks($pdo, $input) {
     error_log("Enviando respuesta exitosa con " . count($processedLinks) . " links");
     echo $jsonString;
     error_log("=== FUNCIÓN getAllUserLinks COMPLETADA EXITOSAMENTE ===");
+}
+
+/**
+ * Limpiar URL de Amazon (remover parámetros de tracking y extraer ASIN)
+ */
+function cleanAmazonUrl($url) {
+    // Extraer ASIN (Amazon Standard Identification Number)
+    // Patrón: /dp/ASIN o /gp/product/ASIN
+    if (preg_match('/\/(dp|gp\/product)\/([A-Z0-9]{10})/', $url, $matches)) {
+        $asin = $matches[2];
+        
+        // Construir URL limpia
+        // Detectar dominio de Amazon (.es, .com, .co.uk, etc.)
+        if (preg_match('/amazon\.(es|com|co\.uk|de|fr|it|ca|com\.mx|com\.br)/', $url, $domainMatch)) {
+            $domain = $domainMatch[1];
+            $cleanUrl = "https://www.amazon.$domain/dp/$asin";
+            error_log("URL Amazon limpiada: " . $cleanUrl);
+            return $cleanUrl;
+        }
+    }
+    
+    // Si no se puede limpiar, devolver URL original
+    error_log("No se pudo limpiar URL de Amazon, usando original");
+    return $url;
+}
+
+/**
+ * Optimizar URL de imagen de Amazon para mejor calidad
+ */
+function optimizeAmazonImageUrl($imageUrl) {
+    // URLs de Amazon pueden tener modificadores de tamaño
+    // Ejemplos:
+    // ._AC_SL200_.jpg  → 200px
+    // ._AC_SL1500_.jpg → 1500px (máxima calidad)
+    
+    // Reemplazar tamaños pequeños por grande
+    $optimized = preg_replace('/\._AC_[A-Z]+\d+_\./', '._AC_SL1500_.', $imageUrl);
+    $optimized = preg_replace('/\._SL\d+_\./', '._SL1500_.', $optimized);
+    $optimized = preg_replace('/\._SS\d+_\./', '._SL1500_.', $optimized);
+    
+    if ($optimized !== $imageUrl) {
+        error_log("Imagen Amazon optimizada a calidad máxima");
+    }
+    
+    return $optimized;
+}
+
+/**
+ * Función específica para extraer metadatos de Amazon
+ */
+function scrapeAmazonMetadata($url) {
+    error_log("=== SCRAPE ESPECÍFICO PARA AMAZON ===");
+    error_log("URL Amazon original: " . $url);
+    
+    // Limpiar URL de Amazon (remover parámetros de tracking)
+    $cleanUrl = cleanAmazonUrl($url);
+    
+    $ch = curl_init($cleanUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate, br',
+            'Cache-Control: no-cache',
+            'Pragma: no-cache',
+            'Upgrade-Insecure-Requests: 1'
+        ]
+    ]);
+    
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    if ($error) {
+        error_log("Error cURL en Amazon: " . $error);
+        return [];
+    }
+    
+    if (!$html || $httpCode !== 200) {
+        error_log("Error obteniendo Amazon: HTTP " . $httpCode);
+        return [];
+    }
+    
+    $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if ($enc) {
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
+    }
+    
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    @$doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+    
+    $meta = [];
+    
+    // Extraer título - Amazon tiene buenos meta tags
+    $titleSelectors = [
+        '//meta[@property="og:title"]/@content',
+        '//meta[@name="twitter:title"]/@content',
+        '//span[@id="productTitle"]',
+        '//h1[@id="title"]',
+        '//title'
+    ];
+    
+    foreach ($titleSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $meta['title'] = trim($nodes->item(0)->nodeValue);
+            error_log("Título encontrado con selector: " . $selector);
+            break;
+        }
+    }
+    
+    // Extraer descripción
+    $descSelectors = [
+        '//meta[@property="og:description"]/@content',
+        '//meta[@name="description"]/@content',
+        '//meta[@name="twitter:description"]/@content',
+        '//div[@id="feature-bullets"]//span[@class="a-list-item"]'
+    ];
+    
+    foreach ($descSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $description = trim($nodes->item(0)->nodeValue);
+            // Limpiar texto de bullets
+            $description = preg_replace('/\s+/', ' ', $description);
+            $meta['description'] = $description;
+            error_log("Descripción encontrada con selector: " . $selector);
+            break;
+        }
+    }
+    
+    // Extraer imagen - Amazon usa og:image de forma muy confiable
+    $imageSelectors = [
+        '//meta[@property="og:image"]/@content',
+        '//meta[@name="twitter:image"]/@content',
+        '//img[@id="landingImage"]/@data-old-hires',
+        '//img[@id="landingImage"]/@src',
+        '//img[@id="imgBlkFront"]/@src',
+        '//div[@id="imageBlock"]//img/@src'
+    ];
+    
+    foreach ($imageSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $imageUrl = trim($nodes->item(0)->nodeValue);
+            
+            // Verificar que sea una URL válida de Amazon
+            if (strpos($imageUrl, 'amazon.com') !== false || 
+                strpos($imageUrl, 'media-amazon.com') !== false ||
+                strpos($imageUrl, 'ssl-images-amazon.com') !== false ||
+                strpos($imageUrl, 'm.media-amazon.com') !== false) {
+                
+                // Optimizar URL de imagen (obtener tamaño grande)
+                $meta['image'] = optimizeAmazonImageUrl($imageUrl);
+                error_log("Imagen Amazon encontrada y optimizada: " . $meta['image']);
+                break;
+            }
+        }
+    }
+    
+    // Limpiar título (remover "Amazon.es" o similares del final)
+    if (isset($meta['title'])) {
+        $meta['title'] = preg_replace('/\s*-\s*Amazon\.(es|com|co\.uk|de|fr|it|ca|com\.mx).*$/i', '', $meta['title']);
+        $meta['title'] = preg_replace('/\s*\|\s*Amazon\.(es|com|co\.uk|de|fr|it|ca|com\.mx).*$/i', '', $meta['title']);
+        $meta['title'] = preg_replace('/\s*:\s*Amazon\.(es|com|co\.uk|de|fr|it|ca|com\.mx).*$/i', '', $meta['title']);
+        $meta['title'] = trim($meta['title']);
+    }
+    
+    // Limpiar descripción
+    if (isset($meta['description'])) {
+        // Limitar longitud de descripción
+        if (strlen($meta['description']) > 300) {
+            $meta['description'] = substr($meta['description'], 0, 297) . '...';
+        }
+    }
+    
+    error_log("Metadatos Amazon extraídos:");
+    error_log("Título: " . ($meta['title'] ?? 'N/A'));
+    error_log("Descripción: " . substr($meta['description'] ?? 'N/A', 0, 100) . "...");
+    error_log("Imagen: " . ($meta['image'] ?? 'N/A'));
+    
+    return $meta;
 }
 ?>
