@@ -1088,11 +1088,77 @@ function getUrlMetadataFromUrl($url) {
     }
 }
 
+/**
+ * Obtener metadatos de TikTok usando oembed API
+ * Esta es la forma más confiable y no requiere API key
+ */
+function getTikTokOembed($url) {
+    error_log("Intentando TikTok oembed API para: " . $url);
+    
+    // Construir URL de oembed
+    $oembedUrl = 'https://www.tiktok.com/oembed?url=' . urlencode($url);
+    
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $oembedUrl,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_HTTPHEADER => [
+            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept: application/json',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8'
+        ]
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    if ($error) {
+        error_log("Error cURL en TikTok oembed: " . $error);
+        return null;
+    }
+    
+    if ($httpCode !== 200) {
+        error_log("TikTok oembed API respondió con HTTP " . $httpCode);
+        return null;
+    }
+    
+    $data = json_decode($response, true);
+    
+    if (!$data) {
+        error_log("Error decodificando JSON de TikTok oembed: " . json_last_error_msg());
+        return null;
+    }
+    
+    error_log("✅ TikTok oembed exitoso - Datos: " . json_encode($data));
+    
+    return $data;
+}
+
 // Función específica para extraer metadatos de TikTok
 function scrapeTikTokMetadata($url) {
     error_log("=== SCRAPE ESPECÍFICO PARA TIKTOK ===");
     error_log("URL TikTok: " . $url);
+    
+    // PASO 1: Intentar primero con oembed API (más confiable)
+    error_log("Intentando obtener metadatos con TikTok oembed API...");
+    $oembedData = getTikTokOembed($url);
+    
+    if ($oembedData && isset($oembedData['thumbnail_url'])) {
+        error_log("✅ Metadatos obtenidos exitosamente con oembed API");
+        return [
+            'title' => $oembedData['title'] ?? 'Video de TikTok',
+            'description' => ($oembedData['author_name'] ?? '') . ' - ' . ($oembedData['title'] ?? ''),
+            'image' => $oembedData['thumbnail_url']
+        ];
+    }
+    
+    error_log("⚠️ oembed API falló, intentando con scraping tradicional...");
 
+    // PASO 2: Fallback a scraping tradicional
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
