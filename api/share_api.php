@@ -1660,26 +1660,95 @@ function scrapeAmazonMetadata($url) {
     $cleanUrl = cleanAmazonUrl($url);
     error_log("Usando URL para scraping: " . $cleanUrl);
     
+    // Detectar si es Amazon.es o europeo
+    $isEuropeanAmazon = (strpos($cleanUrl, 'amazon.es') !== false || 
+                         strpos($cleanUrl, 'amazon.de') !== false || 
+                         strpos($cleanUrl, 'amazon.fr') !== false || 
+                         strpos($cleanUrl, 'amazon.it') !== false);
+    
+    if ($isEuropeanAmazon) {
+        error_log("Detectado Amazon europeo, usando estrategia anti-bloqueo...");
+        
+        // ESTRATEGIA: Hacer request a página principal primero para obtener cookies reales
+        $domain = '';
+        if (strpos($cleanUrl, 'amazon.es') !== false) $domain = 'amazon.es';
+        else if (strpos($cleanUrl, 'amazon.de') !== false) $domain = 'amazon.de';
+        else if (strpos($cleanUrl, 'amazon.fr') !== false) $domain = 'amazon.fr';
+        else if (strpos($cleanUrl, 'amazon.it') !== false) $domain = 'amazon.it';
+        
+        if ($domain) {
+            error_log("Obteniendo cookies de https://www.$domain ...");
+            $cookieJar = tempnam(sys_get_temp_dir(), 'amazon_cookies');
+            
+            // Request inicial a la homepage para obtener cookies
+            $chInit = curl_init("https://www.$domain");
+            curl_setopt_array($chInit, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_COOKIEJAR => $cookieJar,
+                CURLOPT_COOKIEFILE => $cookieJar,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_HTTPHEADER => [
+                    'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language: es-ES,es;q=0.9'
+                ]
+            ]);
+            curl_exec($chInit);
+            curl_close($chInit);
+            error_log("Cookies obtenidas de Amazon");
+            
+            // Pequeño delay para parecer más humano
+            usleep(500000); // 0.5 segundos
+        }
+    }
+    
+    // Headers más completos simulando Chrome en Windows
     $ch = curl_init($cleanUrl);
-    curl_setopt_array($ch, [
+    
+    $curlOptions = [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        CURLOPT_TIMEOUT => 15,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_CONNECTTIMEOUT => 10,
         CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_SSL_VERIFYHOST => false,
-        CURLOPT_ENCODING => 'gzip, deflate',
+        CURLOPT_SSL_VERIFYHOST => 0,
+        CURLOPT_ENCODING => 'gzip, deflate, br',
+        CURLOPT_AUTOREFERER => true,
         CURLOPT_HTTPHEADER => [
-            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
-            'Cache-Control: no-cache',
-            'Pragma: no-cache',
+            'Accept-Encoding: gzip, deflate, br',
+            'Connection: keep-alive',
             'Upgrade-Insecure-Requests: 1',
             'Sec-Fetch-Dest: document',
             'Sec-Fetch-Mode: navigate',
-            'Sec-Fetch-Site: none'
+            'Sec-Fetch-Site: none',
+            'Sec-Fetch-User: ?1',
+            'Sec-Ch-Ua: "Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'Sec-Ch-Ua-Mobile: ?0',
+            'Sec-Ch-Ua-Platform: "Windows"',
+            'Cache-Control: max-age=0',
+            'Device-Memory: 8',
+            'Viewport-Width: 1920',
+            'Dpr: 1'
         ]
-    ]);
+    ];
+    
+    // Si es Amazon europeo y obtuvimos cookies, usarlas
+    if ($isEuropeanAmazon && isset($cookieJar) && file_exists($cookieJar)) {
+        $curlOptions[CURLOPT_COOKIEJAR] = $cookieJar;
+        $curlOptions[CURLOPT_COOKIEFILE] = $cookieJar;
+        error_log("Usando cookies de sesión de Amazon");
+    } else {
+        // Cookie manual para otros casos
+        $curlOptions[CURLOPT_COOKIE] = 'session-id=' . uniqid() . '-' . time() . '; i18n-prefs=EUR; lc-acbes=es_ES';
+    }
+    
+    curl_setopt_array($ch, $curlOptions);
     
     $html = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -1699,6 +1768,18 @@ function scrapeAmazonMetadata($url) {
     if (!$html || $httpCode !== 200) {
         error_log("Error obteniendo Amazon: HTTP " . $httpCode);
         error_log("HTML snippet: " . substr($html ?? '', 0, 500));
+        return [];
+    }
+    
+    // Verificar si Amazon está mostrando CAPTCHA o error
+    if (strpos($html, 'Robot Check') !== false || 
+        strpos($html, 'captcha') !== false ||
+        strpos($html, 'api-services-support@amazon') !== false) {
+        error_log("⚠️ Amazon está mostrando CAPTCHA o página de bloqueo");
+        error_log("Esto sucede cuando Amazon detecta scraping. Recomendaciones:");
+        error_log("1. Reducir frecuencia de requests");
+        error_log("2. Esperar unos minutos antes de reintentar");
+        error_log("3. Cambiar IP si es posible");
         return [];
     }
     
@@ -1801,6 +1882,12 @@ function scrapeAmazonMetadata($url) {
     error_log("Título: " . ($meta['title'] ?? 'N/A'));
     error_log("Descripción: " . substr($meta['description'] ?? 'N/A', 0, 100) . "...");
     error_log("Imagen: " . ($meta['image'] ?? 'N/A'));
+    
+    // Limpiar archivo de cookies temporal
+    if (isset($cookieJar) && file_exists($cookieJar)) {
+        @unlink($cookieJar);
+        error_log("Cookie jar temporal eliminado");
+    }
     
     return $meta;
 }
