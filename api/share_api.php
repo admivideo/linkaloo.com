@@ -707,22 +707,85 @@ function scrapeWallapopMetadata($url) {
             // Extraer del JSON de Next.js
             $pageProps = $data['props']['pageProps'];
             
-            // Buscar título
-            if (isset($pageProps['item']['title'])) {
-                $meta['title'] = $pageProps['item']['title'];
-                $log("✅ Título encontrado en JSON: " . $meta['title']);
+            // Log de la estructura para debugging
+            $log("Estructura de pageProps disponible: " . implode(', ', array_keys($pageProps)));
+            
+            // Intentar encontrar el item en diferentes ubicaciones
+            $item = null;
+            if (isset($pageProps['item'])) {
+                $item = $pageProps['item'];
+                $log("Item encontrado en pageProps->item");
+            } elseif (isset($pageProps['initialProps']['item'])) {
+                $item = $pageProps['initialProps']['item'];
+                $log("Item encontrado en pageProps->initialProps->item");
             }
             
-            // Buscar descripción
-            if (isset($pageProps['item']['description'])) {
-                $meta['description'] = $pageProps['item']['description'];
-                $log("✅ Descripción encontrada en JSON: " . substr($meta['description'], 0, 100));
-            }
-            
-            // Buscar imagen
-            if (isset($pageProps['item']['images']) && is_array($pageProps['item']['images']) && count($pageProps['item']['images']) > 0) {
-                $meta['image'] = $pageProps['item']['images'][0]['original'] ?? $pageProps['item']['images'][0]['medium'] ?? $pageProps['item']['images'][0]['small'] ?? '';
-                $log("✅ Imagen encontrada en JSON: " . $meta['image']);
+            if ($item) {
+                $log("Claves disponibles en item: " . implode(', ', array_keys($item)));
+                
+                // Buscar título
+                if (isset($item['title'])) {
+                    // Si es array, convertir a string
+                    if (is_array($item['title'])) {
+                        $meta['title'] = implode(' ', $item['title']);
+                        $log("✅ Título (array convertido): " . $meta['title']);
+                    } else {
+                        $meta['title'] = $item['title'];
+                        $log("✅ Título encontrado: " . $meta['title']);
+                    }
+                }
+                
+                // Buscar descripción
+                if (isset($item['description'])) {
+                    if (is_array($item['description'])) {
+                        $meta['description'] = implode(' ', $item['description']);
+                    } else {
+                        $meta['description'] = $item['description'];
+                    }
+                    $log("✅ Descripción encontrada: " . substr($meta['description'], 0, 100) . "...");
+                }
+                
+                // Buscar imagen - probar diferentes ubicaciones
+                $imageFound = false;
+                
+                // Opción 1: images array
+                if (isset($item['images']) && is_array($item['images']) && count($item['images']) > 0) {
+                    $firstImage = $item['images'][0];
+                    if (is_string($firstImage)) {
+                        $meta['image'] = $firstImage;
+                        $imageFound = true;
+                    } elseif (is_array($firstImage)) {
+                        $meta['image'] = $firstImage['original'] ?? $firstImage['medium'] ?? $firstImage['large'] ?? $firstImage['xlarge'] ?? $firstImage['small'] ?? '';
+                        $imageFound = !empty($meta['image']);
+                    }
+                    if ($imageFound) {
+                        $log("✅ Imagen encontrada en images[0]: " . substr($meta['image'], 0, 100));
+                    }
+                }
+                
+                // Opción 2: image directo
+                if (!$imageFound && isset($item['image'])) {
+                    $meta['image'] = is_array($item['image']) ? ($item['image']['original'] ?? $item['image'][0] ?? '') : $item['image'];
+                    $imageFound = !empty($meta['image']);
+                    if ($imageFound) {
+                        $log("✅ Imagen encontrada en image: " . substr($meta['image'], 0, 100));
+                    }
+                }
+                
+                // Opción 3: mainImage
+                if (!$imageFound && isset($item['mainImage'])) {
+                    $meta['image'] = is_array($item['mainImage']) ? ($item['mainImage']['original'] ?? $item['mainImage'][0] ?? '') : $item['mainImage'];
+                    $imageFound = !empty($meta['image']);
+                    if ($imageFound) {
+                        $log("✅ Imagen encontrada en mainImage: " . substr($meta['image'], 0, 100));
+                    }
+                }
+                
+                if (!$imageFound) {
+                    $log("⚠️ No se encontró imagen en el JSON");
+                }
+            } else {
+                $log("⚠️ No se encontró objeto 'item' en pageProps");
             }
             
             // Si ya tenemos los datos del JSON, retornar
