@@ -394,7 +394,7 @@ function scrapeMetadata($url) {
     }
     
     // Detectar si es TEMU y usar función específica
-    if (strpos($url, 'temu.') !== false) {
+    if (strpos($url, 'temu.') !== false || strpos($url, 'share.temu.') !== false) {
         error_log("Detectado TEMU, usando función específica");
         return scrapeTemuMetadata($url);
     }
@@ -2031,8 +2031,9 @@ function scrapeTemuMetadata($url) {
     error_log("=== SCRAPE ESPECÍFICO PARA TEMU ===");
     error_log("URL TEMU: " . $url);
     
-    // Expandir URL corta si es temu.to
-    if (strpos($url, 'temu.to') !== false) {
+    // Expandir URL corta si es temu.to o share.temu.com
+    if (strpos($url, 'temu.to') !== false || strpos($url, 'share.temu.com') !== false) {
+        error_log("URL corta/compartir de TEMU detectada, expandiendo...");
         $url = expandTemuShortUrl($url);
         error_log("URL después de expandir: " . $url);
     }
