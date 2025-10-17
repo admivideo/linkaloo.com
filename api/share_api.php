@@ -1647,8 +1647,10 @@ function expandAmazonShortUrl($url) {
         return $url;
     }
     
-    if ($httpCode >= 200 && $httpCode < 400 && $expandedUrl && $expandedUrl !== $url) {
-        $logMsg("✅ URL expandida exitosamente a: " . $expandedUrl);
+    // Si obtuvimos una URL expandida diferente, usarla (incluso con HTTP 500)
+    // Amazon a veces redirige con 500 pero la URL final es válida
+    if ($expandedUrl && $expandedUrl !== $url && strpos($expandedUrl, '/dp/') !== false) {
+        $logMsg("✅ URL expandida exitosamente (HTTP $httpCode): " . $expandedUrl);
         return $expandedUrl;
     }
     
