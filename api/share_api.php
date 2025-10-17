@@ -1993,7 +1993,16 @@ function scrapeAmazonMetadata($url) {
  * Expandir URL corta de TEMU (temu.to)
  */
 function expandTemuShortUrl($url) {
-    error_log("Expandiendo URL corta de TEMU: " . $url);
+    // Logger local
+    $logFile = __DIR__ . '/amazon_debug.log';
+    $log = function($msg) use ($logFile) {
+        $timestamp = date('Y-m-d H:i:s');
+        file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $log("=== EXPANDIR URL CORTA TEMU ===");
+    $log("URL corta: " . $url);
     
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -2013,14 +2022,22 @@ function expandTemuShortUrl($url) {
     curl_exec($ch);
     $expandedUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
     curl_close($ch);
     
+    $log("HTTP Code: " . $httpCode);
+    $log("URL expandida: " . ($expandedUrl ?: 'N/A'));
+    
+    if ($error) {
+        $log("❌ Error cURL: " . $error);
+    }
+    
     if ($httpCode >= 200 && $httpCode < 400 && $expandedUrl && $expandedUrl !== $url) {
-        error_log("URL TEMU expandida: " . $expandedUrl);
+        $log("✅ URL TEMU expandida exitosamente");
         return $expandedUrl;
     }
     
-    error_log("No se pudo expandir URL de TEMU, usando original");
+    $log("⚠️ No se pudo expandir URL de TEMU, usando original");
     return $url;
 }
 
@@ -2028,15 +2045,31 @@ function expandTemuShortUrl($url) {
  * Función específica para extraer metadatos de TEMU
  */
 function scrapeTemuMetadata($url) {
-    error_log("=== SCRAPE ESPECÍFICO PARA TEMU ===");
-    error_log("URL TEMU: " . $url);
+    // Logger local para TEMU
+    $logFile = __DIR__ . '/amazon_debug.log';
+    $log = function($msg) use ($logFile) {
+        $timestamp = date('Y-m-d H:i:s');
+        file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $log("=== SCRAPE ESPECÍFICO PARA TEMU ===");
+    $log("URL TEMU original: " . $url);
     
     // Expandir URL corta si es temu.to o share.temu.com
     if (strpos($url, 'temu.to') !== false || strpos($url, 'share.temu.com') !== false) {
-        error_log("URL corta/compartir de TEMU detectada, expandiendo...");
-        $url = expandTemuShortUrl($url);
-        error_log("URL después de expandir: " . $url);
+        $log("URL corta/compartir de TEMU detectada, expandiendo...");
+        $expandedUrl = expandTemuShortUrl($url);
+        $log("URL después de expandir: " . $expandedUrl);
+        
+        if (!$expandedUrl || $expandedUrl === $url) {
+            $log("⚠️ Expansión falló, usando URL original");
+        } else {
+            $url = $expandedUrl;
+        }
     }
+    
+    $log("Usando URL final para scraping: " . $url);
     
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -2063,17 +2096,24 @@ function scrapeTemuMetadata($url) {
     $html = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
+    $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     curl_close($ch);
     
+    $log("HTTP Code: " . $httpCode);
+    $log("URL final: " . $finalUrl);
+    
     if ($error) {
-        error_log("Error cURL en TEMU: " . $error);
+        $log("❌ Error cURL en TEMU: " . $error);
         return [];
     }
     
     if (!$html || $httpCode !== 200) {
-        error_log("Error obteniendo TEMU: HTTP " . $httpCode);
+        $log("❌ Error obteniendo TEMU: HTTP " . $httpCode);
+        $log("HTML length: " . strlen($html ?? ''));
         return [];
     }
+    
+    $log("✅ HTML obtenido correctamente (" . strlen($html) . " bytes)");
     
     $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
     if ($enc) {
@@ -2169,10 +2209,16 @@ function scrapeTemuMetadata($url) {
         }
     }
     
-    error_log("Metadatos TEMU extraídos:");
-    error_log("Título: " . ($meta['title'] ?? 'N/A'));
-    error_log("Descripción: " . substr($meta['description'] ?? 'N/A', 0, 100) . "...");
-    error_log("Imagen: " . ($meta['image'] ?? 'N/A'));
+    $log("=== METADATOS TEMU EXTRAÍDOS ===");
+    $log("Título: " . ($meta['title'] ?? 'N/A'));
+    $log("Descripción: " . substr($meta['description'] ?? 'N/A', 0, 100) . "...");
+    $log("Imagen: " . ($meta['image'] ?? 'N/A'));
+    
+    if (empty($meta) || (empty($meta['title']) && empty($meta['image']))) {
+        $log("⚠️ No se extrajeron metadatos suficientes");
+    } else {
+        $log("✅ Metadatos extraídos exitosamente");
+    }
     
     return $meta;
 }
