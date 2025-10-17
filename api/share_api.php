@@ -681,6 +681,58 @@ function scrapeWallapopMetadata($url) {
     
     $log("✅ HTML obtenido correctamente");
     
+    // DEBUGGING: Guardar una muestra del HTML para análisis
+    $log("Muestra del HTML (primeros 500 caracteres):");
+    $log(substr($html, 0, 500));
+    
+    // Buscar script tags con JSON de Wallapop
+    if (preg_match('/<script[^>]*id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s', $html, $matches)) {
+        $log("✅ Encontrado script __NEXT_DATA__ (Next.js data)");
+        $jsonData = $matches[1];
+        $log("Tamaño JSON: " . strlen($jsonData) . " bytes");
+        
+        // Intentar parsear el JSON
+        $data = json_decode($jsonData, true);
+        if ($data && isset($data['props']['pageProps'])) {
+            $log("✅ JSON parseado exitosamente");
+            
+            // Extraer del JSON de Next.js
+            $pageProps = $data['props']['pageProps'];
+            
+            // Buscar título
+            if (isset($pageProps['item']['title'])) {
+                $meta['title'] = $pageProps['item']['title'];
+                $log("✅ Título encontrado en JSON: " . $meta['title']);
+            }
+            
+            // Buscar descripción
+            if (isset($pageProps['item']['description'])) {
+                $meta['description'] = $pageProps['item']['description'];
+                $log("✅ Descripción encontrada en JSON: " . substr($meta['description'], 0, 100));
+            }
+            
+            // Buscar imagen
+            if (isset($pageProps['item']['images']) && is_array($pageProps['item']['images']) && count($pageProps['item']['images']) > 0) {
+                $meta['image'] = $pageProps['item']['images'][0]['original'] ?? $pageProps['item']['images'][0]['medium'] ?? $pageProps['item']['images'][0]['small'] ?? '';
+                $log("✅ Imagen encontrada en JSON: " . $meta['image']);
+            }
+            
+            // Si ya tenemos los datos del JSON, retornar
+            if (!empty($meta['title']) && !empty($meta['image'])) {
+                $log("=== METADATOS EXTRAÍDOS DE JSON ===");
+                $log("Título: " . $meta['title']);
+                $log("Descripción: " . (isset($meta['description']) ? substr($meta['description'], 0, 100) . "..." : 'N/A'));
+                $log("Imagen: " . $meta['image']);
+                $log("✅ Extracción de JSON exitosa, saltando scraping HTML");
+                return $meta;
+            }
+        } else {
+            $log("⚠️ JSON encontrado pero no se pudo parsear o no tiene la estructura esperada");
+        }
+    } else {
+        $log("⚠️ No se encontró script __NEXT_DATA__ (Wallapop usa Next.js)");
+    }
+    
     $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
     if ($enc) {
         $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
