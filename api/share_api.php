@@ -2807,9 +2807,33 @@ function scrapeMilanunciosMetadata($url) {
     if (!$html || $httpCode !== 200) {
         $log("❌ Error obteniendo Milanuncios: HTTP " . $httpCode);
         if ($html) {
-            $log("Contenido de respuesta (primeros 500 caracteres):");
-            $log(substr($html, 0, 500));
+            $log("Contenido de respuesta (primeros 1000 caracteres):");
+            $log(substr($html, 0, 1000));
         }
+        
+        // Si es 403, detectar tipo de protección
+        if ($httpCode === 403 && $html) {
+            if (strpos($html, 'Pardon Our Interruption') !== false || 
+                strpos($html, 'noindex, nofollow') !== false) {
+                $log("🛡️ Protección anti-bot detectada en Milanuncios");
+                $log("Retornando mensaje informativo para el usuario");
+                
+                // Extraer título de la URL si es posible
+                $urlParts = explode('/', $url);
+                $lastPart = end($urlParts);
+                $titleFromUrl = str_replace(['-', '.htm'], [' ', ''], $lastPart);
+                $titleFromUrl = ucwords($titleFromUrl);
+                
+                return [
+                    'title' => 'Anuncio en Milanuncios',
+                    'description' => 'Haz clic en el enlace para ver todos los detalles del anuncio.',
+                    'image' => 'https://www.milanuncios.com/static/img/logo-milanuncios.svg',
+                    'blocked' => true,
+                    'reason' => 'anti_bot_protection'
+                ];
+            }
+        }
+        
         return [];
     }
     
