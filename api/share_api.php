@@ -1598,26 +1598,43 @@ function expandAmazonShortUrl($url) {
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_NOBODY => true,
-        CURLOPT_TIMEOUT => 10,
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_NOBODY => false,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_SSL_VERIFYHOST => 0,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         CURLOPT_HTTPHEADER => [
-            'Accept: text/html,application/xhtml+xml,application/xml',
-            'Accept-Language: es-ES,es;q=0.9,en;q=0.8'
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate, br',
+            'Connection: keep-alive',
+            'Upgrade-Insecure-Requests: 1'
         ]
     ]);
     
-    curl_exec($ch);
+    $response = curl_exec($ch);
     $expandedUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
     curl_close($ch);
     
-    if ($httpCode >= 200 && $httpCode < 400 && $expandedUrl) {
-        error_log("URL expandida: " . $expandedUrl);
+    error_log("Expansión - HTTP Code: " . $httpCode);
+    error_log("Expansión - URL final: " . ($expandedUrl ?? 'N/A'));
+    error_log("Expansión - Error: " . ($error ?? 'ninguno'));
+    
+    if ($error) {
+        error_log("❌ Error cURL expandiendo URL: " . $error);
+        return $url;
+    }
+    
+    if ($httpCode >= 200 && $httpCode < 400 && $expandedUrl && $expandedUrl !== $url) {
+        error_log("✅ URL expandida exitosamente: " . $expandedUrl);
         return $expandedUrl;
     }
     
-    error_log("No se pudo expandir URL corta, usando original");
+    error_log("⚠️ No se pudo expandir URL corta, usando original");
     return $url;
 }
 
