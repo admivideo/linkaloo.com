@@ -29,9 +29,9 @@ echo "API Key: " . substr(RAINFOREST_API_KEY, 0, 15) . "...\n\n";
 
 // URLs de prueba
 $testUrls = [
-    'https://www.amazon.es/dp/B09B8V1LZ3',
-    'https://amzn.eu/d/5u8p8Rt',
-    'https://www.amazon.com/dp/B08J8FFJ8H'
+    'https://www.amazon.es/dp/B0FV95XQVF',  // Beneath - PS5 (válido)
+    'https://www.amazon.es/dp/B0D1XD1ZV3',  // Producto válido
+    'https://www.amazon.com/dp/B0D1XD1ZV3'  // Amazon USA
 ];
 
 foreach ($testUrls as $index => $testUrl) {

@@ -12,15 +12,15 @@ echo "========================================\n\n";
 
 // URLs de prueba de Amazon
 $testUrls = [
-    // Amazon España
-    'https://www.amazon.es/dp/B0CHX9CY7R',
-    'https://www.amazon.es/Echo-Dot-5-Gen-Altavoz-inteligente-sonido/dp/B09B8V1LZ3',
+    // Amazon España - URLs válidas
+    'https://www.amazon.es/dp/B0FV95XQVF',  // Beneath - PS5
+    'https://www.amazon.es/dp/B0D1XD1ZV3',  // Producto válido
     
     // Amazon USA
-    'https://www.amazon.com/dp/B08J8FFJ8H',
+    'https://www.amazon.com/dp/B0D1XD1ZV3',
     
     // URL con parámetros de tracking (debe limpiarla)
-    'https://www.amazon.es/dp/B09B8V1LZ3/ref=sr_1_1?keywords=echo+dot&qid=1697457600&sr=8-1'
+    'https://www.amazon.es/dp/B0FV95XQVF/ref=sr_1_1?keywords=beneath&qid=1697457600&sr=8-1'
 ];
 
 foreach ($testUrls as $index => $testUrl) {
