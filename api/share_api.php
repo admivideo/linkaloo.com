@@ -393,6 +393,12 @@ function scrapeMetadata($url) {
         return scrapeTikTokMetadata($url);
     }
     
+    // Detectar si es TEMU y usar función específica
+    if (strpos($url, 'temu.') !== false) {
+        error_log("Detectado TEMU, usando función específica");
+        return scrapeTemuMetadata($url);
+    }
+    
     // Detectar si es Amazon y usar Rainforest API
     if (strpos($url, 'amazon.') !== false || strpos($url, 'amzn.') !== false) {
         // Log personalizado para debugging
@@ -1979,6 +1985,193 @@ function scrapeAmazonMetadata($url) {
     
     // NO eliminamos cookies - las mantenemos en caché para reutilizar
     // Se auto-eliminan después de 1 hora (ver código arriba)
+    
+    return $meta;
+}
+
+/**
+ * Expandir URL corta de TEMU (temu.to)
+ */
+function expandTemuShortUrl($url) {
+    error_log("Expandiendo URL corta de TEMU: " . $url);
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_NOBODY => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8'
+        ]
+    ]);
+    
+    curl_exec($ch);
+    $expandedUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode >= 200 && $httpCode < 400 && $expandedUrl && $expandedUrl !== $url) {
+        error_log("URL TEMU expandida: " . $expandedUrl);
+        return $expandedUrl;
+    }
+    
+    error_log("No se pudo expandir URL de TEMU, usando original");
+    return $url;
+}
+
+/**
+ * Función específica para extraer metadatos de TEMU
+ */
+function scrapeTemuMetadata($url) {
+    error_log("=== SCRAPE ESPECÍFICO PARA TEMU ===");
+    error_log("URL TEMU: " . $url);
+    
+    // Expandir URL corta si es temu.to
+    if (strpos($url, 'temu.to') !== false) {
+        $url = expandTemuShortUrl($url);
+        error_log("URL después de expandir: " . $url);
+    }
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_ENCODING => 'gzip, deflate, br',
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate, br',
+            'Connection: keep-alive',
+            'Upgrade-Insecure-Requests: 1',
+            'Sec-Fetch-Dest: document',
+            'Sec-Fetch-Mode: navigate',
+            'Sec-Fetch-Site: none',
+            'Sec-Fetch-User: ?1'
+        ]
+    ]);
+    
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    if ($error) {
+        error_log("Error cURL en TEMU: " . $error);
+        return [];
+    }
+    
+    if (!$html || $httpCode !== 200) {
+        error_log("Error obteniendo TEMU: HTTP " . $httpCode);
+        return [];
+    }
+    
+    $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
+    if ($enc) {
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', $enc);
+    }
+    
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    @$doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+    
+    $meta = [];
+    
+    // Extraer título
+    $titleSelectors = [
+        '//meta[@property="og:title"]/@content',
+        '//meta[@name="twitter:title"]/@content',
+        '//h1[@class="product-title"]',
+        '//h1',
+        '//title'
+    ];
+    
+    foreach ($titleSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $meta['title'] = trim($nodes->item(0)->nodeValue);
+            error_log("Título TEMU encontrado: " . $meta['title']);
+            break;
+        }
+    }
+    
+    // Extraer descripción
+    $descSelectors = [
+        '//meta[@property="og:description"]/@content',
+        '//meta[@name="description"]/@content',
+        '//meta[@name="twitter:description"]/@content',
+        '//div[@class="product-intro"]'
+    ];
+    
+    foreach ($descSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $description = trim($nodes->item(0)->nodeValue);
+            $description = preg_replace('/\s+/', ' ', $description);
+            $meta['description'] = $description;
+            error_log("Descripción TEMU encontrada");
+            break;
+        }
+    }
+    
+    // Extraer imagen
+    $imageSelectors = [
+        '//meta[@property="og:image"]/@content',
+        '//meta[@name="twitter:image"]/@content',
+        '//img[@class="product-image"]/@src',
+        '//img[contains(@src, "img.temu.com")]/@src',
+        '//img[contains(@src, "img.kwcdn.com")]/@src'
+    ];
+    
+    foreach ($imageSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $imageUrl = trim($nodes->item(0)->nodeValue);
+            
+            // Verificar que sea una URL válida de TEMU
+            if (strpos($imageUrl, 'img.temu.com') !== false || 
+                strpos($imageUrl, 'img.kwcdn.com') !== false ||
+                strpos($imageUrl, 'temu.com') !== false) {
+                
+                // Asegurar que sea HTTPS
+                if (strpos($imageUrl, '//') === 0) {
+                    $imageUrl = 'https:' . $imageUrl;
+                }
+                
+                $meta['image'] = $imageUrl;
+                error_log("Imagen TEMU encontrada: " . $meta['image']);
+                break;
+            }
+        }
+    }
+    
+    // Limpiar título (remover "TEMU" o "Temu" del final)
+    if (isset($meta['title'])) {
+        $meta['title'] = preg_replace('/\s*-\s*TEMU.*$/i', '', $meta['title']);
+        $meta['title'] = preg_replace('/\s*\|\s*TEMU.*$/i', '', $meta['title']);
+        $meta['title'] = trim($meta['title']);
+    }
+    
+    // Limpiar descripción
+    if (isset($meta['description'])) {
+        if (strlen($meta['description']) > 300) {
+            $meta['description'] = substr($meta['description'], 0, 297) . '...';
+        }
+    }
+    
+    error_log("Metadatos TEMU extraídos:");
+    error_log("Título: " . ($meta['title'] ?? 'N/A'));
+    error_log("Descripción: " . substr($meta['description'] ?? 'N/A', 0, 100) . "...");
+    error_log("Imagen: " . ($meta['image'] ?? 'N/A'));
     
     return $meta;
 }
