@@ -76,9 +76,21 @@ function getAmazonDataWithRainforest($url) {
         return null;
     }
     
+    error_log("Rainforest HTTP Code: " . $httpCode);
+    error_log("Rainforest Response: " . substr($response ?? 'EMPTY', 0, 1000));
+    
     if ($httpCode !== 200) {
         error_log("❌ Rainforest API respondió con HTTP " . $httpCode);
-        error_log("Respuesta: " . substr($response ?? '', 0, 500));
+        
+        // Intentar decodificar el error
+        $errorData = json_decode($response ?? '{}', true);
+        if (isset($errorData['error'])) {
+            error_log("Error de Rainforest: " . $errorData['error']);
+        }
+        if (isset($errorData['message'])) {
+            error_log("Mensaje de Rainforest: " . $errorData['message']);
+        }
+        
         return null;
     }
     
@@ -86,13 +98,23 @@ function getAmazonDataWithRainforest($url) {
     
     if (!$data) {
         error_log("❌ Error decodificando JSON de Rainforest");
+        error_log("JSON Error: " . json_last_error_msg());
         return null;
     }
     
     // Verificar que tengamos datos del producto
     if (!isset($data['product'])) {
         error_log("❌ Rainforest no devolvió datos de producto");
-        error_log("Respuesta: " . json_encode($data));
+        error_log("Respuesta completa: " . json_encode($data));
+        
+        // Verificar si hay mensaje de error
+        if (isset($data['error'])) {
+            error_log("Error API: " . $data['error']);
+        }
+        if (isset($data['request_info'])) {
+            error_log("Request Info: " . json_encode($data['request_info']));
+        }
+        
         return null;
     }
     

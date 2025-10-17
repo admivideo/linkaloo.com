@@ -51,7 +51,11 @@ foreach ($testUrls as $index => $testUrl) {
     
     // Test 3: Rainforest API completa
     echo "\n3. Llamando a Rainforest API:\n";
+    
+    // Habilitar output de errores
+    ob_start();
     $metadata = getAmazonDataWithRainforest($testUrl);
+    $output = ob_get_clean();
     
     if ($metadata) {
         echo "   ✅ API EXITOSA\n";
@@ -63,7 +67,12 @@ foreach ($testUrls as $index => $testUrl) {
         }
     } else {
         echo "   ❌ API FALLÓ\n";
-        echo "   Verifica los logs para más detalles\n";
+        echo "   IMPORTANTE: Revisa los logs de error de PHP en tu servidor\n";
+        echo "   Los logs mostrarán el error exacto de Rainforest API\n";
+        if ($output) {
+            echo "\n   Output capturado:\n";
+            echo "   " . str_replace("\n", "\n   ", $output) . "\n";
+        }
     }
     
     echo "\n";
