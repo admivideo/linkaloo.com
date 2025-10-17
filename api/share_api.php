@@ -635,8 +635,16 @@ function scrapePinterestMetadata($url) {
 
 // Función específica para Wallapop
 function scrapeWallapopMetadata($url) {
-    error_log("=== SCRAPE ESPECÍFICO PARA WALLAPOP ===");
-    error_log("URL Wallapop: " . $url);
+    // Logger local para Wallapop
+    $logFile = __DIR__ . '/amazon_debug.log';
+    $log = function($msg) use ($logFile) {
+        $timestamp = date('Y-m-d H:i:s');
+        file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $log("=== SCRAPE ESPECÍFICO PARA WALLAPOP ===");
+    $log("URL Wallapop: " . $url);
     
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -655,12 +663,23 @@ function scrapeWallapopMetadata($url) {
     
     $html = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
     curl_close($ch);
     
-    if (!$html || $httpCode !== 200) {
-        error_log("Error obteniendo Wallapop: HTTP " . $httpCode);
+    $log("HTTP Code: " . $httpCode);
+    $log("HTML length: " . strlen($html ?? ''));
+    
+    if ($error) {
+        $log("❌ Error cURL: " . $error);
         return [];
     }
+    
+    if (!$html || $httpCode !== 200) {
+        $log("❌ Error obteniendo Wallapop: HTTP " . $httpCode);
+        return [];
+    }
+    
+    $log("✅ HTML obtenido correctamente");
     
     $enc = mb_detect_encoding($html, 'UTF-8, ISO-8859-1, WINDOWS-1252', true);
     if ($enc) {
@@ -684,15 +703,22 @@ function scrapeWallapopMetadata($url) {
         '//meta[@name="twitter:title"]/@content'
     ];
     
+    $log("Buscando título...");
     foreach ($titleSelectors as $selector) {
         $nodes = $xpath->query($selector);
         if ($nodes->length > 0) {
             $title = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
             if (!empty($title)) {
                 $meta['title'] = $title;
+                $log("✅ Título encontrado con: " . $selector);
+                $log("Título: " . substr($title, 0, 100));
                 break;
             }
         }
+    }
+    
+    if (empty($meta['title'])) {
+        $log("⚠️ No se encontró título");
     }
     
     // Extraer descripción - Wallapop tiene estructura específica para productos
@@ -705,15 +731,22 @@ function scrapeWallapopMetadata($url) {
         '//meta[@name="description"]/@content'
     ];
     
+    $log("Buscando descripción...");
     foreach ($descSelectors as $selector) {
         $nodes = $xpath->query($selector);
         if ($nodes->length > 0) {
             $desc = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
             if (!empty($desc)) {
                 $meta['description'] = $desc;
+                $log("✅ Descripción encontrada con: " . $selector);
+                $log("Descripción: " . substr($desc, 0, 100) . "...");
                 break;
             }
         }
+    }
+    
+    if (empty($meta['description'])) {
+        $log("⚠️ No se encontró descripción con selectores estándar");
     }
     
     // Extraer imagen - Wallapop usa estructura específica para productos
@@ -726,12 +759,15 @@ function scrapeWallapopMetadata($url) {
         '//meta[@name="twitter:image"]/@content'
     ];
     
+    $log("Buscando imagen con selectores estándar...");
     foreach ($imageSelectors as $selector) {
         $nodes = $xpath->query($selector);
         if ($nodes->length > 0) {
             $img = trim($nodes->item(0)->nodeValue ?? '');
             if (!empty($img)) {
                 $meta['image'] = $img;
+                $log("✅ Imagen encontrada con selector: " . $selector);
+                $log("URL imagen: " . substr($img, 0, 100));
                 break;
             }
         }
@@ -739,6 +775,8 @@ function scrapeWallapopMetadata($url) {
     
      // Si no encontramos imagen, buscar en el JSON embebido de Wallapop
      if (empty($meta['image'])) {
+         $log("⚠️ No se encontró imagen con selectores estándar, buscando en CDN patterns...");
+         
          // Buscar específicamente URLs de CDN de Wallapop
          $wallapopCdnPatterns = [
              '/"@https:\/\/cdn\.wallapop\.com\/images\/([^"]+)"/',
@@ -750,7 +788,8 @@ function scrapeWallapopMetadata($url) {
          foreach ($wallapopCdnPatterns as $pattern) {
              if (preg_match($pattern, $html, $matches)) {
                  $meta['image'] = 'https://cdn.wallapop.com/images/' . $matches[1];
-                 error_log("Imagen encontrada en CDN de Wallapop: " . $meta['image']);
+                 $log("✅ Imagen encontrada en CDN con pattern: " . $pattern);
+                 $log("URL imagen: " . $meta['image']);
                  break;
              }
          }
@@ -863,10 +902,16 @@ function scrapeWallapopMetadata($url) {
         $meta['title'] = trim($meta['title']);
     }
     
-    error_log("Metadatos Wallapop extraídos:");
-    error_log("  Título: " . ($meta['title'] ?? ''));
-    error_log("  Descripción: " . ($meta['description'] ?? ''));
-    error_log("  Imagen: " . ($meta['image'] ?? ''));
+    $log("=== METADATOS WALLAPOP EXTRAÍDOS ===");
+    $log("Título: " . ($meta['title'] ?? 'N/A'));
+    $log("Descripción: " . (isset($meta['description']) ? substr($meta['description'], 0, 100) . "..." : 'N/A'));
+    $log("Imagen: " . ($meta['image'] ?? 'N/A'));
+    
+    if (empty($meta['image']) || empty($meta['description'])) {
+        $log("⚠️ Faltan metadatos (imagen o descripción)");
+    } else {
+        $log("✅ Todos los metadatos extraídos exitosamente");
+    }
     
      return $meta;
 }
