@@ -157,16 +157,22 @@ function getAmazonDataWithRainforest($url) {
  * Extraer ASIN de URL de Amazon
  */
 function extractAmazonAsin($url) {
+    amazonDebugLog("Extrayendo ASIN de: " . $url);
+    
     // Expandir URL corta si es necesario
     if (strpos($url, 'amzn.') !== false || strpos($url, 'a.co') !== false) {
+        amazonDebugLog("URL corta detectada, expandiendo...");
         $url = expandAmazonShortUrl($url);
+        amazonDebugLog("URL después de expandir: " . $url);
     }
     
     // Extraer ASIN (10 caracteres alfanuméricos)
     if (preg_match('/\/(dp|gp\/product)\/([A-Z0-9]{10})/', $url, $matches)) {
+        amazonDebugLog("✅ ASIN encontrado: " . $matches[2]);
         return $matches[2];
     }
     
+    amazonDebugLog("❌ No se pudo extraer ASIN de la URL");
     return null;
 }
 

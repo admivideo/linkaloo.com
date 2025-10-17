@@ -1604,7 +1604,14 @@ function getAllUserLinks($pdo, $input) {
  * Expandir URL corta de Amazon (amzn.eu, a.co, etc.)
  */
 function expandAmazonShortUrl($url) {
-    error_log("Expandiendo URL corta de Amazon: " . $url);
+    // Log personalizado
+    $debugLog = __DIR__ . '/amazon_debug.log';
+    $logMsg = function($msg) use ($debugLog) {
+        file_put_contents($debugLog, "[" . date('Y-m-d H:i:s') . "] " . $msg . "\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $logMsg("Expandiendo URL corta de Amazon: " . $url);
     
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -1632,21 +1639,20 @@ function expandAmazonShortUrl($url) {
     $error = curl_error($ch);
     curl_close($ch);
     
-    error_log("Expansión - HTTP Code: " . $httpCode);
-    error_log("Expansión - URL final: " . ($expandedUrl ?? 'N/A'));
-    error_log("Expansión - Error: " . ($error ?? 'ninguno'));
+    $logMsg("Expansión - HTTP Code: " . $httpCode);
+    $logMsg("Expansión - URL final: " . ($expandedUrl ?? 'N/A'));
     
     if ($error) {
-        error_log("❌ Error cURL expandiendo URL: " . $error);
+        $logMsg("❌ Error cURL expandiendo URL: " . $error);
         return $url;
     }
     
     if ($httpCode >= 200 && $httpCode < 400 && $expandedUrl && $expandedUrl !== $url) {
-        error_log("✅ URL expandida exitosamente: " . $expandedUrl);
+        $logMsg("✅ URL expandida exitosamente a: " . $expandedUrl);
         return $expandedUrl;
     }
     
-    error_log("⚠️ No se pudo expandir URL corta, usando original");
+    $logMsg("⚠️ No se pudo expandir URL corta, usando original");
     return $url;
 }
 
@@ -1704,12 +1710,19 @@ function optimizeAmazonImageUrl($imageUrl) {
  * Función específica para extraer metadatos de Amazon
  */
 function scrapeAmazonMetadata($url) {
-    error_log("=== SCRAPE ESPECÍFICO PARA AMAZON ===");
-    error_log("URL Amazon original: " . $url);
+    // Log personalizado
+    $debugLog = __DIR__ . '/amazon_debug.log';
+    $logMsg = function($msg) use ($debugLog) {
+        file_put_contents($debugLog, "[" . date('Y-m-d H:i:s') . "] " . $msg . "\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $logMsg("=== SCRAPE ESPECÍFICO PARA AMAZON ===");
+    $logMsg("URL Amazon original: " . $url);
     
     // Limpiar URL de Amazon (remover parámetros de tracking)
     $cleanUrl = cleanAmazonUrl($url);
-    error_log("Usando URL para scraping: " . $cleanUrl);
+    $logMsg("Usando URL para scraping: " . $cleanUrl);
     
     // Detectar si es Amazon.es o europeo
     $isEuropeanAmazon = (strpos($cleanUrl, 'amazon.es') !== false || 
