@@ -15,11 +15,11 @@ echo "  TEST: Rainforest API para Amazon  \n";
 echo "========================================\n\n";
 
 // Verificar que la API key esté configurada
-if (RAINFOREST_API_KEY === 'ABB9AE0FE81C43FD8871176F05E3CD6F') {
+if (RAINFOREST_API_KEY === 'TU_API_KEY_AQUI' || empty(RAINFOREST_API_KEY)) {
     echo "❌ ERROR: API Key no configurada\n";
     echo "\nPor favor:\n";
     echo "1. Edita: server_endpoints/rainforest_config.php\n";
-    echo "2. Reemplaza 'ABB9AE0FE81C43FD8871176F05E3CD6F' con tu API key real\n";
+    echo "2. Reemplaza 'TU_API_KEY_AQUI' con tu API key real\n";
     echo "3. Vuelve a ejecutar este script\n\n";
     exit(1);
 }
