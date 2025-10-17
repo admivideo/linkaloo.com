@@ -405,6 +405,12 @@ function scrapeMetadata($url) {
         return scrapeIdealistaMetadata($url);
     }
     
+    // Detectar si es Milanuncios y usar función específica
+    if (strpos($url, 'milanuncios.com') !== false) {
+        error_log("Detectado Milanuncios, usando función específica");
+        return scrapeMilanunciosMetadata($url);
+    }
+    
     // Detectar si es Amazon y usar Rainforest API
     if (strpos($url, 'amazon.') !== false || strpos($url, 'amzn.') !== false) {
         // Log personalizado para debugging
@@ -2746,6 +2752,212 @@ function scrapeIdealistaMetadata($url) {
         $log("⚠️ Faltan metadatos (imagen o título)");
     } else {
         $log("✅ Todos los metadatos extraídos exitosamente");
+    }
+    
+    return $meta;
+}
+
+/**
+ * Función específica para extraer metadatos de Milanuncios
+ */
+function scrapeMilanunciosMetadata($url) {
+    // Logger local para Milanuncios
+    $logFile = __DIR__ . '/amazon_debug.log';
+    $log = function($msg) use ($logFile) {
+        $timestamp = date('Y-m-d H:i:s');
+        file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $log("=== SCRAPE ESPECÍFICO PARA MILANUNCIOS ===");
+    $log("URL Milanuncios: " . $url);
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_ENCODING => '', // Descomprimir automáticamente
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate, br',
+            'Connection: keep-alive',
+            'Upgrade-Insecure-Requests: 1',
+            'Cache-Control: no-cache',
+            'Pragma: no-cache'
+        ]
+    ]);
+    
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    $log("HTTP Code: " . $httpCode);
+    $log("HTML length: " . strlen($html ?? ''));
+    
+    if ($error) {
+        $log("❌ Error cURL: " . $error);
+        return [];
+    }
+    
+    if (!$html || $httpCode !== 200) {
+        $log("❌ Error obteniendo Milanuncios: HTTP " . $httpCode);
+        if ($html) {
+            $log("Contenido de respuesta (primeros 500 caracteres):");
+            $log(substr($html, 0, 500));
+        }
+        return [];
+    }
+    
+    $log("✅ HTML obtenido correctamente");
+    $log("Muestra del HTML (primeros 500 caracteres):");
+    $log(substr($html, 0, 500));
+    
+    $meta = [];
+    
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    @$doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+    
+    // Extraer título - Milanuncios tiene estructura específica
+    $titleSelectors = [
+        '//meta[@property="og:title"]/@content',
+        '//meta[@name="twitter:title"]/@content',
+        '//h1[@class="ad-title"]',
+        '//h1[@class="aditem-detail-title"]',
+        '//h1[contains(@class, "title")]',
+        '//h1',
+        '//title'
+    ];
+    
+    $log("Buscando título...");
+    foreach ($titleSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $title = trim($nodes->item(0)->nodeValue);
+            if (!empty($title) && strlen($title) > 3) {
+                $meta['title'] = $title;
+                $log("✅ Título encontrado con: " . $selector);
+                $log("Título: " . substr($title, 0, 100));
+                break;
+            }
+        }
+    }
+    
+    if (empty($meta['title'])) {
+        $log("⚠️ No se encontró título");
+    }
+    
+    // Extraer descripción
+    $descSelectors = [
+        '//meta[@property="og:description"]/@content',
+        '//meta[@name="description"]/@content',
+        '//meta[@name="twitter:description"]/@content',
+        '//div[@class="ad-description"]',
+        '//div[@class="aditem-detail-description"]',
+        '//div[contains(@class, "description")]',
+        '//p[contains(@class, "description")]'
+    ];
+    
+    $log("Buscando descripción...");
+    foreach ($descSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $desc = trim($nodes->item(0)->nodeValue);
+            if (!empty($desc) && strlen($desc) > 10) {
+                $meta['description'] = $desc;
+                if (strlen($desc) > 300) {
+                    $meta['description'] = substr($desc, 0, 297) . '...';
+                }
+                $log("✅ Descripción encontrada con: " . $selector);
+                $log("Descripción: " . substr($desc, 0, 100) . "...");
+                break;
+            }
+        }
+    }
+    
+    if (empty($meta['description'])) {
+        $log("⚠️ No se encontró descripción");
+    }
+    
+    // Extraer imagen - Milanuncios usa estructura específica
+    $imageSelectors = [
+        '//meta[@property="og:image"]/@content',
+        '//meta[@name="twitter:image"]/@content',
+        '//img[@class="ad-image"]/@src',
+        '//img[@class="aditem-detail-image"]/@src',
+        '//img[contains(@class, "main-image")]/@src',
+        '//img[contains(@class, "detail-image")]/@src',
+        '//div[@class="gallery"]//img/@src',
+        '//img[contains(@src, "milanuncios.com")]/@src'
+    ];
+    
+    $log("Buscando imagen...");
+    foreach ($imageSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $img = trim($nodes->item(0)->nodeValue);
+            // Verificar que sea una URL válida
+            if (!empty($img) && (strpos($img, 'http') === 0 || strpos($img, '//') === 0)) {
+                // Asegurar protocolo HTTPS
+                if (strpos($img, '//') === 0) {
+                    $img = 'https:' . $img;
+                }
+                $meta['image'] = $img;
+                $log("✅ Imagen encontrada con: " . $selector);
+                $log("URL imagen: " . substr($img, 0, 100));
+                break;
+            }
+        }
+    }
+    
+    // Si no encontramos con selectores, buscar en el HTML con regex
+    if (empty($meta['image'])) {
+        $log("⚠️ No se encontró imagen con selectores, buscando con regex...");
+        
+        // Buscar URLs de imágenes de Milanuncios en el HTML
+        $imagePatterns = [
+            '/"(https?:\/\/[^"]*milanuncios\.com[^"]*\/fotos[^"]*\.jpg[^"]*)"/',
+            '/"(https?:\/\/[^"]*milanuncios\.com[^"]*\/images[^"]*\.jpg[^"]*)"/',
+            '/src="([^"]*milanuncios\.com[^"]*\.(jpg|jpeg|png|webp)[^"]*)"/',
+            '/(https?:\/\/[^\s"\']*milanuncios\.com[^\s"\']*\.(jpg|jpeg|png|webp)[^\s"\']*)/'
+        ];
+        
+        foreach ($imagePatterns as $pattern) {
+            if (preg_match($pattern, $html, $matches)) {
+                $meta['image'] = $matches[1];
+                $log("✅ Imagen encontrada con regex: " . $pattern);
+                $log("URL imagen: " . substr($meta['image'], 0, 100));
+                break;
+            }
+        }
+    }
+    
+    if (empty($meta['image'])) {
+        $log("⚠️ No se encontró imagen");
+    }
+    
+    // Limpiar título (remover "Milanuncios" si está)
+    if (isset($meta['title'])) {
+        $meta['title'] = preg_replace('/\s*-\s*Milanuncios.*$/i', '', $meta['title']);
+        $meta['title'] = preg_replace('/\s*\|\s*Milanuncios.*$/i', '', $meta['title']);
+        $meta['title'] = trim($meta['title']);
+    }
+    
+    $log("=== METADATOS MILANUNCIOS EXTRAÍDOS ===");
+    $log("Título: " . ($meta['title'] ?? 'N/A'));
+    $log("Descripción: " . (isset($meta['description']) ? substr($meta['description'], 0, 100) . "..." : 'N/A'));
+    $log("Imagen: " . ($meta['image'] ?? 'N/A'));
+    
+    if (empty($meta['title']) && empty($meta['image'])) {
+        $log("⚠️ No se extrajeron metadatos suficientes");
+    } else {
+        $log("✅ Metadatos extraídos exitosamente");
     }
     
     return $meta;
