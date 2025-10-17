@@ -15,14 +15,24 @@ define('RAINFOREST_API_KEY', 'ABB9AE0FE81C43FD8871176F05E3CD6F');
 define('RAINFOREST_API_URL', 'https://api.rainforestapi.com/request');
 
 /**
+ * Log personalizado para Amazon debugging
+ */
+function amazonDebugLog($message) {
+    $logFile = __DIR__ . '/amazon_debug.log';
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
+    error_log($message); // También log normal
+}
+
+/**
  * Obtener información de producto de Amazon usando Rainforest API
  * 
  * @param string $url URL del producto de Amazon
  * @return array|null Metadatos del producto o null si falla
  */
 function getAmazonDataWithRainforest($url) {
-    error_log("=== RAINFOREST API PARA AMAZON ===");
-    error_log("URL original: " . $url);
+    amazonDebugLog("=== RAINFOREST API PARA AMAZON ===");
+    amazonDebugLog("URL original: " . $url);
     
     // Verificar que la API key esté configurada
     if (RAINFOREST_API_KEY === 'ABB9AE0FE81C43FD8871176F05E3CD6F') {

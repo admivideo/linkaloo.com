@@ -395,29 +395,41 @@ function scrapeMetadata($url) {
     
     // Detectar si es Amazon y usar Rainforest API
     if (strpos($url, 'amazon.') !== false || strpos($url, 'amzn.') !== false) {
-        error_log("Detectado Amazon, intentando obtener metadatos...");
+        // Log personalizado para debugging
+        $debugLog = __DIR__ . '/amazon_debug.log';
+        $logMsg = function($msg) use ($debugLog) {
+            file_put_contents($debugLog, "[" . date('Y-m-d H:i:s') . "] " . $msg . "\n", FILE_APPEND);
+            error_log($msg);
+        };
+        
+        $logMsg("=== DETECTADO AMAZON ===");
+        $logMsg("URL recibida: " . $url);
         
         // Intentar primero con Rainforest API
         require_once 'rainforest_config.php';
         $rainforestData = getAmazonDataWithRainforest($url);
         
         if ($rainforestData && !empty($rainforestData['image'])) {
-            error_log("✅ Metadatos obtenidos con Rainforest API");
+            $logMsg("✅ Metadatos obtenidos con Rainforest API");
+            $logMsg("Título: " . ($rainforestData['title'] ?? 'N/A'));
+            $logMsg("Imagen: " . ($rainforestData['image'] ?? 'N/A'));
             return $rainforestData;
         }
         
         // Fallback a scraping si Rainforest falla
-        error_log("⚠️ Rainforest API no disponible, usando scraping...");
+        $logMsg("⚠️ Rainforest API no disponible, usando scraping...");
         $scrapedData = scrapeAmazonMetadata($url);
         
         // Verificar que el scraping devolvió datos
         if (!empty($scrapedData)) {
-            error_log("✅ Metadatos obtenidos con scraping de Amazon");
+            $logMsg("✅ Metadatos obtenidos con scraping de Amazon");
+            $logMsg("Título: " . ($scrapedData['title'] ?? 'N/A'));
+            $logMsg("Imagen: " . ($scrapedData['image'] ?? 'N/A'));
             return $scrapedData;
         }
         
         // Si ambos fallan, devolver array vacío
-        error_log("❌ No se pudieron obtener metadatos de Amazon");
+        $logMsg("❌ AMBOS MÉTODOS FALLARON - No se pudieron obtener metadatos");
         return [];
     }
     
