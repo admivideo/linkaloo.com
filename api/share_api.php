@@ -2071,6 +2071,44 @@ function scrapeTemuMetadata($url) {
     
     $log("Usando URL final para scraping: " . $url);
     
+    // NUEVO: Intentar extraer metadatos de los parámetros de la URL
+    // TEMU incluye thumb_url y share_img en la URL expandida
+    $meta = [];
+    $parsedUrl = parse_url($url);
+    
+    if (isset($parsedUrl['query'])) {
+        parse_str($parsedUrl['query'], $params);
+        $log("Parámetros encontrados en URL: " . count($params));
+        
+        // Extraer imagen de los parámetros
+        if (isset($params['share_img']) && !empty($params['share_img'])) {
+            $meta['image'] = $params['share_img'];
+            $log("✅ Imagen encontrada en share_img: " . $meta['image']);
+        } elseif (isset($params['thumb_url']) && !empty($params['thumb_url'])) {
+            $meta['image'] = $params['thumb_url'];
+            $log("✅ Imagen encontrada en thumb_url: " . $meta['image']);
+        }
+        
+        // Extraer goods_id para título genérico
+        if (isset($params['goods_id']) && !empty($params['goods_id'])) {
+            $meta['title'] = 'Producto TEMU';
+            $meta['description'] = 'Ver producto en TEMU';
+            $log("✅ Producto TEMU detectado (goods_id: " . $params['goods_id'] . ")");
+        }
+    }
+    
+    // Si ya tenemos metadatos de la URL, retornarlos sin hacer scraping HTML
+    if (!empty($meta['image'])) {
+        $log("=== METADATOS EXTRAÍDOS DE URL ===");
+        $log("Título: " . ($meta['title'] ?? 'N/A'));
+        $log("Descripción: " . ($meta['description'] ?? 'N/A'));
+        $log("Imagen: " . ($meta['image'] ?? 'N/A'));
+        $log("✅ Metadatos extraídos exitosamente de parámetros URL");
+        return $meta;
+    }
+    
+    $log("⚠️ No se encontraron metadatos en URL, intentando scraping HTML...");
+    
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
