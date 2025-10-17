@@ -399,6 +399,12 @@ function scrapeMetadata($url) {
         return scrapeTemuMetadata($url);
     }
     
+    // Detectar si es Idealista y usar función específica
+    if (strpos($url, 'idealista.com') !== false) {
+        error_log("Detectado Idealista, usando función específica");
+        return scrapeIdealistaMetadata($url);
+    }
+    
     // Detectar si es Amazon y usar Rainforest API
     if (strpos($url, 'amazon.') !== false || strpos($url, 'amzn.') !== false) {
         // Log personalizado para debugging
@@ -2424,6 +2430,261 @@ function scrapeTemuMetadata($url) {
         $log("⚠️ No se extrajeron metadatos suficientes");
     } else {
         $log("✅ Metadatos extraídos exitosamente");
+    }
+    
+    return $meta;
+}
+
+/**
+ * Función específica para extraer metadatos de Idealista
+ */
+function scrapeIdealistaMetadata($url) {
+    // Logger local para Idealista
+    $logFile = __DIR__ . '/amazon_debug.log';
+    $log = function($msg) use ($logFile) {
+        $timestamp = date('Y-m-d H:i:s');
+        file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $log("=== SCRAPE ESPECÍFICO PARA IDEALISTA ===");
+    $log("URL Idealista: " . $url);
+    
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_ENCODING => '', // Descomprimir automáticamente
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_HTTPHEADER => [
+            'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language: es-ES,es;q=0.9,en;q=0.8',
+            'Accept-Encoding: gzip, deflate, br',
+            'Connection: keep-alive',
+            'Upgrade-Insecure-Requests: 1',
+            'Sec-Fetch-Dest: document',
+            'Sec-Fetch-Mode: navigate',
+            'Sec-Fetch-Site: none',
+            'Sec-Fetch-User: ?1',
+            'Cache-Control: no-cache',
+            'Pragma: no-cache'
+        ]
+    ]);
+    
+    $html = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    $log("HTTP Code: " . $httpCode);
+    $log("HTML length: " . strlen($html ?? ''));
+    
+    if ($error) {
+        $log("❌ Error cURL: " . $error);
+        return [];
+    }
+    
+    if (!$html || $httpCode !== 200) {
+        $log("❌ Error obteniendo Idealista: HTTP " . $httpCode);
+        return [];
+    }
+    
+    $log("✅ HTML obtenido correctamente");
+    $log("Muestra del HTML (primeros 500 caracteres):");
+    $log(substr($html, 0, 500));
+    
+    $meta = [];
+    
+    // Idealista usa Next.js similar a Wallapop, intentar extraer JSON
+    if (preg_match('/<script[^>]*id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/s', $html, $matches)) {
+        $log("✅ Encontrado script __NEXT_DATA__ (Next.js data)");
+        $jsonData = $matches[1];
+        $log("Tamaño JSON: " . strlen($jsonData) . " bytes");
+        
+        $data = json_decode($jsonData, true);
+        if ($data && isset($data['props']['pageProps'])) {
+            $log("✅ JSON parseado exitosamente");
+            
+            $pageProps = $data['props']['pageProps'];
+            $log("Claves disponibles en pageProps: " . implode(', ', array_keys($pageProps)));
+            
+            // Buscar el inmueble en diferentes ubicaciones
+            $adData = null;
+            if (isset($pageProps['adData'])) {
+                $adData = $pageProps['adData'];
+                $log("✅ adData encontrado en pageProps");
+            } elseif (isset($pageProps['ad'])) {
+                $adData = $pageProps['ad'];
+                $log("✅ ad encontrado en pageProps");
+            } elseif (isset($pageProps['initialProps']['adData'])) {
+                $adData = $pageProps['initialProps']['adData'];
+                $log("✅ adData encontrado en initialProps");
+            }
+            
+            if ($adData) {
+                $log("Claves disponibles en adData: " . implode(', ', array_keys($adData)));
+                
+                // Extraer título
+                if (isset($adData['title'])) {
+                    $meta['title'] = is_array($adData['title']) ? implode(' ', $adData['title']) : $adData['title'];
+                    $log("✅ Título encontrado: " . $meta['title']);
+                } elseif (isset($adData['propertyCode'])) {
+                    $meta['title'] = 'Inmueble en Idealista - Ref: ' . $adData['propertyCode'];
+                    $log("✅ Título genérico creado con propertyCode");
+                }
+                
+                // Extraer descripción
+                if (isset($adData['description'])) {
+                    $meta['description'] = is_array($adData['description']) ? implode(' ', $adData['description']) : $adData['description'];
+                    // Limpiar y limitar descripción
+                    if (strlen($meta['description']) > 300) {
+                        $meta['description'] = substr($meta['description'], 0, 297) . '...';
+                    }
+                    $log("✅ Descripción encontrada: " . substr($meta['description'], 0, 100) . "...");
+                }
+                
+                // Extraer imagen - Idealista tiene múltiples imágenes
+                $imageFound = false;
+                
+                // Opción 1: multimedia array
+                if (isset($adData['multimedia']['images']) && is_array($adData['multimedia']['images']) && count($adData['multimedia']['images']) > 0) {
+                    $firstImage = $adData['multimedia']['images'][0];
+                    if (is_string($firstImage)) {
+                        $meta['image'] = $firstImage;
+                        $imageFound = true;
+                    } elseif (is_array($firstImage) && isset($firstImage['url'])) {
+                        $meta['image'] = $firstImage['url'];
+                        $imageFound = true;
+                    }
+                    if ($imageFound) {
+                        $log("✅ Imagen encontrada en multimedia->images: " . substr($meta['image'], 0, 100));
+                    }
+                }
+                
+                // Opción 2: images array directo
+                if (!$imageFound && isset($adData['images']) && is_array($adData['images']) && count($adData['images']) > 0) {
+                    $firstImage = $adData['images'][0];
+                    if (is_string($firstImage)) {
+                        $meta['image'] = $firstImage;
+                        $imageFound = true;
+                    } elseif (is_array($firstImage) && isset($firstImage['url'])) {
+                        $meta['image'] = $firstImage['url'];
+                        $imageFound = true;
+                    }
+                    if ($imageFound) {
+                        $log("✅ Imagen encontrada en images: " . substr($meta['image'], 0, 100));
+                    }
+                }
+                
+                // Opción 3: mainImage
+                if (!$imageFound && isset($adData['mainImage'])) {
+                    $meta['image'] = is_array($adData['mainImage']) ? ($adData['mainImage']['url'] ?? $adData['mainImage'][0] ?? '') : $adData['mainImage'];
+                    $imageFound = !empty($meta['image']);
+                    if ($imageFound) {
+                        $log("✅ Imagen encontrada en mainImage: " . substr($meta['image'], 0, 100));
+                    }
+                }
+                
+                if (!$imageFound) {
+                    $log("⚠️ No se encontró imagen en el JSON");
+                }
+            } else {
+                $log("⚠️ No se encontró objeto 'adData' o 'ad' en pageProps");
+            }
+            
+            // Si tenemos datos del JSON, retornar
+            if (!empty($meta['title']) && !empty($meta['image'])) {
+                $log("=== METADATOS EXTRAÍDOS DE JSON ===");
+                $log("Título: " . $meta['title']);
+                $log("Descripción: " . (isset($meta['description']) ? substr($meta['description'], 0, 100) . "..." : 'N/A'));
+                $log("Imagen: " . $meta['image']);
+                $log("✅ Extracción de JSON exitosa");
+                return $meta;
+            }
+        } else {
+            $log("⚠️ JSON no tiene la estructura esperada");
+        }
+    } else {
+        $log("⚠️ No se encontró script __NEXT_DATA__");
+    }
+    
+    // Fallback a scraping HTML tradicional
+    $log("⚠️ Intentando scraping HTML tradicional...");
+    
+    libxml_use_internal_errors(true);
+    $doc = new DOMDocument();
+    @$doc->loadHTML($html);
+    $xpath = new DOMXPath($doc);
+    
+    // Buscar título
+    $titleSelectors = [
+        '//meta[@property="og:title"]/@content',
+        '//meta[@name="twitter:title"]/@content',
+        '//h1[@class="main-info__title"]',
+        '//h1',
+        '//title'
+    ];
+    
+    $log("Buscando título con selectores HTML...");
+    foreach ($titleSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $meta['title'] = trim($nodes->item(0)->nodeValue);
+            $log("✅ Título encontrado: " . $meta['title']);
+            break;
+        }
+    }
+    
+    // Buscar descripción
+    $descSelectors = [
+        '//meta[@property="og:description"]/@content',
+        '//meta[@name="description"]/@content',
+        '//div[@class="comment"]',
+        '//p[@class="description"]'
+    ];
+    
+    $log("Buscando descripción con selectores HTML...");
+    foreach ($descSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $meta['description'] = trim($nodes->item(0)->nodeValue);
+            if (strlen($meta['description']) > 300) {
+                $meta['description'] = substr($meta['description'], 0, 297) . '...';
+            }
+            $log("✅ Descripción encontrada: " . substr($meta['description'], 0, 100) . "...");
+            break;
+        }
+    }
+    
+    // Buscar imagen
+    $imageSelectors = [
+        '//meta[@property="og:image"]/@content',
+        '//meta[@name="twitter:image"]/@content',
+        '//img[@class="detail-image"]/@src',
+        '//img[contains(@class, "detail")]/@src'
+    ];
+    
+    $log("Buscando imagen con selectores HTML...");
+    foreach ($imageSelectors as $selector) {
+        $nodes = $xpath->query($selector);
+        if ($nodes->length > 0) {
+            $meta['image'] = trim($nodes->item(0)->nodeValue);
+            $log("✅ Imagen encontrada: " . substr($meta['image'], 0, 100));
+            break;
+        }
+    }
+    
+    $log("=== METADATOS IDEALISTA EXTRAÍDOS ===");
+    $log("Título: " . ($meta['title'] ?? 'N/A'));
+    $log("Descripción: " . (isset($meta['description']) ? substr($meta['description'], 0, 100) . "..." : 'N/A'));
+    $log("Imagen: " . ($meta['image'] ?? 'N/A'));
+    
+    if (empty($meta['image']) || empty($meta['title'])) {
+        $log("⚠️ Faltan metadatos (imagen o título)");
+    } else {
+        $log("✅ Todos los metadatos extraídos exitosamente");
     }
     
     return $meta;
