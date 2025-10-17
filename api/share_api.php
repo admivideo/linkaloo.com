@@ -395,20 +395,30 @@ function scrapeMetadata($url) {
     
     // Detectar si es Amazon y usar Rainforest API
     if (strpos($url, 'amazon.') !== false || strpos($url, 'amzn.') !== false) {
-        error_log("Detectado Amazon, usando Rainforest API");
+        error_log("Detectado Amazon, intentando obtener metadatos...");
         
         // Intentar primero con Rainforest API
         require_once 'rainforest_config.php';
         $rainforestData = getAmazonDataWithRainforest($url);
         
-        if ($rainforestData && isset($rainforestData['image'])) {
+        if ($rainforestData && !empty($rainforestData['image'])) {
             error_log("✅ Metadatos obtenidos con Rainforest API");
             return $rainforestData;
         }
         
         // Fallback a scraping si Rainforest falla
-        error_log("⚠️ Rainforest API falló, intentando scraping como fallback...");
-        return scrapeAmazonMetadata($url);
+        error_log("⚠️ Rainforest API no disponible, usando scraping...");
+        $scrapedData = scrapeAmazonMetadata($url);
+        
+        // Verificar que el scraping devolvió datos
+        if (!empty($scrapedData)) {
+            error_log("✅ Metadatos obtenidos con scraping de Amazon");
+            return $scrapedData;
+        }
+        
+        // Si ambos fallan, devolver array vacío
+        error_log("❌ No se pudieron obtener metadatos de Amazon");
+        return [];
     }
     
     $ch = curl_init($url);
