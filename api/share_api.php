@@ -2535,6 +2535,20 @@ function scrapeIdealistaMetadata($url) {
             $log(substr($html, 0, 500));
         }
         
+        // Si es 403 y detectamos Cloudflare, retornar mensaje informativo
+        if ($httpCode === 403 && $html && (strpos($html, 'Please enable JS') !== false || strpos($html, 'Cloudflare') !== false)) {
+            $log("🛡️ Cloudflare/protección anti-bot detectada");
+            $log("Retornando mensaje informativo para el usuario");
+            
+            return [
+                'title' => 'Inmueble en Idealista',
+                'description' => 'Esta propiedad está protegida por seguridad. Haz clic en el enlace para ver todos los detalles del inmueble.',
+                'image' => 'https://st3.idealista.com/static/common/img/logo-idealista.svg',
+                'blocked' => true,
+                'reason' => 'cloudflare_protection'
+            ];
+        }
+        
         return [];
     }
     
