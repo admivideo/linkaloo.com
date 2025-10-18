@@ -1,6 +1,7 @@
 <?php
-// Incluir archivo de configuración
+// Incluir archivos de configuración y utilidades
 require_once 'config.php';
+require_once 'scraping_logger.php';
 
 // Configurar headers CORS
 setCorsHeaders();
@@ -321,6 +322,7 @@ function processSharedImage($userId, $originalUrl, $imageData, $title, $descript
 
 function getUrlMetadata($pdo, $input) {
     $url = $input['url'] ?? '';
+    $tituloIntent = $input['titulo_intent'] ?? '';  // Título del Intent de Android
     
     if (empty($url)) {
         throw new Exception('URL es requerida');
@@ -331,8 +333,8 @@ function getUrlMetadata($pdo, $input) {
         throw new Exception('URL no válida');
     }
     
-    // Obtener metadatos de la URL
-    $metadata = getUrlMetadataFromUrl($url);
+    // Obtener metadatos de la URL (pasar título del Intent)
+    $metadata = getUrlMetadataFromUrl($url, $tituloIntent);
     
     if ($metadata) {
         echo json_encode([
@@ -371,9 +373,12 @@ function canonicalizeUrl($url) {
     return $scheme . '://' . $host . $port . $path . $query;
 }
 
-function scrapeMetadata($url) {
+function scrapeMetadata($url, $tituloIntent = '') {
     error_log("=== INICIANDO SCRAPE DE METADATOS (Versión Web) ===");
     error_log("URL objetivo: " . $url);
+    if (!empty($tituloIntent)) {
+        error_log("Título del Intent disponible: " . $tituloIntent);
+    }
     
     // Detectar si es Pinterest y usar función específica
     if (strpos($url, 'pinterest.com') !== false || strpos($url, 'pinterest.es') !== false) {
@@ -405,10 +410,16 @@ function scrapeMetadata($url) {
         return scrapeIdealistaMetadata($url);
     }
     
+    // Detectar si es Reddit y usar función específica
+    if (strpos($url, 'reddit.com') !== false || strpos($url, 'redd.it') !== false) {
+        error_log("Detectado Reddit, usando función específica");
+        return scrapeRedditMetadata($url, $tituloIntent);
+    }
+    
     // Detectar si es Milanuncios y usar función específica
     if (strpos($url, 'milanuncios.com') !== false) {
         error_log("Detectado Milanuncios, usando función específica");
-        return scrapeMilanunciosMetadata($url);
+        return scrapeMilanunciosMetadata($url, $tituloIntent);
     }
     
     // Detectar si es Amazon y usar Rainforest API
@@ -1292,9 +1303,9 @@ function getFaviconFromDomain($imageUrl) {
 }
 
 // Función auxiliar para obtener metadatos de URL (usando la misma lógica que la versión web)
-function getUrlMetadataFromUrl($url) {
+function getUrlMetadataFromUrl($url, $tituloIntent = '') {
     try {
-        $meta = scrapeMetadata($url);
+        $meta = scrapeMetadata($url, $tituloIntent);
         
         if (empty($meta)) {
             return null;
@@ -2758,9 +2769,102 @@ function scrapeIdealistaMetadata($url) {
 }
 
 /**
+ * Función específica para extraer metadatos de Reddit
+ * Usa el título del Intent de Android como fuente principal
+ * Fallback: Extraer slug del título de la URL
+ */
+function scrapeRedditMetadata($url, $tituloIntent = '') {
+    // Logger local para Reddit
+    $logFile = __DIR__ . '/amazon_debug.log';
+    $log = function($msg) use ($logFile) {
+        $timestamp = date('Y-m-d H:i:s');
+        file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
+        error_log($msg);
+    };
+    
+    $log("=== SCRAPE ESPECÍFICO PARA REDDIT ===");
+    $log("URL Reddit: " . $url);
+    
+    // PRIMERO: Usar título del Intent si está disponible
+    $titulo = '';
+    if (!empty($tituloIntent)) {
+        $titulo = $tituloIntent;
+        $log("✅ Usando título del Intent: " . $titulo);
+    }
+    
+    // FALLBACK: Extraer título del slug de la URL
+    if (empty($titulo)) {
+        $log("No hay título del Intent, extrayendo del slug de la URL...");
+        
+        // Expandir URL corta de Reddit si es necesario (redd.it -> reddit.com)
+        if (strpos($url, 'redd.it') !== false) {
+            $log("URL corta detectada (redd.it), expandiendo...");
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_NOBODY => true,  // Solo headers
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            ]);
+            curl_exec($ch);
+            $expandedUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+            curl_close($ch);
+            
+            if ($expandedUrl && $expandedUrl !== $url) {
+                $log("URL expandida: " . $expandedUrl);
+                $url = $expandedUrl;
+            }
+        }
+        
+        // Extraer slug del título de la URL de Reddit
+        // Formato típico: https://www.reddit.com/r/subreddit/comments/id/slug_del_titulo/
+        if (preg_match('#reddit\.com/r/[^/]+/comments/[^/]+/([^/?]+)#i', $url, $matches)) {
+            $slug = $matches[1];
+            // Convertir guiones bajos y guiones a espacios y capitalizar
+            $titulo = ucwords(str_replace(['_', '-'], ' ', $slug));
+            $log("Título extraído del slug: " . $titulo);
+        }
+    }
+    
+    // Si aún no hay título, usar mensaje genérico
+    if (empty($titulo)) {
+        $titulo = "Post de Reddit";
+        $log("No se pudo extraer título, usando genérico");
+    }
+    
+    // Logo de Reddit
+    $platformLogosDir = __DIR__ . '/platform_logos';
+    $redditLogoPath = $platformLogosDir . '/reddit_logo.png';
+    $redditLogoUrl = '';
+    
+    if (file_exists($redditLogoPath)) {
+        $redditLogoUrl = 'https://linkaloo.com/api/platform_logos/reddit_logo.png';
+        $log("Logo de Reddit encontrado: " . $redditLogoUrl);
+    } else {
+        $log("⚠️ Logo de Reddit no encontrado en: " . $redditLogoPath);
+        $redditLogoUrl = 'https://www.redditstatic.com/desktop2x/img/favicon/android-icon-192x192.png';
+    }
+    
+    // Construir resultado
+    $meta = [
+        'title' => $titulo,
+        'description' => 'Para ver el contenido completo, abre este post en la aplicación Reddit o en tu navegador.',
+        'image' => $redditLogoUrl
+    ];
+    
+    $log("✅ Metadatos de Reddit obtenidos:");
+    $log("  - Título: " . $meta['title']);
+    $log("  - Descripción: " . $meta['description']);
+    $log("  - Imagen: " . $meta['image']);
+    
+    return $meta;
+}
+
+/**
  * Función específica para extraer metadatos de Milanuncios
  */
-function scrapeMilanunciosMetadata($url) {
+function scrapeMilanunciosMetadata($url, $tituloIntent = '') {
     // Logger local para Milanuncios
     $logFile = __DIR__ . '/amazon_debug.log';
     $log = function($msg) use ($logFile) {
@@ -2771,6 +2875,9 @@ function scrapeMilanunciosMetadata($url) {
     
     $log("=== SCRAPE ESPECÍFICO PARA MILANUNCIOS ===");
     $log("URL Milanuncios: " . $url);
+    if (!empty($tituloIntent)) {
+        $log("Título del Intent: " . $tituloIntent);
+    }
     
     $ch = curl_init($url);
     curl_setopt_array($ch, [
