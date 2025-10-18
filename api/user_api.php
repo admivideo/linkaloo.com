@@ -59,6 +59,10 @@ try {
             getLinks($pdo, $input);
             break;
             
+        case 'check_duplicate_link':
+            checkDuplicateLink($pdo, $input);
+            break;
+            
         case 'get_links_paginated':
             getLinksPaginated($pdo, $input);
             break;
@@ -1371,6 +1375,178 @@ function updateCategory($pdo, $input) {
         
     } catch (Exception $e) {
         error_log("ERROR en debugTableStructure: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * Verifica si un link ya existe para un usuario
+ * Detecta duplicados por hash de URL
+ */
+function checkDuplicateLink($pdo, $input) {
+    try {
+        error_log("=== CHECK DUPLICATE LINK ===");
+        
+        $userId = $input['user_id'] ?? null;
+        $url = $input['url'] ?? null;
+        
+        if (!$userId || !$url) {
+            throw new Exception('user_id y url son requeridos');
+        }
+        
+        error_log("👤 Usuario ID: $userId");
+        error_log("🔗 URL a verificar: $url");
+        
+        // Limpiar y normalizar la URL
+        $urlLimpia = trim($url);
+        $urlLimpia = preg_replace('/\?.*$/', '', $urlLimpia); // Eliminar parámetros de query
+        $urlLimpia = rtrim($urlLimpia, '/'); // Eliminar trailing slash
+        error_log("🧹 URL limpia: $urlLimpia");
+        
+        // Calcular hash de la URL (mismo método que en save_shared_link)
+        $hashUrl = hash('sha256', $urlLimpia);
+        error_log("🔐 Hash URL: $hashUrl");
+        
+        // Buscar por hash exacto primero
+        error_log("🔍 Preparando query de búsqueda por hash...");
+        $stmt = $pdo->prepare("
+            SELECT 
+                l.id,
+                l.usuario_id,
+                l.categoria_id,
+                l.url,
+                l.url_canonica,
+                l.titulo,
+                l.descripcion,
+                l.imagen,
+                l.creado_en,
+                l.actualizado_en,
+                c.nombre as categoria_nombre
+            FROM links l
+            LEFT JOIN categorias c ON l.categoria_id = c.id
+            WHERE l.usuario_id = ? AND l.hash_url = ?
+            LIMIT 1
+        ");
+        
+        error_log("🔍 Ejecutando query con userId=$userId y hashUrl=$hashUrl");
+        $stmt->execute([$userId, $hashUrl]);
+        error_log("🔍 Query ejecutada, obteniendo resultado...");
+        $linkExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+        error_log("🔍 Resultado obtenido: " . ($linkExistente ? "Link encontrado ID=" . $linkExistente['id'] : "No encontrado"));
+        
+        if ($linkExistente) {
+            error_log("⚠️ DUPLICADO ENCONTRADO por hash - Link ID: " . $linkExistente['id']);
+            error_log("📂 Categoría: " . $linkExistente['categoria_nombre']);
+            error_log("📅 Guardado el: " . $linkExistente['creado_en']);
+            
+            echo json_encode([
+                'success' => true,
+                'duplicate_found' => true,
+                'existing_link' => [
+                    'id' => (int)$linkExistente['id'],
+                    'url' => $linkExistente['url'],
+                    'url_canonica' => $linkExistente['url_canonica'],
+                    'titulo' => $linkExistente['titulo'],
+                    'descripcion' => $linkExistente['descripcion'],
+                    'imagen' => $linkExistente['imagen'],
+                    'categoria_id' => (int)$linkExistente['categoria_id'],
+                    'categoria_nombre' => $linkExistente['categoria_nombre'],
+                    'creado_en' => $linkExistente['creado_en'],
+                    'actualizado_en' => $linkExistente['actualizado_en']
+                ]
+            ]);
+            return;
+        }
+        
+        // Si no se encuentra por hash, buscar por URL similar (sin parámetros)
+        error_log("🔍 Buscando por URL similar...");
+        $urlPattern = $urlLimpia . '%';
+        $urlWithoutProtocol = preg_replace('/^https?:\/\//', '', $urlLimpia);
+        error_log("🔍 URL pattern: $urlPattern");
+        error_log("🔍 URL sin protocolo: $urlWithoutProtocol");
+        
+        try {
+            $stmt = $pdo->prepare("
+                SELECT 
+                    l.id,
+                    l.usuario_id,
+                    l.categoria_id,
+                    l.url,
+                    l.url_canonica,
+                    l.titulo,
+                    l.descripcion,
+                    l.imagen,
+                    l.creado_en,
+                    l.actualizado_en,
+                    c.nombre as categoria_nombre
+                FROM links l
+                LEFT JOIN categorias c ON l.categoria_id = c.id
+                WHERE l.usuario_id = ? 
+                AND (
+                    l.url LIKE ? 
+                    OR (l.url_canonica IS NOT NULL AND l.url_canonica LIKE ?)
+                    OR REPLACE(REPLACE(l.url, 'http://', ''), 'https://', '') = ?
+                    OR (l.url_canonica IS NOT NULL AND REPLACE(REPLACE(l.url_canonica, 'http://', ''), 'https://', '') = ?)
+                )
+                LIMIT 1
+            ");
+            
+            error_log("🔍 Ejecutando query de similitud...");
+            $stmt->execute([
+                $userId, 
+                $urlPattern, 
+                $urlPattern,
+                $urlWithoutProtocol,
+                $urlWithoutProtocol
+            ]);
+            error_log("🔍 Query de similitud ejecutada");
+            $linkExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+            error_log("🔍 Resultado similitud: " . ($linkExistente ? "Link encontrado ID=" . $linkExistente['id'] : "No encontrado"));
+        } catch (PDOException $e) {
+            error_log("❌ ERROR en query de similitud: " . $e->getMessage());
+            // Si falla el query de similitud, continuar sin error (ya intentamos por hash)
+            $linkExistente = null;
+        }
+        
+        if ($linkExistente) {
+            error_log("⚠️ DUPLICADO ENCONTRADO por URL similar - Link ID: " . $linkExistente['id']);
+            error_log("📂 Categoría: " . $linkExistente['categoria_nombre']);
+            error_log("📅 Guardado el: " . $linkExistente['creado_en']);
+            
+            echo json_encode([
+                'success' => true,
+                'duplicate_found' => true,
+                'existing_link' => [
+                    'id' => (int)$linkExistente['id'],
+                    'url' => $linkExistente['url'],
+                    'url_canonica' => $linkExistente['url_canonica'],
+                    'titulo' => $linkExistente['titulo'],
+                    'descripcion' => $linkExistente['descripcion'],
+                    'imagen' => $linkExistente['imagen'],
+                    'categoria_id' => (int)$linkExistente['categoria_id'],
+                    'categoria_nombre' => $linkExistente['categoria_nombre'],
+                    'creado_en' => $linkExistente['creado_en'],
+                    'actualizado_en' => $linkExistente['actualizado_en']
+                ]
+            ]);
+            return;
+        }
+        
+        // No se encontró duplicado
+        error_log("✅ No se encontró duplicado");
+        echo json_encode([
+            'success' => true,
+            'duplicate_found' => false
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("❌ ERROR en checkDuplicateLink: " . $e->getMessage());
+        error_log("❌ STACK TRACE: " . $e->getTraceAsString());
+        
+        http_response_code(500);
         echo json_encode([
             'success' => false,
             'error' => $e->getMessage()
