@@ -3,6 +3,11 @@
 require_once 'config.php';
 require_once 'scraping_logger.php';
 
+// Configurar límites PHP para operaciones pesadas
+ini_set('memory_limit', '512M');
+ini_set('max_execution_time', '300'); // 5 minutos
+set_time_limit(300);
+
 // Configurar headers CORS
 setCorsHeaders();
 
@@ -1703,8 +1708,10 @@ function getAllUserLinks($pdo, $input) {
     error_log("Input recibido: " . json_encode($input));
     
     $userId = $input['user_id'] ?? 0;
+    $offset = $input['offset'] ?? 0;
+    $limit = $input['limit'] ?? 1000; // Límite por defecto de 1000 links
     
-    error_log("User ID: " . $userId);
+    error_log("User ID: " . $userId . " | Offset: " . $offset . " | Limit: " . $limit);
     
     if ($userId <= 0) {
         throw new Exception('ID de usuario válido es requerido');
@@ -1723,47 +1730,59 @@ function getAllUserLinks($pdo, $input) {
     
     error_log("Usuario verificado correctamente");
     
-    // Obtener todos los links del usuario ordenados cronológicamente (más recientes primero)
-    error_log("Obteniendo todos los links para usuario: " . $userId);
+    // Primero obtener el conteo total
+    error_log("Obteniendo conteo total de links para usuario: " . $userId);
+    $stmtCount = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE usuario_id = ?");
+    $stmtCount->execute([$userId]);
+    $totalCount = (int)$stmtCount->fetch()['total'];
+    error_log("Total de links del usuario: " . $totalCount);
+    
+    // Obtener los links del usuario con paginación y ordenados cronológicamente (más recientes primero)
+    error_log("Obteniendo links paginados para usuario: " . $userId);
     $stmt = $pdo->prepare("
-        SELECT l.*, c.nombre as categoria_nombre 
+        SELECT 
+            l.id,
+            l.usuario_id,
+            l.categoria_id,
+            l.url,
+            l.url_canonica,
+            l.titulo,
+            l.descripcion,
+            l.imagen,
+            l.creado_en,
+            l.actualizado_en,
+            l.nota_link,
+            l.hash_url,
+            c.nombre as categoria_nombre 
         FROM links l 
         LEFT JOIN categorias c ON l.categoria_id = c.id 
         WHERE l.usuario_id = ? 
         ORDER BY COALESCE(l.actualizado_en, l.creado_en) DESC, l.id DESC
+        LIMIT ? OFFSET ?
     ");
-    $stmt->execute([$userId]);
-    $links = $stmt->fetchAll();
+    $stmt->execute([$userId, $limit, $offset]);
+    $links = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    error_log("Links obtenidos: " . count($links));
+    error_log("Links obtenidos en esta página: " . count($links) . " de " . $totalCount . " totales");
     
-    // Procesar los links para el formato de respuesta
+    // Procesar los links para el formato de respuesta (reducir logging)
     $processedLinks = [];
-    $linkCount = 0;
     foreach ($links as $link) {
-        $linkCount++;
-        error_log("Procesando link $linkCount - ID: " . $link['id']);
-        
-        try {
-            $processedLinks[] = [
-                'id' => (int)$link['id'],
-                'usuario_id' => (int)$link['usuario_id'],
-                'categoria_id' => (int)$link['categoria_id'],
-                'categoria_nombre' => $link['categoria_nombre'] ?? 'Sin categoría',
-                'url' => $link['url'] ?? '',
-                'url_canonica' => $link['url_canonica'] ?? '',
-                'titulo' => $link['titulo'] ?? '',
-                'descripcion' => $link['descripcion'] ?? '',
-                'imagen_url' => $link['imagen'] ?? '',
-                'creado_en' => $link['creado_en'] ?? '',
-                'modificado_en' => $link['actualizado_en'] ?? '',
-                'nota' => $link['nota_link'] ?? '',
-                'hash_url' => $link['hash_url'] ?? ''
-            ];
-        } catch (Exception $e) {
-            error_log("ERROR procesando link ID " . $link['id'] . ": " . $e->getMessage());
-            throw $e;
-        }
+        $processedLinks[] = [
+            'id' => (int)$link['id'],
+            'usuario_id' => (int)$link['usuario_id'],
+            'categoria_id' => (int)$link['categoria_id'],
+            'categoria_nombre' => $link['categoria_nombre'] ?? 'Sin categoría',
+            'url' => $link['url'] ?? '',
+            'url_canonica' => $link['url_canonica'] ?? '',
+            'titulo' => $link['titulo'] ?? '',
+            'descripcion' => $link['descripcion'] ?? '',
+            'imagen_url' => $link['imagen'] ?? '',
+            'creado_en' => $link['creado_en'] ?? '',
+            'modificado_en' => $link['actualizado_en'] ?? '',
+            'nota' => $link['nota_link'] ?? '',
+            'hash_url' => $link['hash_url'] ?? ''
+        ];
     }
     
     error_log("Links procesados exitosamente: " . count($processedLinks));
@@ -1772,17 +1791,21 @@ function getAllUserLinks($pdo, $input) {
     $jsonData = [
         'success' => true,
         'user_id' => (int)$userId,
-        'total_links' => count($processedLinks),
+        'total_links' => $totalCount,
+        'returned_links' => count($processedLinks),
+        'offset' => $offset,
+        'limit' => $limit,
+        'has_more' => ($offset + count($processedLinks)) < $totalCount,
         'links' => $processedLinks
     ];
     
-    $jsonString = json_encode($jsonData);
+    $jsonString = json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if ($jsonString === false) {
         error_log("ERROR: No se pudo codificar JSON - " . json_last_error_msg());
         throw new Exception('Error al codificar respuesta JSON: ' . json_last_error_msg());
     }
     
-    error_log("Enviando respuesta exitosa con " . count($processedLinks) . " links");
+    error_log("Enviando respuesta exitosa con " . count($processedLinks) . " links (offset: $offset, limit: $limit)");
     echo $jsonString;
     error_log("=== FUNCIÓN getAllUserLinks COMPLETADA EXITOSAMENTE ===");
 }
