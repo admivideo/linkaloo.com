@@ -132,7 +132,13 @@ foreach ($links as $link):
             <!-- Revive Adserver Etiqueta JS asincrónica - Generated with Revive Adserver v5.5.2 -->
             <ins data-revive-zoneid="54" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
             <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
-            <div class="ad-label">patrocinado</div>
+            <div class="ad-label">patrocinado 300x250</div>
+        </div>
+		<div class="card-body">
+            <!-- Revive Adserver Etiqueta JS asincrónica - Generated with Revive Adserver v5.5.2 -->
+            <ins data-revive-zoneid="55" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
+            <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
+            <div class="ad-label">patrocinado 300x250</div>
         </div>
     </div>
     <?php
