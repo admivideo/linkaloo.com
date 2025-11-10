@@ -651,10 +651,9 @@ function getUrlMetadataFromUrl($url) {
 }
 
 /**
- * Normaliza una URL para hashing y detección de duplicados
- * - Maneja casos especiales como YouTube
- * - Elimina parámetros de tracking comunes
- * - Mantiene identificadores relevantes como el video ID
+ * Normaliza una URL para hashing y detección de duplicados.
+ * - Si es YouTube, se reduce a la forma base https://www.youtube.com/watch?v=VIDEO_ID
+ * - Para el resto de URLs, se eliminan parámetros de tracking comunes y se ordenan.
  */
 function normalizeUrlForHash($url) {
     if (empty($url)) {
@@ -668,24 +667,23 @@ function normalizeUrlForHash($url) {
     }
 
     $parts = parse_url($url);
-
     if ($parts === false || empty($parts['host'])) {
         return $url;
     }
 
-    $scheme = strtolower($parts['scheme'] ?? 'https');
     $host = strtolower($parts['host']);
+
+    // Normalización simplificada para YouTube
+    if (strpos($host, 'youtube.com') !== false || strpos($host, 'youtu.be') !== false) {
+        $normalizedYouTube = normalizeYouTubeUrlSimple($url);
+        if (!empty($normalizedYouTube)) {
+            return $normalizedYouTube;
+        }
+    }
+
+    $scheme = strtolower($parts['scheme'] ?? 'https');
     $path = $parts['path'] ?? '';
     $query = $parts['query'] ?? '';
-
-    // Normalizar host para YouTube
-    if ($host === 'm.youtube.com' || $host === 'music.youtube.com') {
-        $host = 'www.youtube.com';
-    }
-
-    if (strpos($host, 'youtube.com') !== false || strpos($host, 'youtu.be') !== false) {
-        return normalizeYouTubeUrl($scheme, $host, $path, $query);
-    }
 
     parse_str($query, $queryParams);
     if (!empty($queryParams)) {
@@ -699,12 +697,11 @@ function normalizeUrlForHash($url) {
     }
 
     $path = preg_replace('#/+#', '/', $path);
-
     if ($path === '') {
         $path = '/';
     }
 
-    $normalizedUrl = $scheme . '://' . $host . $path;
+    $normalizedUrl = $scheme . '://' . strtolower($host) . $path;
     if (!empty($query)) {
         $normalizedUrl .= '?' . $query;
     } elseif ($path !== '/' && substr($normalizedUrl, -1) === '/') {
@@ -715,59 +712,72 @@ function normalizeUrlForHash($url) {
 }
 
 /**
- * Normaliza URLs específicas de YouTube para asegurar un identificador único por video
+ * Normalización mínima para URLs de YouTube.
+ * Convierte cualquier variante al formato https://www.youtube.com/watch?v=VIDEO_ID
+ * Devuelve string vacío si no se puede extraer un identificador.
  */
-function normalizeYouTubeUrl($scheme, $host, $path, $query) {
-    $scheme = 'https';
-
-    // youtu.be/VIDEO_ID -> youtube.com/watch?v=VIDEO_ID
-    if (strpos($host, 'youtu.be') !== false) {
-        $videoId = trim($path, '/');
-        if (!empty($videoId)) {
-            return 'https://www.youtube.com/watch?v=' . $videoId;
-        }
+function normalizeYouTubeUrlSimple($url) {
+    $url = trim($url);
+    if ($url === '') {
+        return '';
+    }
+    if (!preg_match('/^https?:\/\//i', $url)) {
+        $url = 'https://' . $url;
     }
 
-    $host = 'www.youtube.com';
-    $path = $path ?? '';
+    $parts = parse_url($url);
+    if ($parts === false || empty($parts['host'])) {
+        return '';
+    }
 
-    // shorts
+    $host = strtolower($parts['host']);
+    $path = $parts['path'] ?? '';
+    $query = $parts['query'] ?? '';
+
+    // youtu.be/VIDEO_ID
+    if (strpos($host, 'youtu.be') !== false) {
+        $videoId = trim($path, '/');
+        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
+    }
+
+    // unificar host
+    if ($host === 'm.youtube.com' || $host === 'music.youtube.com') {
+        $host = 'www.youtube.com';
+    }
+
+    if (strpos($host, 'youtube.com') === false) {
+        return '';
+    }
+
+    // shorts /shorts/VIDEO_ID
     if (strpos($path, '/shorts/') === 0) {
         $segments = explode('/', trim($path, '/'));
         $videoId = $segments[1] ?? '';
-        if (!empty($videoId)) {
-            return 'https://www.youtube.com/shorts/' . $videoId;
-        }
+        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
     }
 
-    // embed
+    // embed /embed/VIDEO_ID
     if (strpos($path, '/embed/') === 0) {
-        $videoId = trim(substr($path, strlen('/embed/')), '/');
-        if (!empty($videoId)) {
-            return 'https://www.youtube.com/watch?v=' . $videoId;
-        }
+        $segments = explode('/', trim($path, '/'));
+        $videoId = $segments[1] ?? '';
+        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
     }
 
-    parse_str($query, $params);
-
-    if (!empty($params['v'])) {
-        $videoId = $params['v'];
-        return 'https://www.youtube.com/watch?v=' . $videoId;
+    // watch?v=VIDEO_ID
+    if (strpos($path, '/watch') === 0) {
+        parse_str($query, $params);
+        $videoId = $params['v'] ?? '';
+        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
     }
 
-    if (!empty($params['list']) && strpos($path, '/playlist') === 0) {
-        return 'https://www.youtube.com/playlist?list=' . $params['list'];
+    // playlist?list=LIST_ID
+    if (strpos($path, '/playlist') === 0) {
+        parse_str($query, $params);
+        $listId = $params['list'] ?? '';
+        return $listId ? 'https://www.youtube.com/playlist?list=' . $listId : '';
     }
 
-    $path = preg_replace('#/+#', '/', $path);
-    if ($path === '') {
-        $path = '/';
-    }
-    if ($path !== '/' && substr($path, -1) === '/') {
-        $path = rtrim($path, '/');
-    }
-
-    return $scheme . '://' . $host . $path;
+    return '';
 }
 
 /**
