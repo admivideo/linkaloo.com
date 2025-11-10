@@ -835,6 +835,55 @@ function generateUrlVariants($urls) {
     return $variants;
 }
 
+/**
+ * Determina si el link existente realmente coincide con la URL actual
+ * Evita falsos positivos cuando un registro antiguo fue indexado con lógica diferente
+ */
+function linksAreSame($existingLink, $normalizedUrl, $originalUrl, $hashesToCheck) {
+    if (!$existingLink) {
+        return false;
+    }
+
+    $existingHashes = [];
+    if (!empty($existingLink['hash_url'])) {
+        $existingHashes[] = $existingLink['hash_url'];
+    }
+
+    foreach (['url', 'url_canonica'] as $key) {
+        if (!empty($existingLink[$key])) {
+            $normalizedExisting = normalizeUrlForHash($existingLink[$key]);
+            if (!empty($normalizedExisting)) {
+                $existingHashes[] = hash('sha256', $normalizedExisting);
+            }
+        }
+    }
+
+    $existingHashes = array_unique(array_filter($existingHashes));
+
+    foreach ($existingHashes as $existingHash) {
+        if (in_array($existingHash, $hashesToCheck, true)) {
+            return true;
+        }
+    }
+
+    $existingVariants = [];
+    foreach (['url', 'url_canonica'] as $key) {
+        if (!empty($existingLink[$key])) {
+            $existingVariants = array_merge($existingVariants, generateUrlVariants([$existingLink[$key]]));
+        }
+    }
+    $existingVariants = array_unique(array_filter($existingVariants));
+
+    $currentVariants = generateUrlVariants([$normalizedUrl, $originalUrl]);
+    foreach ($currentVariants as $variant) {
+        if (in_array($variant, $existingVariants, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function updateLink($pdo, $input) {
     $linkId = $input['link_id'] ?? 0;
     $userId = $input['user_id'] ?? 0;
@@ -1644,6 +1693,11 @@ function checkDuplicateLink($pdo, $input) {
         $linkExistente = $stmt->fetch(PDO::FETCH_ASSOC);
         error_log("🔍 Resultado obtenido: " . ($linkExistente ? "Link encontrado ID=" . $linkExistente['id'] : "No encontrado"));
         
+        if ($linkExistente && !linksAreSame($linkExistente, $normalizedUrl, $originalUrlTrimmed ?: $url, $hashesToCheck)) {
+            error_log("ℹ️ Resultado descartado: hash/URL no coinciden realmente con la URL actual");
+            $linkExistente = null;
+        }
+        
         if ($linkExistente) {
             error_log("⚠️ DUPLICADO ENCONTRADO por hash - Link ID: " . $linkExistente['id']);
             error_log("📂 Categoría: " . $linkExistente['categoria_nombre']);
@@ -1708,6 +1762,11 @@ function checkDuplicateLink($pdo, $input) {
                 error_log("❌ ERROR en query de coincidencias: " . $e->getMessage());
                 $linkExistente = null;
             }
+        }
+        
+        if ($linkExistente && !linksAreSame($linkExistente, $normalizedUrl, $originalUrlTrimmed ?: $url, $hashesToCheck)) {
+            error_log("ℹ️ Resultado descartado tras coincidencias exactas: hash/URL no coinciden realmente");
+            $linkExistente = null;
         }
         
         if ($linkExistente) {
