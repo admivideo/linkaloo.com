@@ -20,6 +20,11 @@ if (!function_exists('debugLog')) {
         file_put_contents(LINKALOO_DEBUG_LOG, "[$timestamp] [user_api] $msg\n", FILE_APPEND);
     }
 }
+   if (isset($_GET['debug_test'])) {
+       debugLog('Test manual desde user_api');
+       echo 'Log OK';
+       exit;
+   }
 
 // Manejar preflight requests
 handlePreflightRequest();
