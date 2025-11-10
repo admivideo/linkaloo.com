@@ -840,10 +840,6 @@ function generateUrlVariants($urls) {
  * Evita falsos positivos cuando un registro antiguo fue indexado con lógica diferente
  */
 function linksAreSame($existingLink, $normalizedUrl, $originalUrl, $hashesToCheck) {
-    if (!$existingLink) {
-        return false;
-    }
-
     $existingHashes = [];
     if (!empty($existingLink['hash_url'])) {
         $existingHashes[] = $existingLink['hash_url'];
@@ -862,6 +858,7 @@ function linksAreSame($existingLink, $normalizedUrl, $originalUrl, $hashesToChec
 
     foreach ($existingHashes as $existingHash) {
         if (in_array($existingHash, $hashesToCheck, true)) {
+            error_log("🧮 Hash coincide: existingHash=$existingHash");
             return true;
         }
     }
@@ -877,6 +874,7 @@ function linksAreSame($existingLink, $normalizedUrl, $originalUrl, $hashesToChec
     $currentVariants = generateUrlVariants([$normalizedUrl, $originalUrl]);
     foreach ($currentVariants as $variant) {
         if (in_array($variant, $existingVariants, true)) {
+            error_log("🔄 Variante coincide: $variant");
             return true;
         }
     }
@@ -1697,6 +1695,7 @@ function checkDuplicateLink($pdo, $input) {
             error_log("ℹ️ Resultado descartado: hash/URL no coinciden realmente con la URL actual");
             $linkExistente = null;
         }
+        $hashCheckResult = !empty($linkExistente) ? 'match' : 'miss';
         
         if ($linkExistente) {
             error_log("⚠️ DUPLICADO ENCONTRADO por hash - Link ID: " . $linkExistente['id']);
@@ -1768,6 +1767,7 @@ function checkDuplicateLink($pdo, $input) {
             error_log("ℹ️ Resultado descartado tras coincidencias exactas: hash/URL no coinciden realmente");
             $linkExistente = null;
         }
+        $exactMatchResult = !empty($linkExistente) ? 'match' : 'miss';
         
         if ($linkExistente) {
             error_log("⚠️ DUPLICADO ENCONTRADO por URL similar - Link ID: " . $linkExistente['id']);
@@ -1795,6 +1795,7 @@ function checkDuplicateLink($pdo, $input) {
         
         // No se encontró duplicado
         error_log("✅ No se encontró duplicado");
+        error_log("Summary -> HashCheck: $hashCheckResult, ExactMatch: $exactMatchResult, Hashes: " . json_encode($hashesToCheck));
         echo json_encode([
             'success' => true,
             'duplicate_found' => false
