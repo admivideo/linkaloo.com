@@ -31,6 +31,9 @@ if (isset($_GET['debug_test'])) {
     exit;
 }
 
+echo 'user_api DEPLOY 2025-11-10'; 
+exit;
+
 try {
     // Obtener conexión a la base de datos
     $pdo = getDatabaseConnection();
