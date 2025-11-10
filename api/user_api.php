@@ -20,14 +20,16 @@ if (!function_exists('debugLog')) {
         file_put_contents(LINKALOO_DEBUG_LOG, "[$timestamp] [user_api] $msg\n", FILE_APPEND);
     }
 }
-   if (isset($_GET['debug_test'])) {
-       debugLog('Test manual desde user_api');
-       echo 'Log OK';
-       exit;
-   }
 
 // Manejar preflight requests
 handlePreflightRequest();
+
+// Endpoint de prueba para confirmar que la versión desplegada es la correcta y que el logger funciona
+if (isset($_GET['debug_test'])) {
+    debugLog('Test manual desde user_api (debug_test)');
+    echo 'user_api debug_test OK';
+    exit;
+}
 
 try {
     // Obtener conexión a la base de datos
