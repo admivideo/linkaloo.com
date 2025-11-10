@@ -512,12 +512,23 @@ function createLink($pdo, $input) {
         throw new Exception('Categoría no encontrada o no pertenece al usuario');
     }
     
-    // Generar hash de la URL para identificación única
-    $hashUrl = hash('sha256', $url);
-    
+    // Normalizar URL para hashing consistente
+    $normalizedUrl = normalizeUrlForHash($url);
+    $originalUrlTrimmed = rtrim(trim($url), '/');
+
+    if (empty($normalizedUrl)) {
+        throw new Exception('No se pudo normalizar la URL');
+    }
+
+    // Generar hashes (normalizado y original) para compatibilidad hacia atrás
+    $hashNormalized = hash('sha256', $normalizedUrl);
+    $hashOriginal = hash('sha256', $originalUrlTrimmed ?: $url);
+
     // Verificar si ya existe un link con la misma URL en esta categoría
-    $stmt = $pdo->prepare("SELECT id FROM links WHERE usuario_id = ? AND categoria_id = ? AND hash_url = ?");
-    $stmt->execute([$userId, $categoriaId, $hashUrl]);
+    $hashesToCheck = array_unique([$hashNormalized, $hashOriginal]);
+    $hashPlaceholders = implode(',', array_fill(0, count($hashesToCheck), '?'));
+    $stmt = $pdo->prepare("SELECT id FROM links WHERE usuario_id = ? AND categoria_id = ? AND hash_url IN ($hashPlaceholders)");
+    $stmt->execute(array_merge([$userId, $categoriaId], $hashesToCheck));
     $existingLink = $stmt->fetch();
 
     if ($existingLink) {
@@ -525,20 +536,23 @@ function createLink($pdo, $input) {
     }
     
     // Obtener metadatos de la URL solo si no se proporcionan título, descripción o imagen
-    $urlCanonica = $url;
+    $urlCanonica = $normalizedUrl;
     if (empty($titulo) || empty($descripcion) || empty($imagen)) {
         $metadata = getUrlMetadataFromUrl($url);
         if ($metadata) {
             if (empty($titulo)) $titulo = $metadata['titulo'] ?? '';
             if (empty($descripcion)) $descripcion = $metadata['descripcion'] ?? '';
             if (empty($imagen)) $imagen = $metadata['imagen'] ?? ''; // Solo usar metadatos si no hay imagen
-            $urlCanonica = $metadata['url_canonica'] ?? $url;
+            if (!empty($metadata['url_canonica'])) {
+                $urlCanonica = normalizeUrlForHash($metadata['url_canonica']);
+                $hashNormalized = hash('sha256', $urlCanonica);
+            }
         }
     }
     
     // Crear el link
     $stmt = $pdo->prepare("INSERT INTO links (usuario_id, categoria_id, url, url_canonica, titulo, descripcion, imagen, nota_link, hash_url, creado_en, actualizado_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-    $stmt->execute([$userId, $categoriaId, $url, $urlCanonica, $titulo, $descripcion, $imagen ?? null, $notaLink, $hashUrl]);
+    $stmt->execute([$userId, $categoriaId, $url, $urlCanonica, $titulo, $descripcion, $imagen ?? null, $notaLink, $hashNormalized]);
     
     $linkId = $pdo->lastInsertId();
     
@@ -634,6 +648,191 @@ function getUrlMetadataFromUrl($url) {
     } catch (Exception $e) {
         return null;
     }
+}
+
+/**
+ * Normaliza una URL para hashing y detección de duplicados
+ * - Maneja casos especiales como YouTube
+ * - Elimina parámetros de tracking comunes
+ * - Mantiene identificadores relevantes como el video ID
+ */
+function normalizeUrlForHash($url) {
+    if (empty($url)) {
+        return '';
+    }
+
+    $url = trim($url);
+
+    if (!preg_match('/^https?:\/\//i', $url)) {
+        $url = 'https://' . $url;
+    }
+
+    $parts = parse_url($url);
+
+    if ($parts === false || empty($parts['host'])) {
+        return $url;
+    }
+
+    $scheme = strtolower($parts['scheme'] ?? 'https');
+    $host = strtolower($parts['host']);
+    $path = $parts['path'] ?? '';
+    $query = $parts['query'] ?? '';
+
+    // Normalizar host para YouTube
+    if ($host === 'm.youtube.com' || $host === 'music.youtube.com') {
+        $host = 'www.youtube.com';
+    }
+
+    if (strpos($host, 'youtube.com') !== false || strpos($host, 'youtu.be') !== false) {
+        return normalizeYouTubeUrl($scheme, $host, $path, $query);
+    }
+
+    parse_str($query, $queryParams);
+    if (!empty($queryParams)) {
+        $queryParams = removeTrackingParameters($queryParams);
+        if (!empty($queryParams)) {
+            ksort($queryParams);
+            $query = http_build_query($queryParams);
+        } else {
+            $query = '';
+        }
+    }
+
+    $path = preg_replace('#/+#', '/', $path);
+
+    if ($path === '') {
+        $path = '/';
+    }
+
+    $normalizedUrl = $scheme . '://' . $host . $path;
+    if (!empty($query)) {
+        $normalizedUrl .= '?' . $query;
+    } elseif ($path !== '/' && substr($normalizedUrl, -1) === '/') {
+        $normalizedUrl = rtrim($normalizedUrl, '/');
+    }
+
+    return $normalizedUrl;
+}
+
+/**
+ * Normaliza URLs específicas de YouTube para asegurar un identificador único por video
+ */
+function normalizeYouTubeUrl($scheme, $host, $path, $query) {
+    $scheme = 'https';
+
+    // youtu.be/VIDEO_ID -> youtube.com/watch?v=VIDEO_ID
+    if (strpos($host, 'youtu.be') !== false) {
+        $videoId = trim($path, '/');
+        if (!empty($videoId)) {
+            return 'https://www.youtube.com/watch?v=' . $videoId;
+        }
+    }
+
+    $host = 'www.youtube.com';
+    $path = $path ?? '';
+
+    // shorts
+    if (strpos($path, '/shorts/') === 0) {
+        $segments = explode('/', trim($path, '/'));
+        $videoId = $segments[1] ?? '';
+        if (!empty($videoId)) {
+            return 'https://www.youtube.com/shorts/' . $videoId;
+        }
+    }
+
+    // embed
+    if (strpos($path, '/embed/') === 0) {
+        $videoId = trim(substr($path, strlen('/embed/')), '/');
+        if (!empty($videoId)) {
+            return 'https://www.youtube.com/watch?v=' . $videoId;
+        }
+    }
+
+    parse_str($query, $params);
+
+    if (!empty($params['v'])) {
+        $videoId = $params['v'];
+        return 'https://www.youtube.com/watch?v=' . $videoId;
+    }
+
+    if (!empty($params['list']) && strpos($path, '/playlist') === 0) {
+        return 'https://www.youtube.com/playlist?list=' . $params['list'];
+    }
+
+    $path = preg_replace('#/+#', '/', $path);
+    if ($path === '') {
+        $path = '/';
+    }
+    if ($path !== '/' && substr($path, -1) === '/') {
+        $path = rtrim($path, '/');
+    }
+
+    return $scheme . '://' . $host . $path;
+}
+
+/**
+ * Elimina parámetros de tracking comunes de un arreglo de query params
+ */
+function removeTrackingParameters($params) {
+    if (empty($params)) {
+        return $params;
+    }
+
+    $trackingKeys = [
+        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+        'utm_name', 'utm_id', 'utm_reader', 'utm_place',
+        'gclid', 'fbclid', 'igshid', 'mc_cid', 'mc_eid', 'si',
+        'feature', 'spm', 'mibextid', 'hss_channel', 'hss_campaign',
+        'hss_src'
+    ];
+
+    foreach ($params as $key => $value) {
+        $lower = strtolower($key);
+        if (strpos($lower, 'utm_') === 0 || in_array($lower, $trackingKeys, true)) {
+            unset($params[$key]);
+        }
+    }
+
+    return $params;
+}
+
+/**
+ * Genera variantes de URL para comparar en la búsqueda de duplicados
+ */
+function generateUrlVariants($urls) {
+    $variants = [];
+
+    foreach ($urls as $url) {
+        if (empty($url)) {
+            continue;
+        }
+
+        $trimmed = trim($url);
+        if ($trimmed === '') {
+            continue;
+        }
+
+        $variants[] = $trimmed;
+        $variants[] = rtrim($trimmed, '/');
+        $variants[] = strtolower($trimmed);
+        $variants[] = strtolower(rtrim($trimmed, '/'));
+
+        $withoutProtocol = preg_replace('/^https?:\/\//i', '', $trimmed);
+        if (!empty($withoutProtocol)) {
+            $variants[] = $withoutProtocol;
+            $variants[] = strtolower($withoutProtocol);
+        }
+
+        if (stripos($trimmed, 'https://') === 0) {
+            $variants[] = 'http://' . substr($trimmed, strlen('https://'));
+        } elseif (stripos($trimmed, 'http://') === 0) {
+            $variants[] = 'https://' . substr($trimmed, strlen('http://'));
+        }
+    }
+
+    $variants = array_values(array_unique(array_filter($variants)));
+
+    return $variants;
 }
 
 function updateLink($pdo, $input) {
@@ -1400,15 +1599,23 @@ function checkDuplicateLink($pdo, $input) {
         error_log("👤 Usuario ID: $userId");
         error_log("🔗 URL a verificar: $url");
         
-        // Limpiar y normalizar la URL
-        $urlLimpia = trim($url);
-        $urlLimpia = preg_replace('/\?.*$/', '', $urlLimpia); // Eliminar parámetros de query
-        $urlLimpia = rtrim($urlLimpia, '/'); // Eliminar trailing slash
-        error_log("🧹 URL limpia: $urlLimpia");
-        
-        // Calcular hash de la URL (mismo método que en save_shared_link)
-        $hashUrl = hash('sha256', $urlLimpia);
-        error_log("🔐 Hash URL: $hashUrl");
+        // Normalizar la URL y obtener hashes
+        $normalizedUrl = normalizeUrlForHash($url);
+        if (empty($normalizedUrl)) {
+            throw new Exception('No se pudo normalizar la URL');
+        }
+
+        $originalUrlTrimmed = rtrim(trim($url), '/');
+
+        $hashNormalized = hash('sha256', $normalizedUrl);
+        $hashOriginal = hash('sha256', $originalUrlTrimmed ?: $url);
+
+        $hashesToCheck = array_unique([$hashNormalized, $hashOriginal]);
+        $hashPlaceholders = implode(',', array_fill(0, count($hashesToCheck), '?'));
+
+        error_log("🧹 URL normalizada: $normalizedUrl");
+        error_log("🔐 Hash normalizado: $hashNormalized");
+        error_log("🔐 Hash original: $hashOriginal");
         
         // Buscar por hash exacto primero
         error_log("🔍 Preparando query de búsqueda por hash...");
@@ -1427,12 +1634,12 @@ function checkDuplicateLink($pdo, $input) {
                 c.nombre as categoria_nombre
             FROM links l
             LEFT JOIN categorias c ON l.categoria_id = c.id
-            WHERE l.usuario_id = ? AND l.hash_url = ?
+            WHERE l.usuario_id = ? AND l.hash_url IN ($hashPlaceholders)
             LIMIT 1
         ");
         
-        error_log("🔍 Ejecutando query con userId=$userId y hashUrl=$hashUrl");
-        $stmt->execute([$userId, $hashUrl]);
+        error_log("🔍 Ejecutando query con userId=$userId y hashes=" . implode(',', $hashesToCheck));
+        $stmt->execute(array_merge([$userId], $hashesToCheck));
         error_log("🔍 Query ejecutada, obteniendo resultado...");
         $linkExistente = $stmt->fetch(PDO::FETCH_ASSOC);
         error_log("🔍 Resultado obtenido: " . ($linkExistente ? "Link encontrado ID=" . $linkExistente['id'] : "No encontrado"));
@@ -1462,53 +1669,45 @@ function checkDuplicateLink($pdo, $input) {
         }
         
         // Si no se encuentra por hash, buscar por URL similar (sin parámetros)
-        error_log("🔍 Buscando por URL similar...");
-        $urlPattern = $urlLimpia . '%';
-        $urlWithoutProtocol = preg_replace('/^https?:\/\//', '', $urlLimpia);
-        error_log("🔍 URL pattern: $urlPattern");
-        error_log("🔍 URL sin protocolo: $urlWithoutProtocol");
-        
-        try {
-            $stmt = $pdo->prepare("
-                SELECT 
-                    l.id,
-                    l.usuario_id,
-                    l.categoria_id,
-                    l.url,
-                    l.url_canonica,
-                    l.titulo,
-                    l.descripcion,
-                    l.imagen,
-                    l.creado_en,
-                    l.actualizado_en,
-                    c.nombre as categoria_nombre
-                FROM links l
-                LEFT JOIN categorias c ON l.categoria_id = c.id
-                WHERE l.usuario_id = ? 
-                AND (
-                    l.url LIKE ? 
-                    OR (l.url_canonica IS NOT NULL AND l.url_canonica LIKE ?)
-                    OR REPLACE(REPLACE(l.url, 'http://', ''), 'https://', '') = ?
-                    OR (l.url_canonica IS NOT NULL AND REPLACE(REPLACE(l.url_canonica, 'http://', ''), 'https://', '') = ?)
-                )
-                LIMIT 1
-            ");
+        error_log("🔍 Buscando coincidencias exactas en URL/URL canónica...");
+        $urlVariants = generateUrlVariants([$normalizedUrl, $originalUrlTrimmed ?: $url]);
+
+        if (!empty($urlVariants)) {
+            $urlPlaceholders = implode(',', array_fill(0, count($urlVariants), '?'));
             
-            error_log("🔍 Ejecutando query de similitud...");
-            $stmt->execute([
-                $userId, 
-                $urlPattern, 
-                $urlPattern,
-                $urlWithoutProtocol,
-                $urlWithoutProtocol
-            ]);
-            error_log("🔍 Query de similitud ejecutada");
-            $linkExistente = $stmt->fetch(PDO::FETCH_ASSOC);
-            error_log("🔍 Resultado similitud: " . ($linkExistente ? "Link encontrado ID=" . $linkExistente['id'] : "No encontrado"));
-        } catch (PDOException $e) {
-            error_log("❌ ERROR en query de similitud: " . $e->getMessage());
-            // Si falla el query de similitud, continuar sin error (ya intentamos por hash)
-            $linkExistente = null;
+            try {
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        l.id,
+                        l.usuario_id,
+                        l.categoria_id,
+                        l.url,
+                        l.url_canonica,
+                        l.titulo,
+                        l.descripcion,
+                        l.imagen,
+                        l.creado_en,
+                        l.actualizado_en,
+                        c.nombre as categoria_nombre
+                    FROM links l
+                    LEFT JOIN categorias c ON l.categoria_id = c.id
+                    WHERE l.usuario_id = ? 
+                    AND (
+                        l.url IN ($urlPlaceholders)
+                        OR (l.url_canonica IS NOT NULL AND l.url_canonica IN ($urlPlaceholders))
+                    )
+                    LIMIT 1
+                ");
+            
+                error_log("🔍 Ejecutando query de coincidencias exactas...");
+                $stmt->execute(array_merge([$userId], $urlVariants, $urlVariants));
+                error_log("🔍 Query de coincidencias ejecutada");
+                $linkExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+                error_log("🔍 Resultado coincidencias: " . ($linkExistente ? "Link encontrado ID=" . $linkExistente['id'] : "No encontrado"));
+            } catch (PDOException $e) {
+                error_log("❌ ERROR en query de coincidencias: " . $e->getMessage());
+                $linkExistente = null;
+            }
         }
         
         if ($linkExistente) {
