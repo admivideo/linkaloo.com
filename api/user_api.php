@@ -10,6 +10,17 @@ require_once 'config.php';
 // Configurar headers CORS
 setCorsHeaders();
 
+// Logger personalizado reutilizando amazon_debug.log
+if (!defined('LINKALOO_DEBUG_LOG')) {
+    define('LINKALOO_DEBUG_LOG', __DIR__ . '/amazon_debug.log');
+}
+if (!function_exists('debugLog')) {
+    function debugLog($msg) {
+        $timestamp = date('Y-m-d H:i:s');
+        file_put_contents(LINKALOO_DEBUG_LOG, "[$timestamp] [user_api] $msg\n", FILE_APPEND);
+    }
+}
+
 // Manejar preflight requests
 handlePreflightRequest();
 
@@ -868,7 +879,9 @@ function linksAreSame($existingLink, $normalizedUrl, $originalUrl, $hashesToChec
 
     foreach ($existingHashes as $existingHash) {
         if (in_array($existingHash, $hashesToCheck, true)) {
-            error_log("🧮 Hash coincide: existingHash=$existingHash");
+            $msg = "🧮 Hash coincide: existingHash=$existingHash";
+            error_log($msg);
+            debugLog($msg);
             return true;
         }
     }
@@ -884,7 +897,9 @@ function linksAreSame($existingLink, $normalizedUrl, $originalUrl, $hashesToChec
     $currentVariants = generateUrlVariants([$normalizedUrl, $originalUrl]);
     foreach ($currentVariants as $variant) {
         if (in_array($variant, $existingVariants, true)) {
-            error_log("🔄 Variante coincide: $variant");
+            $msg = "🔄 Variante coincide: $variant";
+            error_log($msg);
+            debugLog($msg);
             return true;
         }
     }
@@ -1645,6 +1660,7 @@ function updateCategory($pdo, $input) {
 function checkDuplicateLink($pdo, $input) {
     try {
         error_log("=== CHECK DUPLICATE LINK ===");
+        debugLog("=== CHECK DUPLICATE LINK: " . json_encode($input) . " ===");
         
         $userId = $input['user_id'] ?? null;
         $url = $input['url'] ?? null;
@@ -1655,6 +1671,7 @@ function checkDuplicateLink($pdo, $input) {
         
         error_log("👤 Usuario ID: $userId");
         error_log("🔗 URL a verificar: $url");
+        debugLog("Usuario $userId - URL a verificar: $url");
         
         // Normalizar la URL y obtener hashes
         $normalizedUrl = normalizeUrlForHash($url);
@@ -1673,6 +1690,7 @@ function checkDuplicateLink($pdo, $input) {
         error_log("🧹 URL normalizada: $normalizedUrl");
         error_log("🔐 Hash normalizado: $hashNormalized");
         error_log("🔐 Hash original: $hashOriginal");
+        debugLog("URL normalizada: $normalizedUrl | hash_norm=$hashNormalized | hash_orig=$hashOriginal");
         
         // Buscar por hash exacto primero
         error_log("🔍 Preparando query de búsqueda por hash...");
@@ -1711,6 +1729,7 @@ function checkDuplicateLink($pdo, $input) {
             error_log("⚠️ DUPLICADO ENCONTRADO por hash - Link ID: " . $linkExistente['id']);
             error_log("📂 Categoría: " . $linkExistente['categoria_nombre']);
             error_log("📅 Guardado el: " . $linkExistente['creado_en']);
+            debugLog("Duplicado encontrado (hash) -> ID=" . $linkExistente['id'] . " | URL guardada=" . $linkExistente['url']);
             
             echo json_encode([
                 'success' => true,
@@ -1783,6 +1802,7 @@ function checkDuplicateLink($pdo, $input) {
             error_log("⚠️ DUPLICADO ENCONTRADO por URL similar - Link ID: " . $linkExistente['id']);
             error_log("📂 Categoría: " . $linkExistente['categoria_nombre']);
             error_log("📅 Guardado el: " . $linkExistente['creado_en']);
+            debugLog("Duplicado encontrado (URL) -> ID=" . $linkExistente['id'] . " | URL guardada=" . $linkExistente['url']);
             
             echo json_encode([
                 'success' => true,
@@ -1805,7 +1825,9 @@ function checkDuplicateLink($pdo, $input) {
         
         // No se encontró duplicado
         error_log("✅ No se encontró duplicado");
-        error_log("Summary -> HashCheck: $hashCheckResult, ExactMatch: $exactMatchResult, Hashes: " . json_encode($hashesToCheck));
+        $summary = "Summary -> HashCheck: $hashCheckResult, ExactMatch: $exactMatchResult, Hashes: " . json_encode($hashesToCheck);
+        error_log($summary);
+        debugLog($summary);
         echo json_encode([
             'success' => true,
             'duplicate_found' => false
