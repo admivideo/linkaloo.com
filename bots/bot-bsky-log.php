@@ -1,9 +1,9 @@
 <?php
 /****************************************************
- * Linkaloo Bluesky Bot - Registro de actividad
+ * Linkaloo Bluesky Bot - Registro de actividad (v2)
  * --------------------------------------------------
- * Recibe datos JSON desde n8n y los guarda en MySQL.
- * Registra tanto los posts encontrados como las respuestas publicadas.
+ * Guarda los posts detectados y las respuestas publicadas
+ * en la base de datos MySQL, evitando duplicados.
  ****************************************************/
 
 // Configuración de conexión a la base de datos
@@ -33,27 +33,38 @@ $message   = isset($data['message']) ? trim($data['message']) : null;
 $type      = isset($data['type']) ? trim($data['type']) : 'post';
 $createdAt = isset($data['createdAt']) ? trim($data['createdAt']) : date("Y-m-d H:i:s");
 
-// Evitar entradas vacías
+// Validación básica
 if (empty($post_uri) || empty($author)) {
     http_response_code(400);
     die(json_encode(["status" => "error", "message" => "Faltan campos obligatorios (post_uri o author)."]));
 }
 
-// Insertar registro
+// Comprobar si ya existe el registro
+$check = $mysqli->prepare("SELECT id FROM bot_bluesky_logs WHERE post_uri = ? AND message_type = ?");
+$check->bind_param("ss", $post_uri, $type);
+$check->execute();
+$check->store_result();
+
+if ($check->num_rows > 0) {
+    // Ya existe → no insertar de nuevo
+    echo json_encode([
+        "status" => "exists",
+        "message" => "El registro ya existe, no se ha duplicado.",
+        "post_uri" => $post_uri,
+        "type" => $type
+    ]);
+    $check->close();
+    $mysqli->close();
+    exit;
+}
+$check->close();
+
+// Insertar nuevo registro
 $stmt = $mysqli->prepare("
     INSERT INTO bot_bluesky_logs (post_uri, author, text, message, message_type, created_at)
     VALUES (?, ?, ?, ?, ?, ?)
 ");
-
-$stmt->bind_param(
-    "ssssss",
-    $post_uri,
-    $author,
-    $text,
-    $message,
-    $type,
-    $createdAt
-);
+$stmt->bind_param("ssssss", $post_uri, $author, $text, $message, $type, $createdAt);
 
 if ($stmt->execute()) {
     echo json_encode(["status" => "ok", "message" => "Registro guardado correctamente"]);
