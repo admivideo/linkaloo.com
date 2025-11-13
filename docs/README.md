@@ -29,6 +29,7 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 | [uso.md](uso.md) | Guía paso a paso para operar la aplicación desde la interfaz web. |
 | [configuracion.md](configuracion.md) | Variables de entorno recomendadas, requisitos de OAuth/reCAPTCHA y tareas de mantenimiento. |
 | [endpoints.md](endpoints.md) | Referencia de los scripts PHP que exponen respuestas JSON o sirven contenido público. |
+| [progreso.md](progreso.md) | Resumen del estado actual del proyecto, funcionalidades cubiertas y próximos pasos sugeridos. |
 
 ## Flujo general del proyecto
 
