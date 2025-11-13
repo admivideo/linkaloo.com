@@ -98,4 +98,5 @@ Los estilos y patrones de arquitectura principales se describen en el
 - [docs/manual_tecnico.md](docs/manual_tecnico.md) – visión completa de arquitectura, flujos y buenas prácticas.
 - [docs/arquitectura.md](docs/arquitectura.md) – descripción de capas, flujos de datos e integraciones externas.
 - [docs/configuracion.md](docs/configuracion.md) – variables de entorno, ajustes avanzados y consejos de despliegue.
+- [docs/progreso.md](docs/progreso.md) – resumen del estado actual, logros y próximos pasos.
 
