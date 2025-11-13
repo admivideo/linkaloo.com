@@ -1,31 +1,41 @@
 <?php
 require 'config.php';
 require 'favicon_utils.php';
-require_once 'session.php';
 require_once 'device.php';
-if(!isset($_SESSION['user_id'])){
-    http_response_code(401);
+
+$token = $_GET['token'] ?? '';
+if(empty($token)){
+    http_response_code(400);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([]);
     exit;
 }
-$user_id = (int)$_SESSION['user_id'];
+
 $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
-$limitParam = isset($_GET['limit']) ? (int)$_GET['limit'] : 18;
+if($offset < 0){
+    $offset = 0;
+}
+$limitParam = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
 if($limitParam <= 0){
-    $limitParam = 18;
+    $limitParam = 50;
 }
 $limit = min($limitParam, 500);
-$cat = isset($_GET['cat']) ? $_GET['cat'] : 'all';
 
-$sql = "SELECT id, categoria_id, url, titulo, descripcion, imagen FROM links WHERE usuario_id = ?";
-$params = [$user_id];
-if($cat !== 'all'){
-    $sql .= " AND categoria_id = ?";
-    $params[] = (int)$cat;
+$stmt = $pdo->prepare('SELECT id FROM categorias WHERE share_token = ?');
+$stmt->execute([$token]);
+$board = $stmt->fetch(PDO::FETCH_ASSOC);
+if(!$board){
+    http_response_code(404);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([]);
+    exit;
 }
-$sql .= " ORDER BY creado_en DESC LIMIT $limit OFFSET $offset";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$links = $stmt->fetchAll();
+
+$sql = "SELECT url, titulo, descripcion, imagen FROM links WHERE categoria_id = ? ORDER BY id DESC LIMIT $limit OFFSET $offset";
+$stmtLinks = $pdo->prepare($sql);
+$stmtLinks->execute([$board['id']]);
+$links = $stmtLinks->fetchAll();
+
 $descLimit = isMobile() ? 50 : 150;
 foreach($links as &$link){
     if(mb_strlen($link['titulo']) > 50){
@@ -38,6 +48,7 @@ foreach($links as &$link){
     $link['favicon'] = $domain ? getLocalFavicon($domain) : '';
 }
 unset($link);
+
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode($links, JSON_UNESCAPED_UNICODE);
 ?>

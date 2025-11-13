@@ -19,10 +19,19 @@ if(!$board){
     exit('Tablero no disponible');
 }
 
-$linksStmt = $pdo->prepare('SELECT url, titulo, descripcion, imagen FROM links WHERE categoria_id = ? ORDER BY id DESC');
+$isMobile = isMobile();
+$totalStmt = $pdo->prepare('SELECT COUNT(*) FROM links WHERE categoria_id = ?');
+$totalStmt->execute([$board['id']]);
+$totalLinks = (int)$totalStmt->fetchColumn();
+$linksQuery = 'SELECT url, titulo, descripcion, imagen FROM links WHERE categoria_id = ? ORDER BY id DESC';
+if(!$isMobile){
+    $linksQuery .= ' LIMIT 500';
+}
+$linksStmt = $pdo->prepare($linksQuery);
 $linksStmt->execute([$board['id']]);
 $links = $linksStmt->fetchAll();
-$descLimit = isMobile() ? 50 : 150;
+$loadedLinks = count($links);
+$descLimit = $isMobile ? 50 : 150;
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
 $shareUrl = $baseUrl . '/tablero_publico.php?token=' . $token;
@@ -45,7 +54,7 @@ include 'header.php';
     </div>
 </div>
 <?php if(!empty($links)): ?>
-<div class="link-cards board-links">
+<div class="link-cards board-links" data-mode="public" data-token="<?= htmlspecialchars($token, ENT_QUOTES) ?>" data-total="<?= $totalLinks ?>" data-loaded="<?= $loadedLinks ?>">
 <?php foreach($links as $link): ?>
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
