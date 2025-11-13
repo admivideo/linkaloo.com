@@ -3,6 +3,7 @@ require 'config.php';
 require 'favicon_utils.php';
 require_once 'image_utils.php';
 require_once 'session.php';
+require_once 'device.php';
 if(!isset($_SESSION['user_id'])){
     header('Location: login.php');
     exit;
@@ -110,9 +111,16 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     }
 }
 
-$linksStmt = $pdo->prepare('SELECT id, url, imagen FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY id DESC');
+$isMobile = isMobile();
+$linksQuery = 'SELECT id, url, imagen FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY id DESC';
+if(!$isMobile){
+    $linksQuery .= ' LIMIT 500';
+}
+$linksStmt = $pdo->prepare($linksQuery);
 $linksStmt->execute([$user_id, $id]);
 $links = $linksStmt->fetchAll();
+$loadedLinks = count($links);
+$totalLinks = (int)($board['total_links'] ?? $loadedLinks);
 
 $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : '';
 $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado_en'])) : '';
@@ -164,7 +172,7 @@ include 'header.php';
     </div>
 </div>
 <?php if(!empty($links)): ?>
-<div class="link-cards board-links">
+<div class="link-cards board-links" data-mode="private" data-cat="<?= $id ?>" data-total="<?= $totalLinks ?>" data-loaded="<?= $loadedLinks ?>">
 <?php foreach($links as $link): ?>
     <?php
         $domain = parse_url($link['url'], PHP_URL_HOST);
