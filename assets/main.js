@@ -37,11 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
     cards.forEach(card => {
       const inCat = (cat === 'all' || card.dataset.cat === cat);
       const isAd = card.classList.contains('ad-card');
-      let matches;
-      if (normalizedQuery === '') {
-        matches = true;
-      } else {
-        matches = !isAd && card.textContent.toLowerCase().includes(normalizedQuery);
+      let matches = true;
+      if (normalizedQuery !== '') {
+        const loweredQuery = normalizedQuery.toLowerCase();
+        const titleEl = card.querySelector('.card-title');
+        const descEl = card.querySelector('.card-body p');
+        const titleText = titleEl ? titleEl.textContent.toLowerCase() : '';
+        const descText = descEl ? descEl.textContent.toLowerCase() : '';
+        matches = !isAd && (titleText.includes(loweredQuery) || descText.includes(loweredQuery));
       }
       card.style.display = (inCat && matches) ? '' : 'none';
     });
