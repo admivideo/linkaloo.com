@@ -93,6 +93,8 @@ Los estilos y patrones de arquitectura principales se describen en el
 - [docs/README.md](docs/README.md) – índice general de la documentación.
 - [docs/instalacion.md](docs/instalacion.md) – instalación paso a paso con capturas y comandos.
 - [docs/uso.md](docs/uso.md) – guía práctica para personas usuarias finales.
+- [docs/documentacion_general.md](docs/documentacion_general.md) – resumen ejecutivo del funcionamiento y
+  dependencias clave.
 - [docs/estructura.md](docs/estructura.md) – descripción detallada del repositorio y la base de datos.
 - [docs/endpoints.md](docs/endpoints.md) – referencia de endpoints JSON y vistas públicas.
 - [docs/manual_tecnico.md](docs/manual_tecnico.md) – visión completa de arquitectura, flujos y buenas prácticas.
