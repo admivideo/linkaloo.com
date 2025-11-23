@@ -11,15 +11,18 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 2. **¿Necesitas entender la arquitectura o planificas realizar cambios?** Lee el
    [manual técnico](manual_tecnico.md), que detalla la organización del código, el modelo de datos y los
    procesos principales.
-3. **¿Buscas un mapa rápido del repositorio o de la base de datos?** Consulta
+3. **¿Buscas explicar rápidamente qué hace la aplicación?** Revisa la
+   [visión funcional](vision_funcional.md) para disponer de un resumen narrativo enfocado en negocio.
+4. **¿Buscas un mapa rápido del repositorio o de la base de datos?** Consulta
    [estructura.md](estructura.md) para conocer cómo se agrupan los archivos y tablas.
-4. **¿Vas a integrar el front-end con llamadas asíncronas?** Revisa la referencia de
+5. **¿Vas a integrar el front-end con llamadas asíncronas?** Revisa la referencia de
    [endpoints.md](endpoints.md) para conocer parámetros, respuestas y requisitos de autenticación.
 
 ## Tabla de contenidos
 
 | Documento | Descripción |
 | --- | --- |
+| [vision_funcional.md](vision_funcional.md) | Explica propósito, alcance, flujos clave e integraciones externas desde una óptica funcional. |
 | [manual_tecnico.md](manual_tecnico.md) | Panorama completo de arquitectura, flujos de negocio, servicios externos y prácticas recomendadas. |
 | [estructura.md](estructura.md) | Resumen de directorios, archivos clave y esquema de la base de datos. |
 | [instalacion.md](instalacion.md) | Pasos detallados para preparar un entorno local de desarrollo o pruebas. |
