@@ -31,8 +31,9 @@ if (isset($_GET['debug_test'])) {
     exit;
 }
 
-echo 'user_api DEPLOY 2025-11-10'; 
-exit;
+// COMENTADO: Estas líneas impedían que el API procesara las peticiones
+// echo 'user_api DEPLOY 2025-11-10'; 
+// exit;
 
 try {
     // Obtener conexión a la base de datos
@@ -110,6 +111,10 @@ try {
             
         case 'upload_image':
             uploadImage($pdo, $input);
+            break;
+            
+        case 'get_top_favolinks':
+            getTopFavolinks($pdo, $input);
             break;
             
         default:
@@ -1845,6 +1850,74 @@ function checkDuplicateLink($pdo, $input) {
         
     } catch (Exception $e) {
         error_log("❌ ERROR en checkDuplicateLink: " . $e->getMessage());
+        error_log("❌ STACK TRACE: " . $e->getTraceAsString());
+        
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+}
+
+/**
+ * Obtiene los links más compartidos de la tabla TopFavolinks
+ * Filtra por categoría si se proporciona
+ */
+function getTopFavolinks($pdo, $input) {
+    try {
+        error_log("=== GET TOP FAVOLINKS INICIADO ===");
+        error_log("Input recibido: " . json_encode($input));
+        
+        $categoria = $input['categoria'] ?? null;
+        
+        if ($categoria !== null && trim($categoria) !== '') {
+            error_log("Filtro por categoría: " . $categoria);
+            // Filtrar por categoría específica
+            $stmt = $pdo->prepare("
+                SELECT categoria, url, titulo, descripcion, imagen, favicon, dominio, etiquetas, hash_url, nota_link 
+                FROM TopFavolinks 
+                WHERE categoria = ?
+                ORDER BY categoria, titulo
+            ");
+            $stmt->execute([$categoria]);
+        } else {
+            error_log("Obteniendo todos los Top Favolinks (sin filtro)");
+            // Obtener todos los Top Favolinks
+            $stmt = $pdo->prepare("
+                SELECT categoria, url, titulo, descripcion, imagen, favicon, dominio, etiquetas, hash_url, nota_link 
+                FROM TopFavolinks 
+                ORDER BY categoria, titulo
+            ");
+            $stmt->execute();
+        }
+        
+        $topFavolinks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        error_log("Total Top Favolinks encontrados: " . count($topFavolinks));
+        
+        echo json_encode([
+            'success' => true,
+            'total_favolinks' => count($topFavolinks),
+            'top_favolinks' => array_map(function($link) {
+                return [
+                    'categoria' => $link['categoria'] ?? null,
+                    'url' => $link['url'] ?? '',
+                    'titulo' => $link['titulo'] ?? null,
+                    'descripcion' => $link['descripcion'] ?? null,
+                    'imagen' => $link['imagen'] ?? null,
+                    'favicon' => $link['favicon'] ?? null,
+                    'dominio' => $link['dominio'] ?? null,
+                    'etiquetas' => $link['etiquetas'] ?? null,
+                    'hash_url' => $link['hash_url'] ?? null,
+                    'nota_link' => $link['nota_link'] ?? null
+                ];
+            }, $topFavolinks)
+        ]);
+        
+        error_log("=== GET TOP FAVOLINKS COMPLETADO ===");
+        
+    } catch (Exception $e) {
+        error_log("❌ ERROR EN GET TOP FAVOLINKS: " . $e->getMessage());
         error_log("❌ STACK TRACE: " . $e->getTraceAsString());
         
         http_response_code(500);
