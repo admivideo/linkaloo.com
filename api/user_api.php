@@ -123,11 +123,15 @@ try {
             break;
             
         case 'get_top_favolinks':
+            error_log("✅ Case get_top_favolinks encontrado, llamando función...");
             getTopFavolinks($pdo, $input);
             break;
             
         default:
-            throw new Exception('Acción no válida');
+            error_log("❌ Acción no reconocida en switch: '" . $action . "'");
+            error_log("❌ Tipo de acción: " . gettype($action));
+            error_log("❌ Longitud: " . strlen($action));
+            throw new Exception('Acción no válida: ' . $action);
     }
     
 } catch (Exception $e) {
