@@ -40,8 +40,17 @@ try {
     $pdo = getDatabaseConnection();
     
     // Obtener datos del request
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    error_log("Raw input recibido: " . $rawInput);
+    $input = json_decode($rawInput, true);
+    
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("Error decodificando JSON: " . json_last_error_msg());
+        throw new Exception('Error decodificando JSON: ' . json_last_error_msg());
+    }
+    
     $action = $input['action'] ?? '';
+    error_log("Acción recibida: " . $action);
     
     switch ($action) {
         case 'check_user':
