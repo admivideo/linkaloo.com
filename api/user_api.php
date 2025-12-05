@@ -42,6 +42,7 @@ try {
     // Obtener datos del request
     $rawInput = file_get_contents('php://input');
     error_log("Raw input recibido: " . $rawInput);
+    error_log("Raw input length: " . strlen($rawInput));
     $input = json_decode($rawInput, true);
     
     if (json_last_error() !== JSON_ERROR_NONE) {
@@ -49,8 +50,23 @@ try {
         throw new Exception('Error decodificando JSON: ' . json_last_error_msg());
     }
     
-    $action = $input['action'] ?? '';
-    error_log("Acción recibida: " . $action);
+    $action = isset($input['action']) ? trim($input['action']) : '';
+    error_log("Acción recibida (raw): '" . $action . "'");
+    error_log("Acción recibida (length): " . strlen($action));
+    error_log("Acción recibida (hex): " . bin2hex($action));
+    error_log("Input completo: " . json_encode($input));
+    
+    // Lista de acciones disponibles para debugging
+    $availableActions = [
+        'check_user', 'create_user', 'get_categories', 'update_category',
+        'create_category', 'delete_category', 'debug_table_structure',
+        'test_connection', 'get_links', 'check_duplicate_link',
+        'get_links_paginated', 'create_link', 'update_link', 'delete_link',
+        'get_url_metadata', 'debug_links', 'upload_image', 'get_top_favolinks'
+    ];
+    error_log("Acciones disponibles: " . implode(', ', $availableActions));
+    error_log("¿get_top_favolinks está en la lista? " . (in_array('get_top_favolinks', $availableActions) ? 'SÍ' : 'NO'));
+    error_log("¿La acción recibida está en la lista? " . (in_array($action, $availableActions) ? 'SÍ' : 'NO'));
     
     switch ($action) {
         case 'check_user':
