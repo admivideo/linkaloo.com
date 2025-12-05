@@ -1875,7 +1875,7 @@ function getTopFavolinks($pdo, $input) {
             error_log("Filtro por categoría: " . $categoria);
             // Filtrar por categoría específica
             $stmt = $pdo->prepare("
-                SELECT categoria, url, titulo, descripcion, imagen, favicon, dominio, etiquetas, hash_url, nota_link 
+                SELECT categoria, url, titulo, descripcion, imagen, favicon 
                 FROM TopFavolinks 
                 WHERE categoria = ?
                 ORDER BY categoria, titulo
@@ -1885,7 +1885,7 @@ function getTopFavolinks($pdo, $input) {
             error_log("Obteniendo todos los Top Favolinks (sin filtro)");
             // Obtener todos los Top Favolinks
             $stmt = $pdo->prepare("
-                SELECT categoria, url, titulo, descripcion, imagen, favicon, dominio, etiquetas, hash_url, nota_link 
+                SELECT categoria, url, titulo, descripcion, imagen, favicon 
                 FROM TopFavolinks 
                 ORDER BY categoria, titulo
             ");
@@ -1905,11 +1905,7 @@ function getTopFavolinks($pdo, $input) {
                     'titulo' => $link['titulo'] ?? null,
                     'descripcion' => $link['descripcion'] ?? null,
                     'imagen' => $link['imagen'] ?? null,
-                    'favicon' => $link['favicon'] ?? null,
-                    'dominio' => $link['dominio'] ?? null,
-                    'etiquetas' => $link['etiquetas'] ?? null,
-                    'hash_url' => $link['hash_url'] ?? null,
-                    'nota_link' => $link['nota_link'] ?? null
+                    'favicon' => $link['favicon'] ?? null
                 ];
             }, $topFavolinks)
         ]);
