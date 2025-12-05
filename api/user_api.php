@@ -56,6 +56,13 @@ try {
     error_log("Acción recibida (hex): " . bin2hex($action));
     error_log("Input completo: " . json_encode($input));
     
+    // Verificación directa para get_top_favolinks (para evitar problemas de caché)
+    if ($action === 'get_top_favolinks') {
+        error_log("✅ Acción get_top_favolinks detectada directamente, llamando función...");
+        getTopFavolinks($pdo, $input);
+        exit; // Salir después de procesar para evitar el switch
+    }
+    
     // Lista de acciones disponibles para debugging
     $availableActions = [
         'check_user', 'create_user', 'get_categories', 'update_category',
