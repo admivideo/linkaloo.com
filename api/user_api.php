@@ -38,6 +38,50 @@ if (isset($_GET['debug_test'])) {
     exit;
 }
 
+// Endpoint de prueba de conexión a la base de datos
+if (isset($_GET['test_connection'])) {
+    error_log("=== TEST DE CONEXIÓN INICIADO ===");
+    header('Content-Type: application/json');
+    
+    try {
+        $pdo = getDatabaseConnection();
+        error_log("✅ Conexión a BD exitosa");
+        
+        // Hacer una consulta simple para verificar que la conexión funciona
+        $stmt = $pdo->query("SELECT 1 as test");
+        $result = $stmt->fetch();
+        
+        if ($result && isset($result['test'])) {
+            error_log("✅ Consulta de prueba exitosa");
+            echo json_encode([
+                'success' => true,
+                'connection' => 'OK',
+                'message' => 'Conexión a la base de datos exitosa',
+                'timestamp' => date('Y-m-d H:i:s')
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            error_log("⚠️ Consulta de prueba no devolvió resultado esperado");
+            echo json_encode([
+                'success' => false,
+                'connection' => 'ERROR',
+                'message' => 'Conexión establecida pero consulta falló',
+                'timestamp' => date('Y-m-d H:i:s')
+            ], JSON_UNESCAPED_UNICODE);
+        }
+    } catch (Exception $e) {
+        error_log("❌ Error en test de conexión: " . $e->getMessage());
+        error_log("❌ Stack trace: " . $e->getTraceAsString());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'connection' => 'ERROR',
+            'message' => 'Error de conexión: ' . $e->getMessage(),
+            'timestamp' => date('Y-m-d H:i:s')
+        ], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
+
 // COMENTADO: Estas líneas impedían que el API procesara las peticiones
 // echo 'user_api DEPLOY 2025-11-10'; 
 // exit;
