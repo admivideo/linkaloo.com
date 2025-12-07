@@ -24,6 +24,9 @@ if (!function_exists('debugLog')) {
 // Manejar preflight requests
 handlePreflightRequest();
 
+// LOG INICIAL para confirmar que este archivo se está ejecutando
+error_log("=== user_api.php INICIADO - Versión con get_top_favolinks - " . date('Y-m-d H:i:s') . " ===");
+
 // Endpoint de prueba para confirmar que la versión desplegada es la correcta y que el logger funciona
 if (isset($_GET['debug_test'])) {
     debugLog('Test manual desde user_api (debug_test)');
@@ -65,10 +68,31 @@ try {
     error_log("Acción recibida (hex): " . bin2hex($action));
     error_log("Input completo: " . json_encode($input));
     
+    // LOGGING EXTRA PARA DEBUGGING
+    error_log("=== COMPARACIÓN DE ACCIÓN ===");
+    error_log("Acción recibida: [" . $action . "]");
+    error_log("Acción esperada: [get_top_favolinks]");
+    error_log("¿Son iguales? " . ($action === 'get_top_favolinks' ? 'SÍ' : 'NO'));
+    error_log("¿Son iguales (case-insensitive)? " . (strtolower($action) === 'get_top_favolinks' ? 'SÍ' : 'NO'));
+    error_log("¿Contiene 'get_top_favolinks'? " . (strpos($action, 'get_top_favolinks') !== false ? 'SÍ' : 'NO'));
+    error_log("Tipo de variable: " . gettype($action));
+    error_log("=== FIN COMPARACIÓN ===");
+    
     // VERIFICACIÓN MUY TEMPRANA para get_top_favolinks (ANTES de conectar a BD)
     // Esto evita cualquier problema con la conexión a BD o el switch
-    if ($action === 'get_top_favolinks') {
+    // Usar múltiples métodos de comparación para evitar problemas de encoding/caché
+    $actionNormalized = strtolower(trim($action));
+    $isGetTopFavolinks = ($action === 'get_top_favolinks') || 
+                         ($actionNormalized === 'get_top_favolinks') ||
+                         (strcasecmp($action, 'get_top_favolinks') === 0) ||
+                         (preg_match('/^get_top_favolinks$/i', $action));
+    
+    if ($isGetTopFavolinks) {
         error_log("✅✅✅ ACCIÓN get_top_favolinks DETECTADA - Procesando ANTES de conectar a BD");
+        error_log("✅ Método de detección: " . 
+            ($action === 'get_top_favolinks' ? 'Comparación exacta' : 
+             ($actionNormalized === 'get_top_favolinks' ? 'strtolower+trim' :
+              (strcasecmp($action, 'get_top_favolinks') === 0 ? 'strcasecmp' : 'preg_match'))));
         
         // Conectar a BD solo cuando sea necesario
         $pdo = getDatabaseConnection();
@@ -81,7 +105,9 @@ try {
         }
         
         try {
+            error_log("✅ Llamando a getTopFavolinks...");
             getTopFavolinks($pdo, $input);
+            error_log("✅ getTopFavolinks completado exitosamente");
         } catch (Exception $e) {
             error_log("❌ Error en getTopFavolinks: " . $e->getMessage());
             error_log("❌ Stack trace: " . $e->getTraceAsString());
@@ -92,6 +118,8 @@ try {
             ]);
         }
         exit; // Salir después de procesar para evitar el switch
+    } else {
+        error_log("⚠️ Acción NO es get_top_favolinks, continuando con switch...");
     }
     
     // Obtener conexión a la base de datos (después de validar el input y procesar get_top_favolinks)
