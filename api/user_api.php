@@ -27,7 +27,11 @@ handlePreflightRequest();
 // Endpoint de prueba para confirmar que la versión desplegada es la correcta y que el logger funciona
 if (isset($_GET['debug_test'])) {
     debugLog('Test manual desde user_api (debug_test)');
-    echo 'user_api debug_test OK';
+    header('Content-Type: text/plain');
+    echo "user_api debug_test OK\n";
+    echo "Versión: Archivo actualizado con get_top_favolinks\n";
+    echo "Función getTopFavolinks existe: " . (function_exists('getTopFavolinks') ? 'SÍ' : 'NO') . "\n";
+    echo "Fecha: " . date('Y-m-d H:i:s') . "\n";
     exit;
 }
 
@@ -36,19 +40,26 @@ if (isset($_GET['debug_test'])) {
 // exit;
 
 try {
-    // Obtener conexión a la base de datos
-    $pdo = getDatabaseConnection();
-    
-    // Obtener datos del request
+    // Obtener datos del request primero (antes de conectar a BD)
     $rawInput = file_get_contents('php://input');
     error_log("Raw input recibido: " . $rawInput);
     error_log("Raw input length: " . strlen($rawInput));
+    
+    // Si no hay input, puede ser un GET request sin body
+    if (empty($rawInput) && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        error_log("⚠️ Request GET sin body - no se puede procesar acción");
+        throw new Exception('Este endpoint requiere un POST request con JSON body');
+    }
+    
     $input = json_decode($rawInput, true);
     
     if (json_last_error() !== JSON_ERROR_NONE) {
         error_log("Error decodificando JSON: " . json_last_error_msg());
         throw new Exception('Error decodificando JSON: ' . json_last_error_msg());
     }
+    
+    // Obtener conexión a la base de datos (después de validar el input)
+    $pdo = getDatabaseConnection();
     
     $action = isset($input['action']) ? trim($input['action']) : '';
     error_log("Acción recibida (raw): '" . $action . "'");
@@ -57,9 +68,22 @@ try {
     error_log("Input completo: " . json_encode($input));
     
     // Verificación directa para get_top_favolinks (para evitar problemas de caché)
-    if ($action === 'get_top_favolinks') {
+    // Verificar con múltiples métodos para asegurar que funcione
+    if ($action === 'get_top_favolinks' || 
+        strtolower(trim($action)) === 'get_top_favolinks' ||
+        $action === 'get_top_favolinks') {
         error_log("✅ Acción get_top_favolinks detectada directamente, llamando función...");
-        getTopFavolinks($pdo, $input);
+        error_log("✅ Verificando si función existe: " . (function_exists('getTopFavolinks') ? 'SÍ' : 'NO'));
+        try {
+            getTopFavolinks($pdo, $input);
+        } catch (Exception $e) {
+            error_log("❌ Error en getTopFavolinks: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error procesando Top Favolinks: ' . $e->getMessage()
+            ]);
+        }
         exit; // Salir después de procesar para evitar el switch
     }
     
@@ -158,11 +182,17 @@ try {
     }
     
 } catch (Exception $e) {
+    error_log("❌ EXCEPCIÓN CAPTURADA EN user_api.php: " . $e->getMessage());
+    error_log("❌ STACK TRACE: " . $e->getTraceAsString());
+    error_log("❌ Archivo: " . $e->getFile() . " Línea: " . $e->getLine());
+    
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage()
-    ]);
+        'error' => $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine()
+    ], JSON_UNESCAPED_UNICODE);
 }
 
 function checkUser($pdo, $input) {
