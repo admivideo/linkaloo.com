@@ -2043,21 +2043,33 @@ function getTopFavolinks($pdo, $input) {
         }
         
         $topFavolinks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        error_log("Total Top Favolinks encontrados: " . count($topFavolinks));
+        error_log("Total Top Favolinks encontrados (antes de eliminar duplicados): " . count($topFavolinks));
         
-        echo json_encode([
-            'success' => true,
-            'total_favolinks' => count($topFavolinks),
-            'top_favolinks' => array_map(function($link) {
-                return [
+        // Eliminar duplicados usando URL como clave única
+        $uniqueLinks = [];
+        foreach ($topFavolinks as $link) {
+            $url = trim($link['url'] ?? '');
+            if (!empty($url) && !isset($uniqueLinks[$url])) {
+                // Solo agregar si la URL no existe ya
+                $uniqueLinks[$url] = [
                     'categoria' => $link['categoria'] ?? null,
-                    'url' => $link['url'] ?? '',
+                    'url' => $url,
                     'titulo' => $link['titulo'] ?? null,
                     'descripcion' => $link['descripcion'] ?? null,
                     'imagen' => $link['imagen'] ?? null,
                     'favicon' => $link['favicon'] ?? null
                 ];
-            }, $topFavolinks)
+            }
+        }
+        
+        // Convertir el array asociativo a array indexado y mantener el orden
+        $uniqueLinksArray = array_values($uniqueLinks);
+        error_log("Total Top Favolinks únicos (después de eliminar duplicados): " . count($uniqueLinksArray));
+        
+        echo json_encode([
+            'success' => true,
+            'total_favolinks' => count($uniqueLinksArray),
+            'top_favolinks' => $uniqueLinksArray
         ]);
         
         error_log("=== GET TOP FAVOLINKS COMPLETADO ===");
