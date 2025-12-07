@@ -2021,20 +2021,22 @@ function getTopFavolinks($pdo, $input) {
         
         if ($categoria !== null && trim($categoria) !== '') {
             error_log("Filtro por categoría: " . $categoria);
-            // Filtrar por categoría específica
+            // Filtrar por categoría específica - Usar GROUP BY para evitar duplicados
             $stmt = $pdo->prepare("
                 SELECT categoria, url, titulo, descripcion, imagen, favicon 
                 FROM TopFavolinks 
                 WHERE categoria = ?
+                GROUP BY url
                 ORDER BY categoria, titulo
             ");
             $stmt->execute([$categoria]);
         } else {
             error_log("Obteniendo todos los Top Favolinks (sin filtro)");
-            // Obtener todos los Top Favolinks
+            // Obtener todos los Top Favolinks - Usar GROUP BY para evitar duplicados
             $stmt = $pdo->prepare("
                 SELECT categoria, url, titulo, descripcion, imagen, favicon 
                 FROM TopFavolinks 
+                GROUP BY url
                 ORDER BY categoria, titulo
             ");
             $stmt->execute();
