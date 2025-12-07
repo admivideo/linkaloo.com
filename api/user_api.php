@@ -44,6 +44,7 @@ try {
     $rawInput = file_get_contents('php://input');
     error_log("Raw input recibido: " . $rawInput);
     error_log("Raw input length: " . strlen($rawInput));
+    error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
     
     // Si no hay input, puede ser un GET request sin body
     if (empty($rawInput) && $_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -58,26 +59,32 @@ try {
         throw new Exception('Error decodificando JSON: ' . json_last_error_msg());
     }
     
-    // Obtener conexión a la base de datos (después de validar el input)
-    $pdo = getDatabaseConnection();
-    
     $action = isset($input['action']) ? trim($input['action']) : '';
     error_log("Acción recibida (raw): '" . $action . "'");
     error_log("Acción recibida (length): " . strlen($action));
     error_log("Acción recibida (hex): " . bin2hex($action));
     error_log("Input completo: " . json_encode($input));
     
-    // Verificación directa para get_top_favolinks (para evitar problemas de caché)
-    // Verificar con múltiples métodos para asegurar que funcione
-    if ($action === 'get_top_favolinks' || 
-        strtolower(trim($action)) === 'get_top_favolinks' ||
-        $action === 'get_top_favolinks') {
-        error_log("✅ Acción get_top_favolinks detectada directamente, llamando función...");
+    // VERIFICACIÓN MUY TEMPRANA para get_top_favolinks (ANTES de conectar a BD)
+    // Esto evita cualquier problema con la conexión a BD o el switch
+    if ($action === 'get_top_favolinks') {
+        error_log("✅✅✅ ACCIÓN get_top_favolinks DETECTADA - Procesando ANTES de conectar a BD");
+        
+        // Conectar a BD solo cuando sea necesario
+        $pdo = getDatabaseConnection();
+        
         error_log("✅ Verificando si función existe: " . (function_exists('getTopFavolinks') ? 'SÍ' : 'NO'));
+        
+        if (!function_exists('getTopFavolinks')) {
+            error_log("❌ ERROR: La función getTopFavolinks NO existe!");
+            throw new Exception('Función getTopFavolinks no encontrada en el servidor');
+        }
+        
         try {
             getTopFavolinks($pdo, $input);
         } catch (Exception $e) {
             error_log("❌ Error en getTopFavolinks: " . $e->getMessage());
+            error_log("❌ Stack trace: " . $e->getTraceAsString());
             http_response_code(500);
             echo json_encode([
                 'success' => false,
@@ -86,6 +93,9 @@ try {
         }
         exit; // Salir después de procesar para evitar el switch
     }
+    
+    // Obtener conexión a la base de datos (después de validar el input y procesar get_top_favolinks)
+    $pdo = getDatabaseConnection();
     
     // Lista de acciones disponibles para debugging
     $availableActions = [
