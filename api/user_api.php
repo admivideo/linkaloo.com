@@ -2021,23 +2021,25 @@ function getTopFavolinks($pdo, $input) {
         
         if ($categoria !== null && trim($categoria) !== '') {
             error_log("Filtro por categoría: " . $categoria);
-            // Filtrar por categoría específica - Ordenar por actualizado_en DESC (más nuevo primero)
+            // Filtrar por categoría específica - Usar GROUP BY para evitar duplicados - LIMIT 8
             $stmt = $pdo->prepare("
-                SELECT categoria, url, titulo, descripcion, imagen, favicon, actualizado_en 
+                SELECT categoria, url, titulo, descripcion, imagen, favicon 
                 FROM TopFavolinks 
                 WHERE categoria = ?
                 GROUP BY url
-                ORDER BY actualizado_en DESC, categoria, titulo
+                ORDER BY categoria, titulo
+                LIMIT 8
             ");
             $stmt->execute([$categoria]);
         } else {
-            error_log("Obteniendo todos los Top Favolinks (sin filtro)");
-            // Obtener todos los Top Favolinks - Ordenar por actualizado_en DESC (más nuevo primero)
+            error_log("Obteniendo todos los Top Favolinks (sin filtro) - LIMIT 8");
+            // Obtener todos los Top Favolinks - Usar GROUP BY para evitar duplicados - LIMIT 8
             $stmt = $pdo->prepare("
-                SELECT categoria, url, titulo, descripcion, imagen, favicon, actualizado_en 
+                SELECT categoria, url, titulo, descripcion, imagen, favicon 
                 FROM TopFavolinks 
                 GROUP BY url
-                ORDER BY actualizado_en DESC, categoria, titulo
+                ORDER BY categoria, titulo
+                LIMIT 8
             ");
             $stmt->execute();
         }
@@ -2057,38 +2059,14 @@ function getTopFavolinks($pdo, $input) {
                     'titulo' => $link['titulo'] ?? null,
                     'descripcion' => $link['descripcion'] ?? null,
                     'imagen' => $link['imagen'] ?? null,
-                    'favicon' => $link['favicon'] ?? null,
-                    'actualizado_en' => $link['actualizado_en'] ?? null
+                    'favicon' => $link['favicon'] ?? null
                 ];
             }
         }
         
-        // Convertir el array asociativo a array indexado
+        // Convertir el array asociativo a array indexado y mantener el orden
         $uniqueLinksArray = array_values($uniqueLinks);
-        
-        // Ordenar por actualizado_en DESC (más nuevo primero) después de eliminar duplicados
-        usort($uniqueLinksArray, function($a, $b) {
-            $fechaA = $a['actualizado_en'] ?? null;
-            $fechaB = $b['actualizado_en'] ?? null;
-            
-            // Si ambas fechas son null, mantener orden original
-            if ($fechaA === null && $fechaB === null) {
-                return 0;
-            }
-            // Si solo A es null, ponerlo al final
-            if ($fechaA === null) {
-                return 1;
-            }
-            // Si solo B es null, ponerlo al final
-            if ($fechaB === null) {
-                return -1;
-            }
-            
-            // Comparar fechas (más reciente primero = DESC)
-            return strtotime($fechaB) - strtotime($fechaA);
-        });
-        
-        error_log("Total Top Favolinks únicos (después de eliminar duplicados y ordenar): " . count($uniqueLinksArray));
+        error_log("Total Top Favolinks únicos (después de eliminar duplicados): " . count($uniqueLinksArray));
         
         echo json_encode([
             'success' => true,
