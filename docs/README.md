@@ -13,7 +13,9 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
    procesos principales.
 3. **¿Buscas un mapa rápido del repositorio o de la base de datos?** Consulta
    [estructura.md](estructura.md) para conocer cómo se agrupan los archivos y tablas.
-4. **¿Vas a integrar el front-end con llamadas asíncronas?** Revisa la referencia de
+4. **¿Necesitas preparar credenciales o ajustar el servidor?** Consulta
+   [configuracion.md](configuracion.md) para conocer las variables de entorno y consejos de despliegue.
+5. **¿Vas a integrar el front-end con llamadas asíncronas?** Revisa la referencia de
    [endpoints.md](endpoints.md) para conocer parámetros, respuestas y requisitos de autenticación.
 
 ## Tabla de contenidos
@@ -21,10 +23,14 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 | Documento | Descripción |
 | --- | --- |
 | [manual_tecnico.md](manual_tecnico.md) | Panorama completo de arquitectura, flujos de negocio, servicios externos y prácticas recomendadas. |
+| [arquitectura.md](arquitectura.md) | Visión por capas del sistema, flujos de datos e integraciones clave. |
 | [estructura.md](estructura.md) | Resumen de directorios, archivos clave y esquema de la base de datos. |
 | [instalacion.md](instalacion.md) | Pasos detallados para preparar un entorno local de desarrollo o pruebas. |
 | [uso.md](uso.md) | Guía paso a paso para operar la aplicación desde la interfaz web. |
+| [documentacion_general.md](documentacion_general.md) | Visión transversal y resumida de la aplicación y sus dependencias. |
+| [configuracion.md](configuracion.md) | Variables de entorno recomendadas, requisitos de OAuth/reCAPTCHA y tareas de mantenimiento. |
 | [endpoints.md](endpoints.md) | Referencia de los scripts PHP que exponen respuestas JSON o sirven contenido público. |
+| [progreso.md](progreso.md) | Resumen del estado actual del proyecto, funcionalidades cubiertas y próximos pasos sugeridos. |
 
 ## Flujo general del proyecto
 
