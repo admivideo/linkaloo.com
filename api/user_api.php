@@ -10,196 +10,16 @@ require_once 'config.php';
 // Configurar headers CORS
 setCorsHeaders();
 
-// Logger personalizado reutilizando amazon_debug.log
-if (!defined('LINKALOO_DEBUG_LOG')) {
-    define('LINKALOO_DEBUG_LOG', __DIR__ . '/amazon_debug.log');
-}
-if (!function_exists('debugLog')) {
-    function debugLog($msg) {
-        $timestamp = date('Y-m-d H:i:s');
-        file_put_contents(LINKALOO_DEBUG_LOG, "[$timestamp] [user_api] $msg\n", FILE_APPEND);
-    }
-}
-
 // Manejar preflight requests
 handlePreflightRequest();
 
-// LOG INICIAL para confirmar que este archivo se está ejecutando
-error_log("=== user_api.php INICIADO - Versión con get_top_favolinks - " . date('Y-m-d H:i:s') . " ===");
-
-// Endpoint de prueba para confirmar que la versión desplegada es la correcta y que el logger funciona
-if (isset($_GET['debug_test'])) {
-    debugLog('Test manual desde user_api (debug_test)');
-    header('Content-Type: text/plain');
-    echo "user_api debug_test OK\n";
-    echo "Versión: Archivo actualizado con get_top_favolinks\n";
-    echo "Función getTopFavolinks existe: " . (function_exists('getTopFavolinks') ? 'SÍ' : 'NO') . "\n";
-    echo "Fecha: " . date('Y-m-d H:i:s') . "\n";
-    exit;
-}
-
-// Endpoint de prueba de conexión a la base de datos
-if (isset($_GET['test_connection'])) {
-    error_log("=== TEST DE CONEXIÓN INICIADO ===");
-    header('Content-Type: application/json');
-    
-    try {
-        $pdo = getDatabaseConnection();
-        error_log("✅ Conexión a BD exitosa");
-        
-        // Hacer una consulta simple para verificar que la conexión funciona
-        $stmt = $pdo->query("SELECT 1 as test");
-        $result = $stmt->fetch();
-        
-        if ($result && isset($result['test'])) {
-            error_log("✅ Consulta de prueba exitosa");
-            echo json_encode([
-                'success' => true,
-                'connection' => 'OK',
-                'message' => 'Conexión a la base de datos exitosa',
-                'timestamp' => date('Y-m-d H:i:s')
-            ], JSON_UNESCAPED_UNICODE);
-        } else {
-            error_log("⚠️ Consulta de prueba no devolvió resultado esperado");
-            echo json_encode([
-                'success' => false,
-                'connection' => 'ERROR',
-                'message' => 'Conexión establecida pero consulta falló',
-                'timestamp' => date('Y-m-d H:i:s')
-            ], JSON_UNESCAPED_UNICODE);
-        }
-    } catch (Exception $e) {
-        error_log("❌ Error en test de conexión: " . $e->getMessage());
-        error_log("❌ Stack trace: " . $e->getTraceAsString());
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'connection' => 'ERROR',
-            'message' => 'Error de conexión: ' . $e->getMessage(),
-            'timestamp' => date('Y-m-d H:i:s')
-        ], JSON_UNESCAPED_UNICODE);
-    }
-    exit;
-}
-
-// COMENTADO: Estas líneas impedían que el API procesara las peticiones
-// echo 'user_api DEPLOY 2025-11-10'; 
-// exit;
-
 try {
-    // Obtener datos del request primero (antes de conectar a BD)
-    $rawInput = file_get_contents('php://input');
-    error_log("Raw input recibido: " . $rawInput);
-    error_log("Raw input length: " . strlen($rawInput));
-    error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
-    
-    // Si no hay input, puede ser un GET request sin body
-    if (empty($rawInput) && $_SERVER['REQUEST_METHOD'] === 'GET') {
-        error_log("⚠️ Request GET sin body - no se puede procesar acción");
-        throw new Exception('Este endpoint requiere un POST request con JSON body');
-    }
-    
-    $input = json_decode($rawInput, true);
-    
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        error_log("Error decodificando JSON: " . json_last_error_msg());
-        error_log("Raw input que causó error: " . substr($rawInput, 0, 500));
-        throw new Exception('Error decodificando JSON: ' . json_last_error_msg());
-    }
-    
-    // Validar que el input sea un array
-    if (!is_array($input)) {
-        error_log("❌ ERROR: Input no es un array. Tipo: " . gettype($input));
-        error_log("❌ Raw input: " . substr($rawInput, 0, 500));
-        throw new Exception('Input inválido: se esperaba un objeto JSON');
-    }
-    
-    $action = isset($input['action']) ? trim($input['action']) : '';
-    error_log("Acción recibida (raw): '" . $action . "'");
-    error_log("Acción recibida (length): " . strlen($action));
-    error_log("Acción recibida (hex): " . bin2hex($action));
-    error_log("Input completo: " . json_encode($input));
-    error_log("Input keys disponibles: " . implode(', ', array_keys($input)));
-    
-    // Validar que la acción no esté vacía
-    if (empty($action)) {
-        error_log("❌ ERROR: Acción vacía o no encontrada en el input");
-        error_log("❌ Input keys: " . implode(', ', array_keys($input)));
-        error_log("❌ Input completo: " . json_encode($input));
-        throw new Exception('Acción no especificada en el request');
-    }
-    
-    // LOGGING EXTRA PARA DEBUGGING
-    error_log("=== COMPARACIÓN DE ACCIÓN ===");
-    error_log("Acción recibida: [" . $action . "]");
-    error_log("Acción esperada: [get_top_favolinks]");
-    error_log("¿Son iguales? " . ($action === 'get_top_favolinks' ? 'SÍ' : 'NO'));
-    error_log("¿Son iguales (case-insensitive)? " . (strtolower($action) === 'get_top_favolinks' ? 'SÍ' : 'NO'));
-    error_log("¿Contiene 'get_top_favolinks'? " . (strpos($action, 'get_top_favolinks') !== false ? 'SÍ' : 'NO'));
-    error_log("Tipo de variable: " . gettype($action));
-    error_log("=== FIN COMPARACIÓN ===");
-    
-    // VERIFICACIÓN MUY TEMPRANA para get_top_favolinks (ANTES de conectar a BD)
-    // Esto evita cualquier problema con la conexión a BD o el switch
-    // Usar múltiples métodos de comparación para evitar problemas de encoding/caché
-    $actionNormalized = strtolower(trim($action));
-    $isGetTopFavolinks = ($action === 'get_top_favolinks') || 
-                         ($actionNormalized === 'get_top_favolinks') ||
-                         (strcasecmp($action, 'get_top_favolinks') === 0) ||
-                         (preg_match('/^get_top_favolinks$/i', $action));
-    
-    if ($isGetTopFavolinks) {
-        error_log("✅✅✅ ACCIÓN get_top_favolinks DETECTADA - Procesando ANTES de conectar a BD");
-        error_log("✅ Método de detección: " . 
-            ($action === 'get_top_favolinks' ? 'Comparación exacta' : 
-             ($actionNormalized === 'get_top_favolinks' ? 'strtolower+trim' :
-              (strcasecmp($action, 'get_top_favolinks') === 0 ? 'strcasecmp' : 'preg_match'))));
-        
-        // Conectar a BD solo cuando sea necesario
-        $pdo = getDatabaseConnection();
-        
-        error_log("✅ Verificando si función existe: " . (function_exists('getTopFavolinks') ? 'SÍ' : 'NO'));
-        
-        if (!function_exists('getTopFavolinks')) {
-            error_log("❌ ERROR: La función getTopFavolinks NO existe!");
-            throw new Exception('Función getTopFavolinks no encontrada en el servidor');
-        }
-        
-        try {
-            error_log("✅ Llamando a getTopFavolinks...");
-            getTopFavolinks($pdo, $input);
-            error_log("✅ getTopFavolinks completado exitosamente");
-        } catch (Exception $e) {
-            error_log("❌ Error en getTopFavolinks: " . $e->getMessage());
-            error_log("❌ Stack trace: " . $e->getTraceAsString());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Error procesando Top Favolinks: ' . $e->getMessage()
-            ]);
-        }
-        exit; // Salir después de procesar para evitar el switch
-    } else {
-        error_log("⚠️ Acción NO es get_top_favolinks, continuando con switch...");
-    }
-    
-    // Obtener conexión a la base de datos (después de validar el input y procesar get_top_favolinks)
+    // Obtener conexión a la base de datos
     $pdo = getDatabaseConnection();
     
-    // Lista de acciones disponibles para debugging
-    $availableActions = [
-        'check_user', 'create_user', 'get_categories', 'update_category',
-        'create_category', 'delete_category', 'debug_table_structure',
-        'test_connection', 'get_links', 'check_duplicate_link',
-        'get_links_paginated', 'create_link', 'update_link', 'delete_link',
-        'get_url_metadata', 'debug_links', 'upload_image', 'get_top_favolinks'
-    ];
-    error_log("Acciones disponibles: " . implode(', ', $availableActions));
-    error_log("¿get_top_favolinks está en la lista? " . (in_array('get_top_favolinks', $availableActions) ? 'SÍ' : 'NO'));
-    error_log("¿La acción recibida está en la lista? " . (in_array($action, $availableActions) ? 'SÍ' : 'NO'));
-    error_log("¿create_category está en la lista? " . (in_array('create_category', $availableActions) ? 'SÍ' : 'NO'));
-    error_log("Comparación directa create_category: " . ($action === 'create_category' ? 'IGUAL' : 'DIFERENTE'));
-    error_log("Comparación case-insensitive: " . (strcasecmp($action, 'create_category') === 0 ? 'IGUAL' : 'DIFERENTE'));
+    // Obtener datos del request
+    $input = json_decode(file_get_contents('php://input'), true);
+    $action = $input['action'] ?? '';
     
     switch ($action) {
         case 'check_user':
@@ -219,9 +39,7 @@ try {
             break;
             
         case 'create_category':
-            error_log("✅✅✅ CASE create_category ENCONTRADO - Llamando función createCategory");
             createCategory($pdo, $input);
-            error_log("✅✅✅ createCategory completado");
             break;
             
         case 'delete_category':
@@ -273,33 +91,16 @@ try {
             uploadImage($pdo, $input);
             break;
             
-        case 'get_top_favolinks':
-            error_log("✅ Case get_top_favolinks encontrado, llamando función...");
-            getTopFavolinks($pdo, $input);
-            break;
-            
         default:
-            error_log("❌ Acción no reconocida en switch: '" . $action . "'");
-            error_log("❌ Tipo de acción: " . gettype($action));
-            error_log("❌ Longitud: " . strlen($action));
-            error_log("❌ Hex de acción: " . bin2hex($action));
-            error_log("❌ Input completo recibido: " . json_encode($input));
-            error_log("❌ Keys del input: " . implode(', ', array_keys($input)));
-            throw new Exception('Acción no válida: ' . $action);
+            throw new Exception('Acción no válida');
     }
     
 } catch (Exception $e) {
-    error_log("❌ EXCEPCIÓN CAPTURADA EN user_api.php: " . $e->getMessage());
-    error_log("❌ STACK TRACE: " . $e->getTraceAsString());
-    error_log("❌ Archivo: " . $e->getFile() . " Línea: " . $e->getLine());
-    
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
-        'file' => basename($e->getFile()),
-        'line' => $e->getLine()
-    ], JSON_UNESCAPED_UNICODE);
+        'error' => $e->getMessage()
+    ]);
 }
 
 function checkUser($pdo, $input) {
@@ -480,115 +281,86 @@ function testConnection($pdo) {
 }
 
 function getLinks($pdo, $input) {
-    try {
-        error_log("=== INICIANDO getLinks ===");
-        error_log("Input recibido: " . json_encode($input));
-        
-        $userId = $input['user_id'] ?? 0;
-        $categoriaId = $input['categoria_id'] ?? 0;
-        
-        error_log("Parámetros procesados - userId: $userId, categoriaId: $categoriaId");
-        
-        if ($userId <= 0) {
-            throw new Exception('ID de usuario válido es requerido');
-        }
-        
-        if ($categoriaId <= 0) {
-            throw new Exception('ID de categoría válido es requerido');
-        }
-        
-        // Verificar que el usuario existe
-        $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch();
-        
-        if (!$user) {
-            throw new Exception('Usuario no encontrado');
-        }
-        
-        // Verificar que la categoría existe y pertenece al usuario
-        $stmt = $pdo->prepare("SELECT id, usuario_id FROM categorias WHERE id = ? AND usuario_id = ?");
-        $stmt->execute([$categoriaId, $userId]);
-        $categoria = $stmt->fetch();
-        
-        if (!$categoria) {
-            // Debug: verificar si la categoría existe pero pertenece a otro usuario
-            $stmt = $pdo->prepare("SELECT id, usuario_id FROM categorias WHERE id = ?");
-            $stmt->execute([$categoriaId]);
-            $categoriaExistente = $stmt->fetch();
-            
-            if ($categoriaExistente) {
-                error_log("Categoría existe pero pertenece a otro usuario: " . $categoriaExistente['usuario_id']);
-                throw new Exception('Categoría existe pero pertenece al usuario ' . $categoriaExistente['usuario_id'] . ', no al usuario ' . $userId);
-            } else {
-                error_log("Categoría no encontrada: $categoriaId");
-                throw new Exception('Categoría no encontrada');
-            }
-        }
-        
-        // Debug: verificar cuántos links tiene el usuario en total
-        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE usuario_id = ?");
-        $stmt->execute([$userId]);
-        $totalUsuario = $stmt->fetch();
-        
-        // Debug: verificar cuántos links tiene la categoría en total
-        $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE categoria_id = ?");
+    $userId = $input['user_id'] ?? 0;
+    $categoriaId = $input['categoria_id'] ?? 0;
+    
+    if ($userId <= 0) {
+        throw new Exception('ID de usuario válido es requerido');
+    }
+    
+    if ($categoriaId <= 0) {
+        throw new Exception('ID de categoría válido es requerido');
+    }
+    
+    // Verificar que el usuario existe
+    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+    
+    if (!$user) {
+        throw new Exception('Usuario no encontrado');
+    }
+    
+    // Verificar que la categoría existe y pertenece al usuario
+    $stmt = $pdo->prepare("SELECT id, usuario_id FROM categorias WHERE id = ? AND usuario_id = ?");
+    $stmt->execute([$categoriaId, $userId]);
+    $categoria = $stmt->fetch();
+    
+    if (!$categoria) {
+        // Debug: verificar si la categoría existe pero pertenece a otro usuario
+        $stmt = $pdo->prepare("SELECT id, usuario_id FROM categorias WHERE id = ?");
         $stmt->execute([$categoriaId]);
-        $totalCategoria = $stmt->fetch();
+        $categoriaExistente = $stmt->fetch();
         
-        // Obtener links de la categoría
-        $stmt = $pdo->prepare("SELECT * FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY creado_en DESC");
-        $stmt->execute([$userId, $categoriaId]);
-        $links = $stmt->fetchAll();
-        
-        error_log("Links encontrados: " . count($links));
-        
-        // Mapear links con manejo seguro de valores NULL
-        $linksMapped = array_map(function($link) {
+        if ($categoriaExistente) {
+            throw new Exception('Categoría existe pero pertenece al usuario ' . $categoriaExistente['usuario_id'] . ', no al usuario ' . $userId);
+        } else {
+            throw new Exception('Categoría no encontrada');
+        }
+    }
+    
+    // Debug: verificar cuántos links tiene el usuario en total
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE usuario_id = ?");
+    $stmt->execute([$userId]);
+    $totalUsuario = $stmt->fetch();
+    
+    // Debug: verificar cuántos links tiene la categoría en total
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM links WHERE categoria_id = ?");
+    $stmt->execute([$categoriaId]);
+    $totalCategoria = $stmt->fetch();
+    
+    // Obtener links de la categoría
+    $stmt = $pdo->prepare("SELECT * FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY creado_en DESC");
+    $stmt->execute([$userId, $categoriaId]);
+    $links = $stmt->fetchAll();
+    
+    echo json_encode([
+        'success' => true,
+        'user_id' => (int)$userId,
+        'categoria_id' => (int)$categoriaId,
+        'total_links' => count($links),
+        'debug_info' => [
+            'total_links_usuario' => (int)$totalUsuario['total'],
+            'total_links_categoria' => (int)$totalCategoria['total'],
+            'categoria_usuario_id' => (int)$categoria['usuario_id']
+        ],
+        'links' => array_map(function($link) {
             return [
                 'id' => (int)$link['id'],
                 'usuario_id' => (int)$link['usuario_id'],
                 'categoria_id' => (int)$link['categoria_id'],
-                'url' => $link['url'] ?? '',
-                'url_canonica' => $link['url_canonica'] ?? null,
-                'titulo' => $link['titulo'] ?? null,
-                'descripcion' => $link['descripcion'] ?? null,
-                'imagen' => $link['imagen'] ?? null,
-                'favicon' => $link['favicon'] ?? null,
-                'creado_en' => $link['creado_en'] ?? null,
-                'actualizado_en' => $link['actualizado_en'] ?? null,
-                'nota_link' => $link['nota_link'] ?? null,
-                'hash_url' => $link['hash_url'] ?? null
+                'url' => $link['url'],
+                'url_canonica' => $link['url_canonica'],
+                'titulo' => $link['titulo'],
+                'descripcion' => $link['descripcion'],
+                'imagen' => $link['imagen'],
+                'creado_en' => $link['creado_en'],
+                'actualizado_en' => $link['actualizado_en'],
+                'nota_link' => $link['nota_link'],
+                'hash_url' => $link['hash_url']
             ];
-        }, $links);
-        
-        $response = [
-            'success' => true,
-            'user_id' => (int)$userId,
-            'categoria_id' => (int)$categoriaId,
-            'total_links' => count($links),
-            'debug_info' => [
-                'total_links_usuario' => (int)$totalUsuario['total'],
-                'total_links_categoria' => (int)$totalCategoria['total'],
-                'categoria_usuario_id' => (int)$categoria['usuario_id']
-            ],
-            'links' => $linksMapped
-        ];
-        
-        error_log("Respuesta preparada, enviando JSON...");
-        echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        error_log("=== getLinks completado exitosamente ===");
-        
-    } catch (Exception $e) {
-        error_log("❌ ERROR en getLinks: " . $e->getMessage());
-        error_log("Stack trace: " . $e->getTraceAsString());
-        
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'error' => 'Error interno del servidor: ' . $e->getMessage()
-        ], JSON_UNESCAPED_UNICODE);
-    }
+        }, $links)
+    ]);
 }
 
 function getLinksPaginated($pdo, $input) {
@@ -879,9 +651,10 @@ function getUrlMetadataFromUrl($url) {
 }
 
 /**
- * Normaliza una URL para hashing y detección de duplicados.
- * - Si es YouTube, se reduce a la forma base https://www.youtube.com/watch?v=VIDEO_ID
- * - Para el resto de URLs, se eliminan parámetros de tracking comunes y se ordenan.
+ * Normaliza una URL para hashing y detección de duplicados
+ * - Maneja casos especiales como YouTube
+ * - Elimina parámetros de tracking comunes
+ * - Mantiene identificadores relevantes como el video ID
  */
 function normalizeUrlForHash($url) {
     if (empty($url)) {
@@ -895,23 +668,24 @@ function normalizeUrlForHash($url) {
     }
 
     $parts = parse_url($url);
+
     if ($parts === false || empty($parts['host'])) {
         return $url;
     }
 
-    $host = strtolower($parts['host']);
-
-    // Normalización simplificada para YouTube
-    if (strpos($host, 'youtube.com') !== false || strpos($host, 'youtu.be') !== false) {
-        $normalizedYouTube = normalizeYouTubeUrlSimple($url);
-        if (!empty($normalizedYouTube)) {
-            return $normalizedYouTube;
-        }
-    }
-
     $scheme = strtolower($parts['scheme'] ?? 'https');
+    $host = strtolower($parts['host']);
     $path = $parts['path'] ?? '';
     $query = $parts['query'] ?? '';
+
+    // Normalizar host para YouTube
+    if ($host === 'm.youtube.com' || $host === 'music.youtube.com') {
+        $host = 'www.youtube.com';
+    }
+
+    if (strpos($host, 'youtube.com') !== false || strpos($host, 'youtu.be') !== false) {
+        return normalizeYouTubeUrl($scheme, $host, $path, $query);
+    }
 
     parse_str($query, $queryParams);
     if (!empty($queryParams)) {
@@ -925,11 +699,12 @@ function normalizeUrlForHash($url) {
     }
 
     $path = preg_replace('#/+#', '/', $path);
+
     if ($path === '') {
         $path = '/';
     }
 
-    $normalizedUrl = $scheme . '://' . strtolower($host) . $path;
+    $normalizedUrl = $scheme . '://' . $host . $path;
     if (!empty($query)) {
         $normalizedUrl .= '?' . $query;
     } elseif ($path !== '/' && substr($normalizedUrl, -1) === '/') {
@@ -940,72 +715,59 @@ function normalizeUrlForHash($url) {
 }
 
 /**
- * Normalización mínima para URLs de YouTube.
- * Convierte cualquier variante al formato https://www.youtube.com/watch?v=VIDEO_ID
- * Devuelve string vacío si no se puede extraer un identificador.
+ * Normaliza URLs específicas de YouTube para asegurar un identificador único por video
  */
-function normalizeYouTubeUrlSimple($url) {
-    $url = trim($url);
-    if ($url === '') {
-        return '';
-    }
-    if (!preg_match('/^https?:\/\//i', $url)) {
-        $url = 'https://' . $url;
-    }
+function normalizeYouTubeUrl($scheme, $host, $path, $query) {
+    $scheme = 'https';
 
-    $parts = parse_url($url);
-    if ($parts === false || empty($parts['host'])) {
-        return '';
-    }
-
-    $host = strtolower($parts['host']);
-    $path = $parts['path'] ?? '';
-    $query = $parts['query'] ?? '';
-
-    // youtu.be/VIDEO_ID
+    // youtu.be/VIDEO_ID -> youtube.com/watch?v=VIDEO_ID
     if (strpos($host, 'youtu.be') !== false) {
         $videoId = trim($path, '/');
-        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
+        if (!empty($videoId)) {
+            return 'https://www.youtube.com/watch?v=' . $videoId;
+        }
     }
 
-    // unificar host
-    if ($host === 'm.youtube.com' || $host === 'music.youtube.com') {
-        $host = 'www.youtube.com';
-    }
+    $host = 'www.youtube.com';
+    $path = $path ?? '';
 
-    if (strpos($host, 'youtube.com') === false) {
-        return '';
-    }
-
-    // shorts /shorts/VIDEO_ID
+    // shorts
     if (strpos($path, '/shorts/') === 0) {
         $segments = explode('/', trim($path, '/'));
         $videoId = $segments[1] ?? '';
-        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
+        if (!empty($videoId)) {
+            return 'https://www.youtube.com/shorts/' . $videoId;
+        }
     }
 
-    // embed /embed/VIDEO_ID
+    // embed
     if (strpos($path, '/embed/') === 0) {
-        $segments = explode('/', trim($path, '/'));
-        $videoId = $segments[1] ?? '';
-        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
+        $videoId = trim(substr($path, strlen('/embed/')), '/');
+        if (!empty($videoId)) {
+            return 'https://www.youtube.com/watch?v=' . $videoId;
+        }
     }
 
-    // watch?v=VIDEO_ID
-    if (strpos($path, '/watch') === 0) {
-        parse_str($query, $params);
-        $videoId = $params['v'] ?? '';
-        return $videoId ? 'https://www.youtube.com/watch?v=' . $videoId : '';
+    parse_str($query, $params);
+
+    if (!empty($params['v'])) {
+        $videoId = $params['v'];
+        return 'https://www.youtube.com/watch?v=' . $videoId;
     }
 
-    // playlist?list=LIST_ID
-    if (strpos($path, '/playlist') === 0) {
-        parse_str($query, $params);
-        $listId = $params['list'] ?? '';
-        return $listId ? 'https://www.youtube.com/playlist?list=' . $listId : '';
+    if (!empty($params['list']) && strpos($path, '/playlist') === 0) {
+        return 'https://www.youtube.com/playlist?list=' . $params['list'];
     }
 
-    return '';
+    $path = preg_replace('#/+#', '/', $path);
+    if ($path === '') {
+        $path = '/';
+    }
+    if ($path !== '/' && substr($path, -1) === '/') {
+        $path = rtrim($path, '/');
+    }
+
+    return $scheme . '://' . $host . $path;
 }
 
 /**
@@ -1071,57 +833,6 @@ function generateUrlVariants($urls) {
     $variants = array_values(array_unique(array_filter($variants)));
 
     return $variants;
-}
-
-/**
- * Determina si el link existente realmente coincide con la URL actual
- * Evita falsos positivos cuando un registro antiguo fue indexado con lógica diferente
- */
-function linksAreSame($existingLink, $normalizedUrl, $originalUrl, $hashesToCheck) {
-    $existingHashes = [];
-    if (!empty($existingLink['hash_url'])) {
-        $existingHashes[] = $existingLink['hash_url'];
-    }
-
-    foreach (['url', 'url_canonica'] as $key) {
-        if (!empty($existingLink[$key])) {
-            $normalizedExisting = normalizeUrlForHash($existingLink[$key]);
-            if (!empty($normalizedExisting)) {
-                $existingHashes[] = hash('sha256', $normalizedExisting);
-            }
-        }
-    }
-
-    $existingHashes = array_unique(array_filter($existingHashes));
-
-    foreach ($existingHashes as $existingHash) {
-        if (in_array($existingHash, $hashesToCheck, true)) {
-            $msg = "🧮 Hash coincide: existingHash=$existingHash";
-            error_log($msg);
-            debugLog($msg);
-            return true;
-        }
-    }
-
-    $existingVariants = [];
-    foreach (['url', 'url_canonica'] as $key) {
-        if (!empty($existingLink[$key])) {
-            $existingVariants = array_merge($existingVariants, generateUrlVariants([$existingLink[$key]]));
-        }
-    }
-    $existingVariants = array_unique(array_filter($existingVariants));
-
-    $currentVariants = generateUrlVariants([$normalizedUrl, $originalUrl]);
-    foreach ($currentVariants as $variant) {
-        if (in_array($variant, $existingVariants, true)) {
-            $msg = "🔄 Variante coincide: $variant";
-            error_log($msg);
-            debugLog($msg);
-            return true;
-        }
-    }
-
-    return false;
 }
 
 function updateLink($pdo, $input) {
@@ -1705,34 +1416,21 @@ function updateCategory($pdo, $input) {
                    'message' => 'Tablero creado exitosamente',
                    'category_id' => (int)$categoryId,
                    'category_name' => $nombre
-               ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+               ]);
            } else {
                error_log("ERROR: Error al insertar la categoría en la base de datos");
                throw new Exception('Error al crear el tablero en la base de datos');
            }
 
-       } catch (PDOException $e) {
-           error_log("❌ ERROR PDO EN CREATE CATEGORY: " . $e->getMessage());
-           error_log("❌ Código de error: " . $e->getCode());
-           error_log("❌ STACK TRACE: " . $e->getTraceAsString());
-           
-           http_response_code(500);
-           echo json_encode([
-               'success' => false,
-               'error' => 'Error de base de datos: ' . $e->getMessage()
-           ], JSON_UNESCAPED_UNICODE);
        } catch (Exception $e) {
            error_log("❌ ERROR EN CREATE CATEGORY: " . $e->getMessage());
            error_log("❌ STACK TRACE: " . $e->getTraceAsString());
-           error_log("❌ Archivo: " . $e->getFile() . " Línea: " . $e->getLine());
            
            http_response_code(500);
            echo json_encode([
                'success' => false,
-               'error' => $e->getMessage(),
-               'file' => basename($e->getFile()),
-               'line' => $e->getLine()
-           ], JSON_UNESCAPED_UNICODE);
+               'error' => $e->getMessage()
+           ]);
        }
    }
 
@@ -1890,7 +1588,6 @@ function updateCategory($pdo, $input) {
 function checkDuplicateLink($pdo, $input) {
     try {
         error_log("=== CHECK DUPLICATE LINK ===");
-        debugLog("=== CHECK DUPLICATE LINK: " . json_encode($input) . " ===");
         
         $userId = $input['user_id'] ?? null;
         $url = $input['url'] ?? null;
@@ -1901,7 +1598,6 @@ function checkDuplicateLink($pdo, $input) {
         
         error_log("👤 Usuario ID: $userId");
         error_log("🔗 URL a verificar: $url");
-        debugLog("Usuario $userId - URL a verificar: $url");
         
         // Normalizar la URL y obtener hashes
         $normalizedUrl = normalizeUrlForHash($url);
@@ -1920,7 +1616,6 @@ function checkDuplicateLink($pdo, $input) {
         error_log("🧹 URL normalizada: $normalizedUrl");
         error_log("🔐 Hash normalizado: $hashNormalized");
         error_log("🔐 Hash original: $hashOriginal");
-        debugLog("URL normalizada: $normalizedUrl | hash_norm=$hashNormalized | hash_orig=$hashOriginal");
         
         // Buscar por hash exacto primero
         error_log("🔍 Preparando query de búsqueda por hash...");
@@ -1949,17 +1644,10 @@ function checkDuplicateLink($pdo, $input) {
         $linkExistente = $stmt->fetch(PDO::FETCH_ASSOC);
         error_log("🔍 Resultado obtenido: " . ($linkExistente ? "Link encontrado ID=" . $linkExistente['id'] : "No encontrado"));
         
-        if ($linkExistente && !linksAreSame($linkExistente, $normalizedUrl, $originalUrlTrimmed ?: $url, $hashesToCheck)) {
-            error_log("ℹ️ Resultado descartado: hash/URL no coinciden realmente con la URL actual");
-            $linkExistente = null;
-        }
-        $hashCheckResult = !empty($linkExistente) ? 'match' : 'miss';
-        
         if ($linkExistente) {
             error_log("⚠️ DUPLICADO ENCONTRADO por hash - Link ID: " . $linkExistente['id']);
             error_log("📂 Categoría: " . $linkExistente['categoria_nombre']);
             error_log("📅 Guardado el: " . $linkExistente['creado_en']);
-            debugLog("Duplicado encontrado (hash) -> ID=" . $linkExistente['id'] . " | URL guardada=" . $linkExistente['url']);
             
             echo json_encode([
                 'success' => true,
@@ -2022,17 +1710,10 @@ function checkDuplicateLink($pdo, $input) {
             }
         }
         
-        if ($linkExistente && !linksAreSame($linkExistente, $normalizedUrl, $originalUrlTrimmed ?: $url, $hashesToCheck)) {
-            error_log("ℹ️ Resultado descartado tras coincidencias exactas: hash/URL no coinciden realmente");
-            $linkExistente = null;
-        }
-        $exactMatchResult = !empty($linkExistente) ? 'match' : 'miss';
-        
         if ($linkExistente) {
             error_log("⚠️ DUPLICADO ENCONTRADO por URL similar - Link ID: " . $linkExistente['id']);
             error_log("📂 Categoría: " . $linkExistente['categoria_nombre']);
             error_log("📅 Guardado el: " . $linkExistente['creado_en']);
-            debugLog("Duplicado encontrado (URL) -> ID=" . $linkExistente['id'] . " | URL guardada=" . $linkExistente['url']);
             
             echo json_encode([
                 'success' => true,
@@ -2055,9 +1736,6 @@ function checkDuplicateLink($pdo, $input) {
         
         // No se encontró duplicado
         error_log("✅ No se encontró duplicado");
-        $summary = "Summary -> HashCheck: $hashCheckResult, ExactMatch: $exactMatchResult, Hashes: " . json_encode($hashesToCheck);
-        error_log($summary);
-        debugLog($summary);
         echo json_encode([
             'success' => true,
             'duplicate_found' => false
@@ -2065,86 +1743,6 @@ function checkDuplicateLink($pdo, $input) {
         
     } catch (Exception $e) {
         error_log("❌ ERROR en checkDuplicateLink: " . $e->getMessage());
-        error_log("❌ STACK TRACE: " . $e->getTraceAsString());
-        
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'error' => $e->getMessage()
-        ]);
-    }
-}
-
-/**
- * Obtiene los links más compartidos de la tabla TopFavolinks
- * Filtra por categoría si se proporciona
- */
-function getTopFavolinks($pdo, $input) {
-    try {
-        error_log("=== GET TOP FAVOLINKS INICIADO ===");
-        error_log("Input recibido: " . json_encode($input));
-        
-        $categoria = $input['categoria'] ?? null;
-        
-        if ($categoria !== null && trim($categoria) !== '') {
-            error_log("Filtro por categoría: " . $categoria);
-            // Filtrar por categoría específica - Usar GROUP BY para evitar duplicados - LIMIT 8
-            $stmt = $pdo->prepare("
-                SELECT categoria, url, titulo, descripcion, imagen, favicon 
-                FROM TopFavolinks 
-                WHERE categoria = ?
-                GROUP BY url
-                ORDER BY categoria, titulo
-                LIMIT 8
-            ");
-            $stmt->execute([$categoria]);
-        } else {
-            error_log("Obteniendo todos los Top Favolinks (sin filtro) - LIMIT 8");
-            // Obtener todos los Top Favolinks - Usar GROUP BY para evitar duplicados - LIMIT 8
-            $stmt = $pdo->prepare("
-                SELECT categoria, url, titulo, descripcion, imagen, favicon 
-                FROM TopFavolinks 
-                GROUP BY url
-                ORDER BY categoria, titulo
-                LIMIT 8
-            ");
-            $stmt->execute();
-        }
-        
-        $topFavolinks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        error_log("Total Top Favolinks encontrados (antes de eliminar duplicados): " . count($topFavolinks));
-        
-        // Eliminar duplicados usando URL como clave única
-        $uniqueLinks = [];
-        foreach ($topFavolinks as $link) {
-            $url = trim($link['url'] ?? '');
-            if (!empty($url) && !isset($uniqueLinks[$url])) {
-                // Solo agregar si la URL no existe ya
-                $uniqueLinks[$url] = [
-                    'categoria' => $link['categoria'] ?? null,
-                    'url' => $url,
-                    'titulo' => $link['titulo'] ?? null,
-                    'descripcion' => $link['descripcion'] ?? null,
-                    'imagen' => $link['imagen'] ?? null,
-                    'favicon' => $link['favicon'] ?? null
-                ];
-            }
-        }
-        
-        // Convertir el array asociativo a array indexado y mantener el orden
-        $uniqueLinksArray = array_values($uniqueLinks);
-        error_log("Total Top Favolinks únicos (después de eliminar duplicados): " . count($uniqueLinksArray));
-        
-        echo json_encode([
-            'success' => true,
-            'total_favolinks' => count($uniqueLinksArray),
-            'top_favolinks' => $uniqueLinksArray
-        ]);
-        
-        error_log("=== GET TOP FAVOLINKS COMPLETADO ===");
-        
-    } catch (Exception $e) {
-        error_log("❌ ERROR EN GET TOP FAVOLINKS: " . $e->getMessage());
         error_log("❌ STACK TRACE: " . $e->getTraceAsString());
         
         http_response_code(500);
