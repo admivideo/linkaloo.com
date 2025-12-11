@@ -103,7 +103,15 @@ try {
     
     if (json_last_error() !== JSON_ERROR_NONE) {
         error_log("Error decodificando JSON: " . json_last_error_msg());
+        error_log("Raw input que causó error: " . substr($rawInput, 0, 500));
         throw new Exception('Error decodificando JSON: ' . json_last_error_msg());
+    }
+    
+    // Validar que el input sea un array
+    if (!is_array($input)) {
+        error_log("❌ ERROR: Input no es un array. Tipo: " . gettype($input));
+        error_log("❌ Raw input: " . substr($rawInput, 0, 500));
+        throw new Exception('Input inválido: se esperaba un objeto JSON');
     }
     
     $action = isset($input['action']) ? trim($input['action']) : '';
@@ -111,11 +119,13 @@ try {
     error_log("Acción recibida (length): " . strlen($action));
     error_log("Acción recibida (hex): " . bin2hex($action));
     error_log("Input completo: " . json_encode($input));
+    error_log("Input keys disponibles: " . implode(', ', array_keys($input)));
     
     // Validar que la acción no esté vacía
     if (empty($action)) {
         error_log("❌ ERROR: Acción vacía o no encontrada en el input");
         error_log("❌ Input keys: " . implode(', ', array_keys($input)));
+        error_log("❌ Input completo: " . json_encode($input));
         throw new Exception('Acción no especificada en el request');
     }
     
@@ -1695,21 +1705,34 @@ function updateCategory($pdo, $input) {
                    'message' => 'Tablero creado exitosamente',
                    'category_id' => (int)$categoryId,
                    'category_name' => $nombre
-               ]);
+               ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
            } else {
                error_log("ERROR: Error al insertar la categoría en la base de datos");
                throw new Exception('Error al crear el tablero en la base de datos');
            }
 
-       } catch (Exception $e) {
-           error_log("❌ ERROR EN CREATE CATEGORY: " . $e->getMessage());
+       } catch (PDOException $e) {
+           error_log("❌ ERROR PDO EN CREATE CATEGORY: " . $e->getMessage());
+           error_log("❌ Código de error: " . $e->getCode());
            error_log("❌ STACK TRACE: " . $e->getTraceAsString());
            
            http_response_code(500);
            echo json_encode([
                'success' => false,
-               'error' => $e->getMessage()
-           ]);
+               'error' => 'Error de base de datos: ' . $e->getMessage()
+           ], JSON_UNESCAPED_UNICODE);
+       } catch (Exception $e) {
+           error_log("❌ ERROR EN CREATE CATEGORY: " . $e->getMessage());
+           error_log("❌ STACK TRACE: " . $e->getTraceAsString());
+           error_log("❌ Archivo: " . $e->getFile() . " Línea: " . $e->getLine());
+           
+           http_response_code(500);
+           echo json_encode([
+               'success' => false,
+               'error' => $e->getMessage(),
+               'file' => basename($e->getFile()),
+               'line' => $e->getLine()
+           ], JSON_UNESCAPED_UNICODE);
        }
    }
 
