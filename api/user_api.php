@@ -218,6 +218,47 @@ try {
         exit; // Salir después de procesar para evitar el switch
     }
     
+    // VERIFICACIÓN TEMPRANA para get_links (similar a create_category)
+    $isGetLinks = ($action === 'get_links') || 
+                   ($actionNormalized === 'get_links') ||
+                   (strcasecmp($action, 'get_links') === 0) ||
+                   (preg_match('/^get_links$/i', $action));
+    
+    if ($isGetLinks) {
+        error_log("✅✅✅ ACCIÓN get_links DETECTADA - Procesando ANTES del switch");
+        error_log("✅ Método de detección: " . 
+            ($action === 'get_links' ? 'Comparación exacta' : 
+             ($actionNormalized === 'get_links' ? 'strtolower+trim' :
+              (strcasecmp($action, 'get_links') === 0 ? 'strcasecmp' : 'preg_match'))));
+        
+        // Conectar a BD
+        $pdo = getDatabaseConnection();
+        
+        error_log("✅ Verificando si función getLinks existe: " . (function_exists('getLinks') ? 'SÍ' : 'NO'));
+        
+        if (!function_exists('getLinks')) {
+            error_log("❌ ERROR: La función getLinks NO existe!");
+            throw new Exception('Función getLinks no encontrada en el servidor');
+        }
+        
+        try {
+            error_log("✅ Llamando a getLinks...");
+            getLinks($pdo, $input);
+            error_log("✅ getLinks completado exitosamente");
+        } catch (Exception $e) {
+            error_log("❌ Error en getLinks: " . $e->getMessage());
+            error_log("❌ Stack trace: " . $e->getTraceAsString());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error procesando get_links: ' . $e->getMessage(),
+                'file' => basename($e->getFile()),
+                'line' => $e->getLine()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        exit; // Salir después de procesar para evitar el switch
+    }
+    
     // Obtener conexión a la base de datos (después de validar el input y procesar get_top_favolinks)
     $pdo = getDatabaseConnection();
     
@@ -582,48 +623,73 @@ function getLinks($pdo, $input) {
         
         // Mapear links con manejo seguro de valores NULL
         $linksMapped = array_map(function($link) {
-            return [
-                'id' => (int)$link['id'],
-                'usuario_id' => (int)$link['usuario_id'],
-                'categoria_id' => (int)$link['categoria_id'],
-                'url' => $link['url'] ?? '',
-                'url_canonica' => $link['url_canonica'] ?? null,
-                'titulo' => $link['titulo'] ?? null,
-                'descripcion' => $link['descripcion'] ?? null,
-                'imagen' => $link['imagen'] ?? null,
-                'favicon' => $link['favicon'] ?? null,
-                'creado_en' => $link['creado_en'] ?? null,
-                'actualizado_en' => $link['actualizado_en'] ?? null,
-                'nota_link' => $link['nota_link'] ?? null,
-                'hash_url' => $link['hash_url'] ?? null
-            ];
+            try {
+                return [
+                    'id' => (int)($link['id'] ?? 0),
+                    'usuario_id' => (int)($link['usuario_id'] ?? 0),
+                    'categoria_id' => (int)($link['categoria_id'] ?? 0),
+                    'url' => $link['url'] ?? '',
+                    'url_canonica' => isset($link['url_canonica']) ? $link['url_canonica'] : null,
+                    'titulo' => isset($link['titulo']) ? $link['titulo'] : null,
+                    'descripcion' => isset($link['descripcion']) ? $link['descripcion'] : null,
+                    'imagen' => isset($link['imagen']) ? $link['imagen'] : null,
+                    'favicon' => isset($link['favicon']) ? $link['favicon'] : null,
+                    'creado_en' => isset($link['creado_en']) ? $link['creado_en'] : null,
+                    'actualizado_en' => isset($link['actualizado_en']) ? $link['actualizado_en'] : null,
+                    'nota_link' => isset($link['nota_link']) ? $link['nota_link'] : null,
+                    'hash_url' => isset($link['hash_url']) ? $link['hash_url'] : null
+                ];
+            } catch (Exception $e) {
+                error_log("Error mapeando link ID " . ($link['id'] ?? 'unknown') . ": " . $e->getMessage());
+                return null;
+            }
         }, $links);
+        
+        // Filtrar cualquier link que haya fallado en el mapeo
+        $linksMapped = array_filter($linksMapped, function($link) {
+            return $link !== null;
+        });
         
         $response = [
             'success' => true,
             'user_id' => (int)$userId,
             'categoria_id' => (int)$categoriaId,
-            'total_links' => count($links),
+            'total_links' => count($linksMapped),
             'debug_info' => [
-                'total_links_usuario' => (int)$totalUsuario['total'],
-                'total_links_categoria' => (int)$totalCategoria['total'],
-                'categoria_usuario_id' => (int)$categoria['usuario_id']
+                'total_links_usuario' => (int)($totalUsuario['total'] ?? 0),
+                'total_links_categoria' => (int)($totalCategoria['total'] ?? 0),
+                'categoria_usuario_id' => (int)($categoria['usuario_id'] ?? 0)
             ],
-            'links' => $linksMapped
+            'links' => array_values($linksMapped) // Re-indexar el array
         ];
         
         error_log("Respuesta preparada, enviando JSON...");
         echo json_encode($response, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         error_log("=== getLinks completado exitosamente ===");
         
-    } catch (Exception $e) {
-        error_log("❌ ERROR en getLinks: " . $e->getMessage());
-        error_log("Stack trace: " . $e->getTraceAsString());
+    } catch (PDOException $e) {
+        error_log("❌ ERROR PDO en getLinks: " . $e->getMessage());
+        error_log("❌ Código de error: " . $e->getCode());
+        error_log("❌ Stack trace: " . $e->getTraceAsString());
         
         http_response_code(500);
         echo json_encode([
             'success' => false,
-            'error' => 'Error interno del servidor: ' . $e->getMessage()
+            'error' => 'Error de base de datos: ' . $e->getMessage(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
+        ], JSON_UNESCAPED_UNICODE);
+    } catch (Exception $e) {
+        error_log("❌ ERROR en getLinks: " . $e->getMessage());
+        error_log("❌ Stack trace: " . $e->getTraceAsString());
+        error_log("❌ Archivo: " . $e->getFile() . " Línea: " . $e->getLine());
+        
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error interno del servidor: ' . $e->getMessage(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
         ], JSON_UNESCAPED_UNICODE);
     }
 }
