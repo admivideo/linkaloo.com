@@ -112,6 +112,13 @@ try {
     error_log("Acción recibida (hex): " . bin2hex($action));
     error_log("Input completo: " . json_encode($input));
     
+    // Validar que la acción no esté vacía
+    if (empty($action)) {
+        error_log("❌ ERROR: Acción vacía o no encontrada en el input");
+        error_log("❌ Input keys: " . implode(', ', array_keys($input)));
+        throw new Exception('Acción no especificada en el request');
+    }
+    
     // LOGGING EXTRA PARA DEBUGGING
     error_log("=== COMPARACIÓN DE ACCIÓN ===");
     error_log("Acción recibida: [" . $action . "]");
@@ -180,6 +187,9 @@ try {
     error_log("Acciones disponibles: " . implode(', ', $availableActions));
     error_log("¿get_top_favolinks está en la lista? " . (in_array('get_top_favolinks', $availableActions) ? 'SÍ' : 'NO'));
     error_log("¿La acción recibida está en la lista? " . (in_array($action, $availableActions) ? 'SÍ' : 'NO'));
+    error_log("¿create_category está en la lista? " . (in_array('create_category', $availableActions) ? 'SÍ' : 'NO'));
+    error_log("Comparación directa create_category: " . ($action === 'create_category' ? 'IGUAL' : 'DIFERENTE'));
+    error_log("Comparación case-insensitive: " . (strcasecmp($action, 'create_category') === 0 ? 'IGUAL' : 'DIFERENTE'));
     
     switch ($action) {
         case 'check_user':
@@ -199,7 +209,9 @@ try {
             break;
             
         case 'create_category':
+            error_log("✅✅✅ CASE create_category ENCONTRADO - Llamando función createCategory");
             createCategory($pdo, $input);
+            error_log("✅✅✅ createCategory completado");
             break;
             
         case 'delete_category':
@@ -260,6 +272,9 @@ try {
             error_log("❌ Acción no reconocida en switch: '" . $action . "'");
             error_log("❌ Tipo de acción: " . gettype($action));
             error_log("❌ Longitud: " . strlen($action));
+            error_log("❌ Hex de acción: " . bin2hex($action));
+            error_log("❌ Input completo recibido: " . json_encode($input));
+            error_log("❌ Keys del input: " . implode(', ', array_keys($input)));
             throw new Exception('Acción no válida: ' . $action);
     }
     
