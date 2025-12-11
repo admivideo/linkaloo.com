@@ -132,11 +132,9 @@ try {
     // LOGGING EXTRA PARA DEBUGGING
     error_log("=== COMPARACIÓN DE ACCIÓN ===");
     error_log("Acción recibida: [" . $action . "]");
-    error_log("Acción esperada: [get_top_favolinks]");
-    error_log("¿Son iguales? " . ($action === 'get_top_favolinks' ? 'SÍ' : 'NO'));
-    error_log("¿Son iguales (case-insensitive)? " . (strtolower($action) === 'get_top_favolinks' ? 'SÍ' : 'NO'));
-    error_log("¿Contiene 'get_top_favolinks'? " . (strpos($action, 'get_top_favolinks') !== false ? 'SÍ' : 'NO'));
     error_log("Tipo de variable: " . gettype($action));
+    error_log("Longitud: " . strlen($action));
+    error_log("Hex: " . bin2hex($action));
     error_log("=== FIN COMPARACIÓN ===");
     
     // VERIFICACIÓN MUY TEMPRANA para get_top_favolinks (ANTES de conectar a BD)
@@ -179,8 +177,45 @@ try {
             ]);
         }
         exit; // Salir después de procesar para evitar el switch
-    } else {
-        error_log("⚠️ Acción NO es get_top_favolinks, continuando con switch...");
+    }
+    
+    // VERIFICACIÓN TEMPRANA para create_category (similar a get_top_favolinks)
+    $isCreateCategory = ($action === 'create_category') || 
+                        ($actionNormalized === 'create_category') ||
+                        (strcasecmp($action, 'create_category') === 0) ||
+                        (preg_match('/^create_category$/i', $action));
+    
+    if ($isCreateCategory) {
+        error_log("✅✅✅ ACCIÓN create_category DETECTADA - Procesando ANTES del switch");
+        error_log("✅ Método de detección: " . 
+            ($action === 'create_category' ? 'Comparación exacta' : 
+             ($actionNormalized === 'create_category' ? 'strtolower+trim' :
+              (strcasecmp($action, 'create_category') === 0 ? 'strcasecmp' : 'preg_match'))));
+        
+        // Conectar a BD
+        $pdo = getDatabaseConnection();
+        
+        error_log("✅ Verificando si función createCategory existe: " . (function_exists('createCategory') ? 'SÍ' : 'NO'));
+        
+        if (!function_exists('createCategory')) {
+            error_log("❌ ERROR: La función createCategory NO existe!");
+            throw new Exception('Función createCategory no encontrada en el servidor');
+        }
+        
+        try {
+            error_log("✅ Llamando a createCategory...");
+            createCategory($pdo, $input);
+            error_log("✅ createCategory completado exitosamente");
+        } catch (Exception $e) {
+            error_log("❌ Error en createCategory: " . $e->getMessage());
+            error_log("❌ Stack trace: " . $e->getTraceAsString());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error procesando create_category: ' . $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE);
+        }
+        exit; // Salir después de procesar para evitar el switch
     }
     
     // Obtener conexión a la base de datos (después de validar el input y procesar get_top_favolinks)
@@ -194,12 +229,14 @@ try {
         'get_links_paginated', 'create_link', 'update_link', 'delete_link',
         'get_url_metadata', 'debug_links', 'upload_image', 'get_top_favolinks'
     ];
+    error_log("=== VALIDACIÓN DE ACCIÓN ===");
     error_log("Acciones disponibles: " . implode(', ', $availableActions));
-    error_log("¿get_top_favolinks está en la lista? " . (in_array('get_top_favolinks', $availableActions) ? 'SÍ' : 'NO'));
+    error_log("Acción recibida: '" . $action . "'");
     error_log("¿La acción recibida está en la lista? " . (in_array($action, $availableActions) ? 'SÍ' : 'NO'));
     error_log("¿create_category está en la lista? " . (in_array('create_category', $availableActions) ? 'SÍ' : 'NO'));
     error_log("Comparación directa create_category: " . ($action === 'create_category' ? 'IGUAL' : 'DIFERENTE'));
     error_log("Comparación case-insensitive: " . (strcasecmp($action, 'create_category') === 0 ? 'IGUAL' : 'DIFERENTE'));
+    error_log("=== FIN VALIDACIÓN ===");
     
     switch ($action) {
         case 'check_user':
