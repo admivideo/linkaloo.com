@@ -32,6 +32,16 @@ if ($selectedCat !== '') {
 
 $links = $stmtLinks->fetchAll();
 
+$catCounts = [];
+foreach ($links as $l) {
+    $cat = $l['categoria'];
+    $catCounts[$cat] = ($catCounts[$cat] ?? 0) + 1;
+}
+$maxAdsPerCat = [];
+foreach ($catCounts as $cat => $cnt) {
+    $maxAdsPerCat[$cat] = intdiv($cnt, 8);
+}
+
 include 'header.php';
 ?>
 <div class="board-nav">
@@ -51,7 +61,12 @@ include 'header.php';
 <input type="text" class="search-input" placeholder="Buscar links...">
 
 <div class="link-cards">
-<?php foreach ($links as $link):
+<?php
+$shownPerCat = [];
+$adsShownPerCat = [];
+foreach ($links as $link):
+    $catId = $link['categoria'];
+    $shownPerCat[$catId] = ($shownPerCat[$catId] ?? 0) + 1;
     $imgSrc = $link['imagen'] ?: ($link['favicon'] ?: '');
     if (!$imgSrc && !empty($link['dominio'])) {
         $imgSrc = getLocalFavicon($link['dominio']);
@@ -96,7 +111,22 @@ include 'header.php';
             </div>
         </div>
     </div>
-<?php endforeach; ?>
+    <?php
+        $catAdsLimit = $maxAdsPerCat[$catId] ?? 0;
+        if ($shownPerCat[$catId] % 8 === 0 && ($adsShownPerCat[$catId] ?? 0) < $catAdsLimit):
+    ?>
+    <div class="card ad-card" data-cat="<?= htmlspecialchars($catId) ?>">
+        <div class="card-body">
+            <ins data-revive-zoneid="55" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
+            <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
+            <div class="ad-label">...</div>
+        </div>
+    </div>
+    <?php
+            $adsShownPerCat[$catId] = ($adsShownPerCat[$catId] ?? 0) + 1;
+        endif;
+    endforeach;
+?>
 </div>
 
 </div>
