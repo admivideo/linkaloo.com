@@ -93,7 +93,14 @@ foreach ($links as $link):
         <div class="card-body">
             <div class="card-title">
                 <?php if ($faviconSrc !== ''): ?>
-                    <img src="<?= htmlspecialchars($faviconSrc) ?>" width="18" height="18" alt="" loading="lazy">
+                    <img
+                        src="<?= htmlspecialchars($faviconSrc) ?>"
+                        width="18"
+                        height="18"
+                        alt=""
+                        loading="lazy"
+                        style="width: 18px; height: 18px; margin-right: 5px; flex-shrink: 0;"
+                    >
                 <?php endif; ?>
                 <h4><?= htmlspecialchars($title) ?></h4>
             </div>
