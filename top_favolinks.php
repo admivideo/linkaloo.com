@@ -81,6 +81,13 @@ foreach ($links as $link):
     if (mb_strlen($desc) > $descLimit) {
         $desc = mb_substr($desc, 0, $descLimit - 3) . '...';
     }
+
+    $faviconSrc = '';
+    if (!empty($link['favicon'])) {
+        $faviconSrc = $link['favicon'];
+    } elseif (!empty($link['dominio'])) {
+        $faviconSrc = getLocalFavicon($link['dominio']);
+    }
 ?>
     <div class="card" data-cat="<?= htmlspecialchars($link['categoria']) ?>" data-id="<?= $link['id'] ?>">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?> <?= $isLocalFavicon ? 'local-favicon' : '' ?>">
@@ -91,24 +98,14 @@ foreach ($links as $link):
         </div>
         <div class="card-body">
             <div class="card-title">
-                <h4>
-                    <?php if (!empty($link['favicon'])): ?>
-                        <img src="<?= htmlspecialchars($link['favicon']) ?>" width="18" height="18" alt="" loading="lazy">
-                    <?php elseif (!empty($link['dominio'])): ?>
-                        <img src="<?= htmlspecialchars(getLocalFavicon($link['dominio'])) ?>" width="18" height="18" alt="" loading="lazy">
-                    <?php endif; ?>
-                    <?= htmlspecialchars($title) ?>
-                </h4>
+                <?php if ($faviconSrc !== ''): ?>
+                    <img src="<?= htmlspecialchars($faviconSrc) ?>" width="18" height="18" alt="" loading="lazy">
+                <?php endif; ?>
+                <h4><?= htmlspecialchars($title) ?></h4>
             </div>
             <?php if($desc !== ''): ?>
                 <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
-            <?php if(!empty($link['etiquetas'])): ?>
-                <div class="favolink-tags"><?= htmlspecialchars($link['etiquetas']) ?></div>
-            <?php endif; ?>
-            <div class="card-actions">
-                <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer" class="button">Visitar</a>
-            </div>
         </div>
     </div>
     <?php
