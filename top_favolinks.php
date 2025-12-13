@@ -67,10 +67,9 @@ $adsShownPerCat = [];
 foreach ($links as $link):
     $catId = $link['categoria'];
     $shownPerCat[$catId] = ($shownPerCat[$catId] ?? 0) + 1;
-    $imgSrc = $link['imagen'] ?: ($link['favicon'] ?: '');
-    if (!$imgSrc && !empty($link['dominio'])) {
-        $imgSrc = getLocalFavicon($link['dominio']);
-    }
+    $domain = !empty($link['dominio']) ? $link['dominio'] : parse_url($link['url'], PHP_URL_HOST);
+    $favicon = $domain ? getLocalFavicon($domain) : '';
+    $imgSrc = !empty($link['imagen']) ? $link['imagen'] : ($link['favicon'] ?: $favicon);
     $isDefault = empty($link['imagen']);
     $isLocalFavicon = str_starts_with($imgSrc, '/local_favicons/');
     $title = $link['titulo'] ?: $link['url'];
@@ -82,12 +81,7 @@ foreach ($links as $link):
         $desc = mb_substr($desc, 0, $descLimit - 3) . '...';
     }
 
-    $faviconSrc = '';
-    if (!empty($link['favicon'])) {
-        $faviconSrc = $link['favicon'];
-    } elseif (!empty($link['dominio'])) {
-        $faviconSrc = getLocalFavicon($link['dominio']);
-    }
+    $faviconSrc = !empty($link['favicon']) ? $link['favicon'] : $favicon;
 ?>
     <div class="card" data-cat="<?= htmlspecialchars($link['categoria']) ?>" data-id="<?= $link['id'] ?>">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?> <?= $isLocalFavicon ? 'local-favicon' : '' ?>">
