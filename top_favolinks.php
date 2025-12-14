@@ -32,6 +32,16 @@ if ($selectedCat !== '') {
 
 $links = $stmtLinks->fetchAll();
 
+$catCounts = [];
+foreach ($links as $l) {
+    $cat = $l['categoria'];
+    $catCounts[$cat] = ($catCounts[$cat] ?? 0) + 1;
+}
+$maxAdsPerCat = [];
+foreach ($catCounts as $cat => $cnt) {
+    $maxAdsPerCat[$cat] = intdiv($cnt, 6);
+}
+
 include 'header.php';
 ?>
 <div class="board-nav">
@@ -51,11 +61,15 @@ include 'header.php';
 <input type="text" class="search-input" placeholder="Buscar links...">
 
 <div class="link-cards">
-<?php foreach ($links as $link):
-    $imgSrc = $link['imagen'] ?: ($link['favicon'] ?: '');
-    if (!$imgSrc && !empty($link['dominio'])) {
-        $imgSrc = getLocalFavicon($link['dominio']);
-    }
+<?php
+$shownPerCat = [];
+$adsShownPerCat = [];
+foreach ($links as $link):
+    $catId = $link['categoria'];
+    $shownPerCat[$catId] = ($shownPerCat[$catId] ?? 0) + 1;
+    $domain = !empty($link['dominio']) ? $link['dominio'] : parse_url($link['url'], PHP_URL_HOST);
+    $favicon = $domain ? getLocalFavicon($domain) : '';
+    $imgSrc = !empty($link['imagen']) ? $link['imagen'] : ($link['favicon'] ?: $favicon);
     $isDefault = empty($link['imagen']);
     $isLocalFavicon = str_starts_with($imgSrc, '/local_favicons/');
     $title = $link['titulo'] ?: $link['url'];
@@ -66,6 +80,8 @@ include 'header.php';
     if (mb_strlen($desc) > $descLimit) {
         $desc = mb_substr($desc, 0, $descLimit - 3) . '...';
     }
+
+    $faviconSrc = !empty($link['favicon']) ? $link['favicon'] : $favicon;
 ?>
     <div class="card" data-cat="<?= htmlspecialchars($link['categoria']) ?>" data-id="<?= $link['id'] ?>">
         <div class="card-image <?= $isDefault ? 'no-image' : '' ?> <?= $isLocalFavicon ? 'local-favicon' : '' ?>">
@@ -77,10 +93,14 @@ include 'header.php';
         <div class="card-body">
             <div class="card-title">
                 <h4>
-                    <?php if (!empty($link['favicon'])): ?>
-                        <img src="<?= htmlspecialchars($link['favicon']) ?>" width="18" height="18" alt="" loading="lazy">
-                    <?php elseif (!empty($link['dominio'])): ?>
-                        <img src="<?= htmlspecialchars(getLocalFavicon($link['dominio'])) ?>" width="18" height="18" alt="" loading="lazy">
+                    <?php if ($faviconSrc !== ''): ?>
+                        <img
+                            src="<?= htmlspecialchars($faviconSrc) ?>"
+                            width="18"
+                            height="18"
+                            alt=""
+                            loading="lazy"
+                        >
                     <?php endif; ?>
                     <?= htmlspecialchars($title) ?>
                 </h4>
@@ -88,15 +108,24 @@ include 'header.php';
             <?php if($desc !== ''): ?>
                 <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
-            <?php if(!empty($link['etiquetas'])): ?>
-                <div class="favolink-tags"><?= htmlspecialchars($link['etiquetas']) ?></div>
-            <?php endif; ?>
-            <div class="card-actions">
-                <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer" class="button">Visitar</a>
-            </div>
         </div>
     </div>
-<?php endforeach; ?>
+    <?php
+        $catAdsLimit = $maxAdsPerCat[$catId] ?? 0;
+        if ($shownPerCat[$catId] % 6 === 0 && ($adsShownPerCat[$catId] ?? 0) < $catAdsLimit):
+    ?>
+    <div class="card ad-card" data-cat="<?= htmlspecialchars($catId) ?>">
+        <div class="card-body">
+            <ins data-revive-zoneid="55" data-revive-id="cabd7431fd9e40f440e6d6f0c0dc8623"></ins>
+            <script async src="//4bes.es/adserver/www/delivery/asyncjs.php"></script>
+            <div class="ad-label">...</div>
+        </div>
+    </div>
+    <?php
+            $adsShownPerCat[$catId] = ($adsShownPerCat[$catId] ?? 0) + 1;
+        endif;
+    endforeach;
+?>
 </div>
 
 </div>
