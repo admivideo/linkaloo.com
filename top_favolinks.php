@@ -102,7 +102,7 @@ foreach ($links as $link):
                             loading="lazy"
                         >
                     <?php endif; ?>
-                    <span><?= htmlspecialchars($title) ?></span>
+                    <?= htmlspecialchars($title) ?>
                 </h4>
             </div>
             <?php if($desc !== ''): ?>
