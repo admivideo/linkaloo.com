@@ -39,7 +39,7 @@ foreach ($links as $l) {
 }
 $maxAdsPerCat = [];
 foreach ($catCounts as $cat => $cnt) {
-    $maxAdsPerCat[$cat] = intdiv($cnt, 8);
+    $maxAdsPerCat[$cat] = intdiv($cnt, 6);
 }
 
 include 'header.php';
@@ -112,7 +112,7 @@ foreach ($links as $link):
     </div>
     <?php
         $catAdsLimit = $maxAdsPerCat[$catId] ?? 0;
-        if ($shownPerCat[$catId] % 8 === 0 && ($adsShownPerCat[$catId] ?? 0) < $catAdsLimit):
+        if ($shownPerCat[$catId] % 6 === 0 && ($adsShownPerCat[$catId] ?? 0) < $catAdsLimit):
     ?>
     <div class="card ad-card" data-cat="<?= htmlspecialchars($catId) ?>">
         <div class="card-body">
