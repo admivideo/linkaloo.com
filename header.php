@@ -41,7 +41,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                 <li><a href="/cpanel.php"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Usuario'); ?></a></li>
             <?php else: ?>
                 <li><a href="/login.php">Login</a></li>
-                <li><a href="/register.php">Registro</a></li>
+                <!-- <li><a href="/register.php">Registro</a></li> -->
                 <li><a href="/top_favolinks.php">Top Favolinks</a></li>
             <?php endif; ?>
             <li class="settings-menu">
