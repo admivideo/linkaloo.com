@@ -44,6 +44,7 @@ foreach ($catCounts as $cat => $cnt) {
 
 include 'header.php';
 ?>
+<h2>Top Favolinks, los links más compartidos</h2>
 <div class="board-nav">
     <button type="button" class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
@@ -58,7 +59,7 @@ include 'header.php';
     <button type="button" class="search-toggle" aria-label="Buscar"><i data-feather="search"></i></button>
 </div>
 
-<input type="text" class="search-input" placeholder="Buscar links...">
+<!-- <input type="text" class="search-input" placeholder="Buscar links..."> -->
 
 <div class="link-cards">
 <?php
