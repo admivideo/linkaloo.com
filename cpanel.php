@@ -33,11 +33,11 @@ include 'header.php';
         <form method="post" class="login-form">
             <input type="text" name="nombre" value="<?= htmlspecialchars($user['nombre'] ?? '') ?>" placeholder="Nombre">
             <input type="email" value="<?= htmlspecialchars($user['email'] ?? '') ?>" placeholder="Email" disabled>
-            <button type="submit">Guardar</button>
+            <!--<button type="submit">Guardar</button>-->
         </form>
         <div class="login-links">
-            <a href="cambiar_password.php">Cambiar contraseña</a>
-            <a href="eliminar_cuenta.php">Eliminar cuenta</a>
+            <!--<a href="cambiar_password.php">Cambiar contraseña</a> -->
+            <!--<a href="eliminar_cuenta.php">Eliminar cuenta</a>-->
             <a href="logout.php">Salir</a>
         </div>
     </div>
