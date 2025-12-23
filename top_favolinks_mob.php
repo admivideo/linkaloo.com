@@ -42,7 +42,7 @@ foreach ($catCounts as $cat => $cnt) {
     $maxAdsPerCat[$cat] = intdiv($cnt, 6);
 }
 
-/* include 'header.php'; */
+include 'header_top_favolinks.php';
 ?>
 <h2>Top Favolinks</h2>
 
