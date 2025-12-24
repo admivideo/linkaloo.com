@@ -16,7 +16,8 @@ if (isset($_SESSION['user_id'])) {
 }
 
 // Categorías disponibles en el listado de Top Favolinks
-$stmtTopCats = $pdo->query('SELECT DISTINCT categoria FROM TopFavolinks ORDER BY categoria ASC');
+$stmtTopCats = $pdo->prepare('SELECT DISTINCT c.nombre FROM links l INNER JOIN categorias c ON l.categoria_id = c.id WHERE l.usuario_id = ? ORDER BY c.nombre ASC');
+$stmtTopCats->execute([294]);
 $topCategories = $stmtTopCats->fetchAll(PDO::FETCH_COLUMN);
 
 if ($selectedCat !== '' && !in_array($selectedCat, $topCategories, true)) {
@@ -24,10 +25,11 @@ if ($selectedCat !== '' && !in_array($selectedCat, $topCategories, true)) {
 }
 
 if ($selectedCat !== '') {
-    $stmtLinks = $pdo->prepare('SELECT id, categoria, url, titulo, descripcion, imagen, favicon, dominio, etiquetas FROM TopFavolinks WHERE categoria = ? ORDER BY creado_en DESC');
-    $stmtLinks->execute([$selectedCat]);
+    $stmtLinks = $pdo->prepare('SELECT l.id, c.nombre AS categoria, l.url, l.titulo, l.descripcion, l.imagen, l.favicon, l.dominio, l.etiquetas FROM links l INNER JOIN categorias c ON l.categoria_id = c.id WHERE l.usuario_id = ? AND c.nombre = ? ORDER BY l.creado_en DESC');
+    $stmtLinks->execute([294, $selectedCat]);
 } else {
-    $stmtLinks = $pdo->query('SELECT id, categoria, url, titulo, descripcion, imagen, favicon, dominio, etiquetas FROM TopFavolinks ORDER BY creado_en DESC');
+    $stmtLinks = $pdo->prepare('SELECT l.id, c.nombre AS categoria, l.url, l.titulo, l.descripcion, l.imagen, l.favicon, l.dominio, l.etiquetas FROM links l INNER JOIN categorias c ON l.categoria_id = c.id WHERE l.usuario_id = ? ORDER BY l.creado_en DESC');
+    $stmtLinks->execute([294]);
 }
 
 $links = $stmtLinks->fetchAll();
