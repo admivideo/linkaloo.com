@@ -26,6 +26,7 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 | [arquitectura.md](arquitectura.md) | Visión por capas del sistema, flujos de datos e integraciones clave. |
 | [estructura.md](estructura.md) | Resumen de directorios, archivos clave y esquema de la base de datos. |
 | [instalacion.md](instalacion.md) | Pasos detallados para preparar un entorno local de desarrollo o pruebas. |
+| [desarrollo.md](desarrollo.md) | Guía práctica para contribuir, ejecutar y desplegar en local. |
 | [uso.md](uso.md) | Guía paso a paso para operar la aplicación desde la interfaz web. |
 | [documentacion_general.md](documentacion_general.md) | Visión transversal y resumida de la aplicación y sus dependencias. |
 | [resumen_ejecutivo.md](resumen_ejecutivo.md) | Resumen rápido para stakeholders: propósito, flujo principal y tareas de operación. |
