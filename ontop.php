@@ -4,6 +4,8 @@ require 'favicon_utils.php';
 require_once 'session.php';
 require_once 'device.php';
 
+$wrapLayout = !defined('TOPFAVOLINKS_EMBED');
+
 $descLimit = isMobile() ? 50 : 150;
 $selectedCat = isset($_GET['cat']) ? trim($_GET['cat']) : '';
 
@@ -44,7 +46,9 @@ foreach ($catCounts as $cat => $cnt) {
     $maxAdsPerCat[$cat] = intdiv($cnt, 6);
 }
 
-include 'header_top_favolinks.php';
+if ($wrapLayout) {
+    include 'header_top_favolinks.php';
+}
 ?>
 <h2 style="margin: 5px 0; text-align: center;">Top Favolinks, los links más compartidos</h2>
 <div class="board-nav">
@@ -131,6 +135,8 @@ foreach ($links as $link):
 ?>
 </div>
 
+<?php if ($wrapLayout): ?>
 </div>
 </body>
 </html>
+<?php endif; ?>
