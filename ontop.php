@@ -50,7 +50,10 @@ if ($wrapLayout) {
     include 'header_top_favolinks.php';
 }
 ?>
-<h2 style="margin: 5px 0; text-align: center;">Top Favolinks, los links más compartidos</h2>
+<h2 style="margin: 5px 0; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; color: #1DA1F2;">
+    <img src="https://linkaloo.com/img/I_TopFavolinks.png" alt="Top Favolinks" width="24" height="24" loading="lazy">
+    <span>Top Favolinks</span>
+</h2>
 <div class="board-nav">
     <button type="button" class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
