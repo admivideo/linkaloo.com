@@ -1,4 +1,11 @@
 <?php
+if (!defined('TOPFAVOLINKS_EMBED')) {
+    $query = $_SERVER['QUERY_STRING'] ?? '';
+    $target = '/top_favolinks.php' . ($query !== '' ? '?' . $query : '');
+    header('Location: ' . $target, true, 302);
+    exit;
+}
+
 require 'config.php';
 require 'favicon_utils.php';
 require_once 'session.php';
