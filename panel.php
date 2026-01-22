@@ -59,7 +59,7 @@ include 'header.php';
 <div class="board-nav">
     <button type="button" class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
-        <a href="https://linkaloo.com/top_favolinks.php" class="board-btn icon-btn" data-cat="top-favolinks" aria-label="Top Favolinks" title="Top Favolinks">
+        <a href="https://linkaloo.com/top_favolinks.php" class="board-btn icon-btn" data-cat="top-favolinks" aria-label="Top Favolinks">
             <img src="https://linkaloo.com/img/I_TopFavolinks.png" alt="Top Favolinks" width="18" height="18" loading="lazy">
             <span>Top Favolinks</span>
         </a>
