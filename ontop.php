@@ -125,6 +125,9 @@ foreach ($links as $link):
             <?php if($desc !== ''): ?>
                 <p><?= htmlspecialchars($desc) ?></p>
             <?php endif; ?>
+            <div class="card-actions">
+                <span class="category-badge"><?= htmlspecialchars($link['categoria']) ?></span>
+            </div>
         </div>
     </div>
     <?php
