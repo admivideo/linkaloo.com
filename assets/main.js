@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (buttons.length) {
     const initial = params.get('cat');
-    let activeBtn = buttons[0];
+    let activeBtn = Array.from(buttons).find(b => b.dataset.cat === 'all') || buttons[0];
     if (initial) {
       const found = Array.from(buttons).find(b => b.dataset.cat === initial);
       if (found) activeBtn = found;

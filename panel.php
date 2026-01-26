@@ -59,6 +59,10 @@ include 'header.php';
 <div class="board-nav">
     <button type="button" class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
+        <a href="https://linkaloo.com/top_favolinks.php" class="board-btn icon-btn" data-cat="top-favolinks" aria-label="Top Favolinks" title="Top Favolinks">
+            <img src="https://linkaloo.com/img/I_TopFavolinks_white.png" alt="Top Favolinks" width="18" height="18" loading="lazy">
+            <!-- <span>Top Favolinks</span> -->
+        </a>
         <a href="panel.php" class="board-btn<?= $selectedCat === 0 ? ' active' : '' ?>" data-cat="all">Todo</a>
     <?php foreach($categorias as $categoria): ?>
         <a href="panel.php?cat=<?= $categoria['id'] ?>" class="board-btn<?= $categoria['id'] == $selectedCat ? ' active' : '' ?>" data-cat="<?= $categoria['id'] ?>">

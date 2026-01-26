@@ -95,6 +95,7 @@ Los estilos y patrones de arquitectura principales se describen en el
 - [docs/uso.md](docs/uso.md) – guía práctica para personas usuarias finales.
 - [docs/documentacion_general.md](docs/documentacion_general.md) – resumen ejecutivo del funcionamiento y
   dependencias clave.
+- [docs/desarrollo.md](docs/desarrollo.md) – guía de trabajo para desarrollo, checks y despliegue local.
 - [docs/estructura.md](docs/estructura.md) – descripción detallada del repositorio y la base de datos.
 - [docs/endpoints.md](docs/endpoints.md) – referencia de endpoints JSON y vistas públicas.
 - [docs/manual_tecnico.md](docs/manual_tecnico.md) – visión completa de arquitectura, flujos y buenas prácticas.
@@ -103,4 +104,3 @@ Los estilos y patrones de arquitectura principales se describen en el
 - [docs/progreso.md](docs/progreso.md) – resumen del estado actual, logros y próximos pasos.
 - [docs/resumen_ejecutivo.md](docs/resumen_ejecutivo.md) – visión rápida para entender el producto, su
   público objetivo y cómo operarlo.
-
