@@ -58,65 +58,35 @@ requireStatsAuth();
 $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'fecha_creacion', 'registrado_en']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
 
-$userDateSelect = $userCreatedColumn ? "`{$userCreatedColumn}`" : 'NULL';
-$linkDateSelect = $linkCreatedColumn ? "`{$linkCreatedColumn}`" : null;
+$userDateSelect = $userCreatedColumn ? "u.`{$userCreatedColumn}`" : 'NULL';
+$userDateGroup = $userCreatedColumn ? ", {$userDateSelect}" : '';
 
-$usersSql = "SELECT id, {$userDateSelect} AS fecha_creacion FROM usuarios ORDER BY id ASC";
-$usersStmt = $pdo->query($usersSql);
-$users = $usersStmt->fetchAll();
-
-$categoryCounts = [];
-$categoryStmt = $pdo->query('SELECT usuario_id, COUNT(*) AS total FROM categorias GROUP BY usuario_id');
-foreach ($categoryStmt->fetchAll() as $row) {
-    $categoryCounts[(int) $row['usuario_id']] = (int) $row['total'];
-}
-
-$linkStats = [];
-if ($linkDateSelect) {
-    $linksSql = "
-        SELECT
-            usuario_id,
-            COUNT(*) AS total,
-            MIN({$linkDateSelect}) AS fecha_primer_favolink,
-            MAX({$linkDateSelect}) AS fecha_ultimo_favolink
-        FROM links
-        GROUP BY usuario_id
-    ";
+if ($linkCreatedColumn) {
+    $linkDateExpr = "l.`{$linkCreatedColumn}`";
+    $firstFavolinkSelect = "MIN({$linkDateExpr})";
+    $lastFavolinkSelect = "MAX({$linkDateExpr})";
 } else {
-    $linksSql = '
-        SELECT
-            usuario_id,
-            COUNT(*) AS total,
-            NULL AS fecha_primer_favolink,
-            NULL AS fecha_ultimo_favolink
-        FROM links
-        GROUP BY usuario_id
-    ';
+    $firstFavolinkSelect = 'NULL';
+    $lastFavolinkSelect = 'NULL';
 }
 
-$linkStmt = $pdo->query($linksSql);
-foreach ($linkStmt->fetchAll() as $row) {
-    $linkStats[(int) $row['usuario_id']] = [
-        'total' => (int) $row['total'],
-        'fecha_primer_favolink' => $row['fecha_primer_favolink'] ?? null,
-        'fecha_ultimo_favolink' => $row['fecha_ultimo_favolink'] ?? null,
-    ];
-}
+$sql = "
+    SELECT
+        u.id,
+        {$userDateSelect} AS fecha_creacion,
+        COUNT(DISTINCT c.id) AS cantidad_categorias,
+        COUNT(l.id) AS cantidad_favolinks_guardados,
+        {$firstFavolinkSelect} AS fecha_primer_favolink,
+        {$lastFavolinkSelect} AS fecha_ultimo_favolink
+    FROM usuarios u
+    LEFT JOIN categorias c ON c.usuario_id = u.id
+    LEFT JOIN links l ON l.usuario_id = u.id
+    GROUP BY u.id{$userDateGroup}
+    ORDER BY u.id ASC
+";
 
-$statsRows = [];
-foreach ($users as $user) {
-    $userId = (int) $user['id'];
-    $userLinks = $linkStats[$userId] ?? ['total' => 0, 'fecha_primer_favolink' => null, 'fecha_ultimo_favolink' => null];
-
-    $statsRows[] = [
-        'id' => $userId,
-        'fecha_creacion' => $user['fecha_creacion'] ?? null,
-        'cantidad_categorias' => $categoryCounts[$userId] ?? 0,
-        'cantidad_favolinks_guardados' => $userLinks['total'],
-        'fecha_primer_favolink' => $userLinks['fecha_primer_favolink'],
-        'fecha_ultimo_favolink' => $userLinks['fecha_ultimo_favolink'],
-    ];
-}
+$stmt = $pdo->query($sql);
+$statsRows = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -177,32 +147,6 @@ foreach ($users as $user) {
 
         tbody tr:hover {
             background: rgba(255, 255, 255, 0.06);
-        }
-
-        th button.sort-btn {
-            all: unset;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-weight: 700;
-            width: 100%;
-        }
-
-        th button.sort-btn::after {
-            content: '↕';
-            font-size: 0.75rem;
-            opacity: 0.7;
-        }
-
-        th button.sort-btn[data-order="asc"]::after {
-            content: '↑';
-            opacity: 1;
-        }
-
-        th button.sort-btn[data-order="desc"]::after {
-            content: '↓';
-            opacity: 1;
         }
 
         .empty {
@@ -267,23 +211,23 @@ foreach ($users as $user) {
             <table>
                 <thead>
                     <tr>
-                        <th><button type="button" class="sort-btn" data-key="id">ID</button></th>
-                        <th><button type="button" class="sort-btn" data-key="fecha_creacion">Fecha de creación</button></th>
-                        <th><button type="button" class="sort-btn" data-key="cantidad_categorias">Cantidad de categorías</button></th>
-                        <th><button type="button" class="sort-btn" data-key="cantidad_favolinks_guardados">Cantidad de favolinks guardados</button></th>
-                        <th><button type="button" class="sort-btn" data-key="fecha_primer_favolink">Fecha del primer favolink</button></th>
-                        <th><button type="button" class="sort-btn" data-key="fecha_ultimo_favolink">Fecha del último favolink</button></th>
+                        <th>ID</th>
+                        <th>Fecha de creación</th>
+                        <th>Cantidad de categorías</th>
+                        <th>Cantidad de favolinks guardados</th>
+                        <th>Fecha del primer favolink</th>
+                        <th>Fecha del último favolink</th>
                     </tr>
                 </thead>
-                <tbody id="stats-body">
+                <tbody>
                 <?php foreach ($statsRows as $row): ?>
                     <tr>
-                        <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
-                        <td data-label="Fecha de creación" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
-                        <td data-label="Cantidad de categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
-                        <td data-label="Cantidad de favolinks guardados" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
-                        <td data-label="Fecha del primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
-                        <td data-label="Fecha del último favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
+                        <td data-label="ID"><?= (int) $row['id'] ?></td>
+                        <td data-label="Fecha de creación"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
+                        <td data-label="Cantidad de categorías"><?= (int) $row['cantidad_categorias'] ?></td>
+                        <td data-label="Cantidad de favolinks guardados"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
+                        <td data-label="Fecha del primer favolink"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
+                        <td data-label="Fecha del último favolink"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -291,75 +235,5 @@ foreach ($users as $user) {
         <?php endif; ?>
     </div>
 </div>
-<script>
-(function () {
-    const tbody = document.getElementById('stats-body');
-    const buttons = document.querySelectorAll('.sort-btn');
-    if (!tbody || !buttons.length) {
-        return;
-    }
-
-    const keyIndex = {
-        id: 0,
-        fecha_creacion: 1,
-        cantidad_categorias: 2,
-        cantidad_favolinks_guardados: 3,
-        fecha_primer_favolink: 4,
-        fecha_ultimo_favolink: 5
-    };
-
-    function valueFor(cellText, cellSort) {
-        const value = cellSort !== '' ? cellSort : cellText.trim();
-        if (value === '' || value === '-') {
-            return null;
-        }
-        if (/^\d+$/.test(value)) {
-            return Number(value);
-        }
-        return value;
-    }
-
-    buttons.forEach((button) => {
-        button.addEventListener('click', () => {
-            const key = button.dataset.key;
-            const col = keyIndex[key];
-            if (typeof col === 'undefined') {
-                return;
-            }
-
-            const nextOrder = button.dataset.order === 'asc' ? 'desc' : 'asc';
-            buttons.forEach((b) => {
-                if (b !== button) {
-                    b.removeAttribute('data-order');
-                }
-            });
-            button.dataset.order = nextOrder;
-
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            rows.sort((a, b) => {
-                const aCell = a.children[col];
-                const bCell = b.children[col];
-                const aVal = valueFor(aCell?.textContent ?? '', aCell?.dataset.sort ?? '');
-                const bVal = valueFor(bCell?.textContent ?? '', bCell?.dataset.sort ?? '');
-
-                if (aVal === null && bVal === null) return 0;
-                if (aVal === null) return 1;
-                if (bVal === null) return -1;
-
-                let cmp = 0;
-                if (typeof aVal === 'number' && typeof bVal === 'number') {
-                    cmp = aVal - bVal;
-                } else {
-                    cmp = String(aVal).localeCompare(String(bVal), 'es');
-                }
-
-                return nextOrder === 'asc' ? cmp : -cmp;
-            });
-
-            rows.forEach((row) => tbody.appendChild(row));
-        });
-    });
-})();
-</script>
 </body>
 </html>
