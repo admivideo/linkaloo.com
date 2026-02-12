@@ -59,33 +59,29 @@ $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'f
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
 
 $userDateSelect = $userCreatedColumn ? "u.`{$userCreatedColumn}`" : 'NULL';
-$linkDateExpr = $linkCreatedColumn ? "`{$linkCreatedColumn}`" : null;
-$firstFavolinkSelect = $linkDateExpr ? "MIN({$linkDateExpr})" : 'NULL';
-$lastFavolinkSelect = $linkDateExpr ? "MAX({$linkDateExpr})" : 'NULL';
+$userDateGroup = $userCreatedColumn ? ", {$userDateSelect}" : '';
+
+if ($linkCreatedColumn) {
+    $linkDateExpr = "l.`{$linkCreatedColumn}`";
+    $firstFavolinkSelect = "MIN({$linkDateExpr})";
+    $lastFavolinkSelect = "MAX({$linkDateExpr})";
+} else {
+    $firstFavolinkSelect = 'NULL';
+    $lastFavolinkSelect = 'NULL';
+}
 
 $sql = "
     SELECT
         u.id,
         {$userDateSelect} AS fecha_creacion,
-        COALESCE(cs.cantidad_categorias, 0) AS cantidad_categorias,
-        COALESCE(ls.cantidad_favolinks_guardados, 0) AS cantidad_favolinks_guardados,
-        ls.fecha_primer_favolink,
-        ls.fecha_ultimo_favolink
+        COUNT(DISTINCT c.id) AS cantidad_categorias,
+        COUNT(l.id) AS cantidad_favolinks_guardados,
+        {$firstFavolinkSelect} AS fecha_primer_favolink,
+        {$lastFavolinkSelect} AS fecha_ultimo_favolink
     FROM usuarios u
-    LEFT JOIN (
-        SELECT usuario_id, COUNT(*) AS cantidad_categorias
-        FROM categorias
-        GROUP BY usuario_id
-    ) cs ON cs.usuario_id = u.id
-    LEFT JOIN (
-        SELECT
-            usuario_id,
-            COUNT(*) AS cantidad_favolinks_guardados,
-            {$firstFavolinkSelect} AS fecha_primer_favolink,
-            {$lastFavolinkSelect} AS fecha_ultimo_favolink
-        FROM links
-        GROUP BY usuario_id
-    ) ls ON ls.usuario_id = u.id
+    LEFT JOIN categorias c ON c.usuario_id = u.id
+    LEFT JOIN links l ON l.usuario_id = u.id
+    GROUP BY u.id{$userDateGroup}
     ORDER BY u.id ASC
 ";
 
