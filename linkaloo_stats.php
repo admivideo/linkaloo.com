@@ -47,7 +47,7 @@ function formatDate(?string $value): string
 
     try {
         $date = new DateTimeImmutable($value);
-        return $date->format('Y-m-d');
+        return $date->format('Y-m-d H:i:s');
     } catch (Exception $e) {
         return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
@@ -58,145 +58,35 @@ requireStatsAuth();
 $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'fecha_creacion', 'registrado_en']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
 
-$userDateSelect = $userCreatedColumn ? "`{$userCreatedColumn}`" : 'NULL';
-$linkDateSelect = $linkCreatedColumn ? "`{$linkCreatedColumn}`" : null;
+$userDateSelect = $userCreatedColumn ? "u.`{$userCreatedColumn}`" : 'NULL';
+$userDateGroup = $userCreatedColumn ? ", {$userDateSelect}" : '';
 
-$usersSql = "SELECT id, {$userDateSelect} AS fecha_creacion FROM usuarios ORDER BY id ASC";
-$usersStmt = $pdo->query($usersSql);
-$users = $usersStmt->fetchAll();
-
-$categoryCounts = [];
-$categoryStmt = $pdo->query('SELECT usuario_id, COUNT(*) AS total FROM categorias GROUP BY usuario_id');
-foreach ($categoryStmt->fetchAll() as $row) {
-    $categoryCounts[(int) $row['usuario_id']] = (int) $row['total'];
-}
-
-$linkStats = [];
-if ($linkDateSelect) {
-    $linksSql = "
-        SELECT
-            usuario_id,
-            COUNT(*) AS total,
-            MIN({$linkDateSelect}) AS fecha_primer_favolink,
-            MAX({$linkDateSelect}) AS fecha_ultimo_favolink
-        FROM links
-        GROUP BY usuario_id
-    ";
+if ($linkCreatedColumn) {
+    $linkDateExpr = "l.`{$linkCreatedColumn}`";
+    $firstFavolinkSelect = "MIN({$linkDateExpr})";
+    $lastFavolinkSelect = "MAX({$linkDateExpr})";
 } else {
-    $linksSql = '
-        SELECT
-            usuario_id,
-            COUNT(*) AS total,
-            NULL AS fecha_primer_favolink,
-            NULL AS fecha_ultimo_favolink
-        FROM links
-        GROUP BY usuario_id
-    ';
+    $firstFavolinkSelect = 'NULL';
+    $lastFavolinkSelect = 'NULL';
 }
 
-$linkStmt = $pdo->query($linksSql);
-foreach ($linkStmt->fetchAll() as $row) {
-    $linkStats[(int) $row['usuario_id']] = [
-        'total' => (int) $row['total'],
-        'fecha_primer_favolink' => $row['fecha_primer_favolink'] ?? null,
-        'fecha_ultimo_favolink' => $row['fecha_ultimo_favolink'] ?? null,
-    ];
-}
+$sql = "
+    SELECT
+        u.id,
+        {$userDateSelect} AS fecha_creacion,
+        COUNT(DISTINCT c.id) AS cantidad_categorias,
+        COUNT(l.id) AS cantidad_favolinks_guardados,
+        {$firstFavolinkSelect} AS fecha_primer_favolink,
+        {$lastFavolinkSelect} AS fecha_ultimo_favolink
+    FROM usuarios u
+    LEFT JOIN categorias c ON c.usuario_id = u.id
+    LEFT JOIN links l ON l.usuario_id = u.id
+    GROUP BY u.id{$userDateGroup}
+    ORDER BY u.id ASC
+";
 
-$statsRows = [];
-foreach ($users as $user) {
-    $userId = (int) $user['id'];
-    $userLinks = $linkStats[$userId] ?? ['total' => 0, 'fecha_primer_favolink' => null, 'fecha_ultimo_favolink' => null];
-
-    $statsRows[] = [
-        'id' => $userId,
-        'fecha_creacion' => $user['fecha_creacion'] ?? null,
-        'cantidad_categorias' => $categoryCounts[$userId] ?? 0,
-        'cantidad_favolinks_guardados' => $userLinks['total'],
-        'fecha_primer_favolink' => $userLinks['fecha_primer_favolink'],
-        'fecha_ultimo_favolink' => $userLinks['fecha_ultimo_favolink'],
-    ];
-}
-
-
-$totalUsuarios = count($statsRows);
-$totalLinks = 0;
-$resumen = [
-    'usuarios_sin_links' => ['usuarios' => 0, 'links' => 0],
-    'usuarios_1_3' => ['usuarios' => 0, 'links' => 0],
-    'usuarios_4_10' => ['usuarios' => 0, 'links' => 0],
-    'usuarios_11_25' => ['usuarios' => 0, 'links' => 0],
-    'usuarios_26_50' => ['usuarios' => 0, 'links' => 0],
-    'usuarios_51_100' => ['usuarios' => 0, 'links' => 0],
-    'usuarios_mas_100' => ['usuarios' => 0, 'links' => 0],
-];
-
-foreach ($statsRows as $row) {
-    $linksGuardados = (int) ($row['cantidad_favolinks_guardados'] ?? 0);
-    $totalLinks += $linksGuardados;
-
-    if ($linksGuardados === 0) {
-        $resumen['usuarios_sin_links']['usuarios']++;
-        continue;
-    }
-
-    if ($linksGuardados <= 3) {
-        $resumen['usuarios_1_3']['usuarios']++;
-        $resumen['usuarios_1_3']['links'] += $linksGuardados;
-    } elseif ($linksGuardados <= 10) {
-        $resumen['usuarios_4_10']['usuarios']++;
-        $resumen['usuarios_4_10']['links'] += $linksGuardados;
-    } elseif ($linksGuardados <= 25) {
-        $resumen['usuarios_11_25']['usuarios']++;
-        $resumen['usuarios_11_25']['links'] += $linksGuardados;
-    } elseif ($linksGuardados <= 50) {
-        $resumen['usuarios_26_50']['usuarios']++;
-        $resumen['usuarios_26_50']['links'] += $linksGuardados;
-    } elseif ($linksGuardados <= 100) {
-        $resumen['usuarios_51_100']['usuarios']++;
-        $resumen['usuarios_51_100']['links'] += $linksGuardados;
-    } else {
-        $resumen['usuarios_mas_100']['usuarios']++;
-        $resumen['usuarios_mas_100']['links'] += $linksGuardados;
-    }
-}
-
-$segmentoPorcentajeLinks = [];
-foreach ($resumen as $segmento => $data) {
-    $segmentoPorcentajeLinks[$segmento] = $totalLinks > 0
-        ? round(($data['links'] / $totalLinks) * 100, 2)
-        : 0.0;
-}
-
-$segmentosInfo = [
-    ['key' => 'usuarios_sin_links', 'label' => '0 links', 'color' => '#6b7280'],
-    ['key' => 'usuarios_1_3', 'label' => '1-3', 'color' => '#22c55e'],
-    ['key' => 'usuarios_4_10', 'label' => '4-10', 'color' => '#3b82f6'],
-    ['key' => 'usuarios_11_25', 'label' => '11-25', 'color' => '#a855f7'],
-    ['key' => 'usuarios_26_50', 'label' => '26-50', 'color' => '#f59e0b'],
-    ['key' => 'usuarios_51_100', 'label' => '51-100', 'color' => '#ef4444'],
-    ['key' => 'usuarios_mas_100', 'label' => '+100', 'color' => '#14b8a6'],
-];
-
-$chartParts = [];
-$legendRows = [];
-$acumulado = 0.0;
-foreach ($segmentosInfo as $segmento) {
-    $key = $segmento['key'];
-    $pct = $segmentoPorcentajeLinks[$key] ?? 0.0;
-    if ($pct > 0) {
-        $inicio = $acumulado;
-        $acumulado += $pct;
-        $chartParts[] = sprintf('%s %.2f%% %.2f%%', $segmento['color'], $inicio, $acumulado);
-    }
-
-    $legendRows[] = [
-        'label' => $segmento['label'],
-        'color' => $segmento['color'],
-        'pct' => $pct,
-    ];
-}
-$pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . ')' : 'conic-gradient(#6b7280 0% 100%)';
+$stmt = $pdo->query($sql);
+$statsRows = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -230,42 +120,6 @@ $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . 
             font-size: clamp(1.2rem, 2.5vw, 1.8rem);
         }
 
-
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 0.8rem;
-            margin: 0 0 1rem;
-        }
-
-        .summary-card {
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 0.75rem;
-        }
-
-        .summary-title {
-            margin: 0;
-            font-size: 0.83rem;
-            color: #c8d1ff;
-        }
-
-        .summary-value {
-            margin: 0.25rem 0 0;
-            font-size: 1.35rem;
-            font-weight: 700;
-        }
-
-
-        .summary-meta {
-            margin: 0.3rem 0 0;
-            font-size: 0.85rem;
-            color: #d9e0ff;
-            line-height: 1.35;
-        }
-
         .table-container {
             overflow-x: auto;
             border: 1px solid rgba(255, 255, 255, 0.16);
@@ -295,107 +149,8 @@ $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . 
             background: rgba(255, 255, 255, 0.06);
         }
 
-        th button.sort-btn {
-            all: unset;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-weight: 700;
-            width: 100%;
-        }
-
-        th button.sort-btn::after {
-            content: '↕';
-            font-size: 0.75rem;
-            opacity: 0.7;
-        }
-
-        th button.sort-btn[data-order="asc"]::after {
-            content: '↑';
-            opacity: 1;
-        }
-
-        th button.sort-btn[data-order="desc"]::after {
-            content: '↓';
-            opacity: 1;
-        }
-
         .empty {
             padding: 1rem;
-        }
-
-
-        .layout-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 320px;
-            gap: 1rem;
-            align-items: start;
-        }
-
-        .list-column .table-container {
-            max-width: 100%;
-        }
-
-        .sidebar {
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1rem;
-            position: sticky;
-            top: 1rem;
-        }
-
-        .sidebar h2 {
-            margin: 0 0 0.8rem;
-            font-size: 1rem;
-        }
-
-        .pie-chart {
-            width: min(220px, 100%);
-            aspect-ratio: 1 / 1;
-            border-radius: 50%;
-            margin: 0 auto 1rem;
-            background: var(--pie-background);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .legend {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: grid;
-            gap: 0.35rem;
-        }
-
-        .legend li {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.5rem;
-            font-size: 0.87rem;
-        }
-
-        .legend-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--dot-color);
-        }
-
-        @media (max-width: 980px) {
-            .layout-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                position: static;
-            }
         }
 
         @media (max-width: 760px) {
@@ -449,60 +204,6 @@ $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . 
 <div class="wrapper">
     <h1>Estadísticas de usuarios de Linkaloo</h1>
 
-
-    <div class="summary-grid">
-        <article class="summary-card">
-            <p class="summary-title">Total usuarios</p>
-            <p class="summary-value"><?= $totalUsuarios ?></p>
-            <p class="summary-meta">Links del segmento: <?= $totalLinks ?></p>
-            <p class="summary-meta">% del total links: 100%</p>
-        </article>
-        <article class="summary-card">
-            <p class="summary-title">Usuarios con 0 links guardados</p>
-            <p class="summary-value"><?= $resumen['usuarios_sin_links']['usuarios'] ?></p>
-            <p class="summary-meta">Links del segmento: <?= $resumen['usuarios_sin_links']['links'] ?></p>
-            <p class="summary-meta">% del total links: <?= number_format($segmentoPorcentajeLinks['usuarios_sin_links'], 2, ',', '.') ?>%</p>
-        </article>
-        <article class="summary-card">
-            <p class="summary-title">Usuarios con 1-3 favolinks guardados</p>
-            <p class="summary-value"><?= $resumen['usuarios_1_3']['usuarios'] ?></p>
-            <p class="summary-meta">Links del segmento: <?= $resumen['usuarios_1_3']['links'] ?></p>
-            <p class="summary-meta">% del total links: <?= number_format($segmentoPorcentajeLinks['usuarios_1_3'], 2, ',', '.') ?>%</p>
-        </article>
-        <article class="summary-card">
-            <p class="summary-title">Usuarios con 4-10 favolinks guardados</p>
-            <p class="summary-value"><?= $resumen['usuarios_4_10']['usuarios'] ?></p>
-            <p class="summary-meta">Links del segmento: <?= $resumen['usuarios_4_10']['links'] ?></p>
-            <p class="summary-meta">% del total links: <?= number_format($segmentoPorcentajeLinks['usuarios_4_10'], 2, ',', '.') ?>%</p>
-        </article>
-        <article class="summary-card">
-            <p class="summary-title">Usuarios con 11-25 favolinks guardados</p>
-            <p class="summary-value"><?= $resumen['usuarios_11_25']['usuarios'] ?></p>
-            <p class="summary-meta">Links del segmento: <?= $resumen['usuarios_11_25']['links'] ?></p>
-            <p class="summary-meta">% del total links: <?= number_format($segmentoPorcentajeLinks['usuarios_11_25'], 2, ',', '.') ?>%</p>
-        </article>
-        <article class="summary-card">
-            <p class="summary-title">Usuarios con 26-50 favolinks guardados</p>
-            <p class="summary-value"><?= $resumen['usuarios_26_50']['usuarios'] ?></p>
-            <p class="summary-meta">Links del segmento: <?= $resumen['usuarios_26_50']['links'] ?></p>
-            <p class="summary-meta">% del total links: <?= number_format($segmentoPorcentajeLinks['usuarios_26_50'], 2, ',', '.') ?>%</p>
-        </article>
-        <article class="summary-card">
-            <p class="summary-title">Usuarios con 51-100 favolinks guardados</p>
-            <p class="summary-value"><?= $resumen['usuarios_51_100']['usuarios'] ?></p>
-            <p class="summary-meta">Links del segmento: <?= $resumen['usuarios_51_100']['links'] ?></p>
-            <p class="summary-meta">% del total links: <?= number_format($segmentoPorcentajeLinks['usuarios_51_100'], 2, ',', '.') ?>%</p>
-        </article>
-        <article class="summary-card">
-            <p class="summary-title">Usuarios con +100 favolinks guardados</p>
-            <p class="summary-value"><?= $resumen['usuarios_mas_100']['usuarios'] ?></p>
-            <p class="summary-meta">Links del segmento: <?= $resumen['usuarios_mas_100']['links'] ?></p>
-            <p class="summary-meta">% del total links: <?= number_format($segmentoPorcentajeLinks['usuarios_mas_100'], 2, ',', '.') ?>%</p>
-        </article>
-    </div>
-
-    <div class="layout-grid">
-        <div class="list-column">
     <div class="table-container">
         <?php if (!$statsRows): ?>
             <div class="empty">No hay datos para mostrar.</div>
@@ -510,114 +211,29 @@ $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . 
             <table>
                 <thead>
                     <tr>
-                        <th><button type="button" class="sort-btn" data-key="id">ID</button></th>
-                        <th><button type="button" class="sort-btn" data-key="fecha_creacion">Fecha de creación</button></th>
-                        <th><button type="button" class="sort-btn" data-key="cantidad_categorias">Cantidad de categorías</button></th>
-                        <th><button type="button" class="sort-btn" data-key="cantidad_favolinks_guardados">Cantidad de favolinks guardados</button></th>
-                        <th><button type="button" class="sort-btn" data-key="fecha_primer_favolink">Fecha del primer favolink</button></th>
-                        <th><button type="button" class="sort-btn" data-key="fecha_ultimo_favolink">Fecha del último favolink</button></th>
+                        <th>ID</th>
+                        <th>Fecha de creación</th>
+                        <th>Cantidad de categorías</th>
+                        <th>Cantidad de favolinks guardados</th>
+                        <th>Fecha del primer favolink</th>
+                        <th>Fecha del último favolink</th>
                     </tr>
                 </thead>
-                <tbody id="stats-body">
+                <tbody>
                 <?php foreach ($statsRows as $row): ?>
                     <tr>
-                        <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
-                        <td data-label="Fecha de creación" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
-                        <td data-label="Cantidad de categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
-                        <td data-label="Cantidad de favolinks guardados" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
-                        <td data-label="Fecha del primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
-                        <td data-label="Fecha del último favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
+                        <td data-label="ID"><?= (int) $row['id'] ?></td>
+                        <td data-label="Fecha de creación"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
+                        <td data-label="Cantidad de categorías"><?= (int) $row['cantidad_categorias'] ?></td>
+                        <td data-label="Cantidad de favolinks guardados"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
+                        <td data-label="Fecha del primer favolink"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
+                        <td data-label="Fecha del último favolink"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
         <?php endif; ?>
     </div>
-        </div>
-
-        <aside class="sidebar">
-            <h2>Distribución de links por segmento</h2>
-            <div class="pie-chart" style="--pie-background: <?= htmlspecialchars($pieBackground, ENT_QUOTES, 'UTF-8') ?>;"></div>
-            <ul class="legend">
-                <?php foreach ($legendRows as $legend): ?>
-                    <li>
-                        <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($legend['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($legend['label'], ENT_QUOTES, 'UTF-8') ?></span>
-                        <strong><?= number_format((float) $legend['pct'], 2, ',', '.') ?>%</strong>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        </aside>
-    </div>
 </div>
-<script>
-(function () {
-    const tbody = document.getElementById('stats-body');
-    const buttons = document.querySelectorAll('.sort-btn');
-    if (!tbody || !buttons.length) {
-        return;
-    }
-
-    const keyIndex = {
-        id: 0,
-        fecha_creacion: 1,
-        cantidad_categorias: 2,
-        cantidad_favolinks_guardados: 3,
-        fecha_primer_favolink: 4,
-        fecha_ultimo_favolink: 5
-    };
-
-    function valueFor(cellText, cellSort) {
-        const value = cellSort !== '' ? cellSort : cellText.trim();
-        if (value === '' || value === '-') {
-            return null;
-        }
-        if (/^\d+$/.test(value)) {
-            return Number(value);
-        }
-        return value;
-    }
-
-    buttons.forEach((button) => {
-        button.addEventListener('click', () => {
-            const key = button.dataset.key;
-            const col = keyIndex[key];
-            if (typeof col === 'undefined') {
-                return;
-            }
-
-            const nextOrder = button.dataset.order === 'asc' ? 'desc' : 'asc';
-            buttons.forEach((b) => {
-                if (b !== button) {
-                    b.removeAttribute('data-order');
-                }
-            });
-            button.dataset.order = nextOrder;
-
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            rows.sort((a, b) => {
-                const aCell = a.children[col];
-                const bCell = b.children[col];
-                const aVal = valueFor(aCell?.textContent ?? '', aCell?.dataset.sort ?? '');
-                const bVal = valueFor(bCell?.textContent ?? '', bCell?.dataset.sort ?? '');
-
-                if (aVal === null && bVal === null) return 0;
-                if (aVal === null) return 1;
-                if (bVal === null) return -1;
-
-                let cmp = 0;
-                if (typeof aVal === 'number' && typeof bVal === 'number') {
-                    cmp = aVal - bVal;
-                } else {
-                    cmp = String(aVal).localeCompare(String(bVal), 'es');
-                }
-
-                return nextOrder === 'asc' ? cmp : -cmp;
-            });
-
-            rows.forEach((row) => tbody.appendChild(row));
-        });
-    });
-})();
-</script>
 </body>
 </html>
