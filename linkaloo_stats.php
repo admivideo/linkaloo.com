@@ -65,11 +65,11 @@ function formatDate(?string $value): string
     }
 }
 
-/** @return array{label:string,color:string,sort:int} */
+/** @return array{key:string,color:string,sort:int,days_range:string} */
 function lastSavedLinkStatus(?string $value): array
 {
     if (!$value) {
-        return ['label' => 'Azul (sin links guardados)', 'color' => '#3b82f6', 'sort' => 9999];
+        return ['key' => 'blue', 'color' => '#3b82f6', 'sort' => 9999, 'days_range' => 'Sin links guardados'];
     }
 
     try {
@@ -79,16 +79,16 @@ function lastSavedLinkStatus(?string $value): array
         $daysSinceLastSavedLink = max(0, $daysSinceLastSavedLink);
 
         if ($daysSinceLastSavedLink <= 3) {
-            return ['label' => 'Verde (0-3 días)', 'color' => '#22c55e', 'sort' => $daysSinceLastSavedLink];
+            return ['key' => 'green', 'color' => '#22c55e', 'sort' => $daysSinceLastSavedLink, 'days_range' => '0-3 días'];
         }
 
         if ($daysSinceLastSavedLink <= 7) {
-            return ['label' => 'Naranja (4-7 días)', 'color' => '#f59e0b', 'sort' => $daysSinceLastSavedLink];
+            return ['key' => 'orange', 'color' => '#f59e0b', 'sort' => $daysSinceLastSavedLink, 'days_range' => '4-7 días'];
         }
 
-        return ['label' => 'Rojo (+8 días)', 'color' => '#ef4444', 'sort' => $daysSinceLastSavedLink];
+        return ['key' => 'red', 'color' => '#ef4444', 'sort' => $daysSinceLastSavedLink, 'days_range' => '+8 días'];
     } catch (Exception $e) {
-        return ['label' => 'Azul (sin links guardados)', 'color' => '#3b82f6', 'sort' => 9999];
+        return ['key' => 'blue', 'color' => '#3b82f6', 'sort' => 9999, 'days_range' => 'Sin links guardados'];
     }
 }
 
@@ -157,14 +157,27 @@ $statsSql = "
 $statsRows = $pdo->query($statsSql)->fetchAll();
 
 $totalLinks = 0;
-foreach ($statsRows as $row) {
+$accessStatusSummary = [
+    'green' => ['color' => '#22c55e', 'days_range' => '0-3 días', 'usuarios' => 0],
+    'orange' => ['color' => '#f59e0b', 'days_range' => '4-7 días', 'usuarios' => 0],
+    'red' => ['color' => '#ef4444', 'days_range' => '+8 días', 'usuarios' => 0],
+    'blue' => ['color' => '#3b82f6', 'days_range' => 'Sin links guardados', 'usuarios' => 0],
+];
+foreach ($statsRows as &$row) {
     $linksGuardados = (int) ($row['cantidad_favolinks_guardados'] ?? 0);
     $totalLinks += $linksGuardados;
 
     $segmentKey = segmentKeyForLinks($linksGuardados, $segments);
     $resumen[$segmentKey]['usuarios']++;
     $resumen[$segmentKey]['links'] += $linksGuardados;
+
+    $savedLinkStatus = lastSavedLinkStatus($row['fecha_ultimo_favolink'] ?? null);
+    $row['estado_ultimo_link'] = $savedLinkStatus;
+    if (isset($accessStatusSummary[$savedLinkStatus['key']])) {
+        $accessStatusSummary[$savedLinkStatus['key']]['usuarios']++;
+    }
 }
+unset($row);
 
 $totalUsuarios = count($statsRows);
 
@@ -249,13 +262,18 @@ $tableHeaders = [
 
         .sidebar { padding: 1rem; position: sticky; top: 1rem; }
         .sidebar h2 { margin: 0 0 0.8rem; font-size: 1rem; }
+        .sidebar section + section { margin-top: 1rem; }
         .pie-chart { width: min(220px, 100%); aspect-ratio: 1/1; border-radius: 50%; margin: 0 auto 1rem; background: var(--pie-background); border: 1px solid rgba(255,255,255,0.2); }
         .legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
         .legend li { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.87rem; }
         .legend-label { display: inline-flex; align-items: center; gap: 0.4rem; }
         .legend-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dot-color); }
+        .status-summary-box { border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 0.8rem; background: rgba(15, 18, 36, 0.45); }
+        .status-summary-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.45rem; }
+        .status-summary-list li { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.87rem; }
+        .status-summary-meta { color: #cdd6ff; }
 
-        .access-status { display: inline-flex; align-items: center; gap: 0.45rem; }
+        .access-status { display: inline-flex; align-items: center; justify-content: center; width: 100%; }
         .access-status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--status-color); flex-shrink: 0; }
 
         .empty { padding: 1rem; }
@@ -307,12 +325,12 @@ $tableHeaders = [
                         </thead>
                         <tbody id="stats-body">
                         <?php foreach ($statsRows as $row): ?>
-                            <?php $savedLinkStatus = lastSavedLinkStatus($row['fecha_ultimo_favolink'] ?? null); ?>
+                            <?php $savedLinkStatus = $row['estado_ultimo_link']; ?>
                             <tr>
                                 <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
                                 <td data-label="Registro" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
                                 <td data-label="Último acceso" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_acceso'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_acceso'] ?? null) ?></td>
-                                <td data-label="Estado último link" data-sort="<?= (int) $savedLinkStatus['sort'] ?>"><span class="access-status"><span class="access-status-dot" style="--status-color: <?= htmlspecialchars($savedLinkStatus['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($savedLinkStatus['label'], ENT_QUOTES, 'UTF-8') ?></span></td>
+                                <td data-label="Estado último link" data-sort="<?= (int) $savedLinkStatus['sort'] ?>"><span class="access-status"><span class="access-status-dot" style="--status-color: <?= htmlspecialchars($savedLinkStatus['color'], ENT_QUOTES, 'UTF-8') ?>;" title="<?= htmlspecialchars($savedLinkStatus['days_range'], ENT_QUOTES, 'UTF-8') ?>"></span></span></td>
                                 <td data-label="Categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
                                 <td data-label="Favolinks" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
                                 <td data-label="Primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
@@ -326,16 +344,30 @@ $tableHeaders = [
         </div>
 
         <aside class="sidebar">
-            <h2>Distribución de links por segmento</h2>
-            <div class="pie-chart" style="--pie-background: <?= htmlspecialchars($pieBackground, ENT_QUOTES, 'UTF-8') ?>;"></div>
-            <ul class="legend">
-                <?php foreach ($legendRows as $legend): ?>
-                    <li>
-                        <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($legend['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($legend['label'], ENT_QUOTES, 'UTF-8') ?></span>
-                        <strong><?= number_format((float) $legend['pct'], 2, ',', '.') ?>%</strong>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+            <section>
+                <h2>Distribución de links por segmento</h2>
+                <div class="pie-chart" style="--pie-background: <?= htmlspecialchars($pieBackground, ENT_QUOTES, 'UTF-8') ?>;"></div>
+                <ul class="legend">
+                    <?php foreach ($legendRows as $legend): ?>
+                        <li>
+                            <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($legend['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($legend['label'], ENT_QUOTES, 'UTF-8') ?></span>
+                            <strong><?= number_format((float) $legend['pct'], 2, ',', '.') ?>%</strong>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </section>
+
+            <section class="status-summary-box">
+                <h2>Resumen de colores (último link)</h2>
+                <ul class="status-summary-list">
+                    <?php foreach ($accessStatusSummary as $status): ?>
+                        <li>
+                            <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($status['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><span class="status-summary-meta"><?= htmlspecialchars($status['days_range'], ENT_QUOTES, 'UTF-8') ?></span></span>
+                            <strong><?= (int) $status['usuarios'] ?> usuarios</strong>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </section>
         </aside>
     </div>
 </div>
