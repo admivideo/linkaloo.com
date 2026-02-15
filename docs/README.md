@@ -6,16 +6,17 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 
 ## Cómo navegar por la documentación
 
-1. **¿Vas a preparar un entorno local?** Empieza por la [guía de instalación](instalacion.md) y, una vez
+1. **¿Necesitas una visión general en pocos minutos?** Empieza por la [guía rápida](guia_rapida.md).
+2. **¿Vas a preparar un entorno local?** Continúa con la [guía de instalación](instalacion.md) y, una vez
    configurado todo, repasa la [guía de uso](uso.md) para validar que el flujo funciona.
-2. **¿Necesitas entender la arquitectura o planificas realizar cambios?** Lee el
+3. **¿Necesitas entender la arquitectura o planificas realizar cambios?** Lee el
    [manual técnico](manual_tecnico.md), que detalla la organización del código, el modelo de datos y los
    procesos principales.
-3. **¿Buscas un mapa rápido del repositorio o de la base de datos?** Consulta
+4. **¿Buscas un mapa rápido del repositorio o de la base de datos?** Consulta
    [estructura.md](estructura.md) para conocer cómo se agrupan los archivos y tablas.
-4. **¿Necesitas preparar credenciales o ajustar el servidor?** Consulta
+5. **¿Necesitas preparar credenciales o ajustar el servidor?** Consulta
    [configuracion.md](configuracion.md) para conocer las variables de entorno y consejos de despliegue.
-5. **¿Vas a integrar el front-end con llamadas asíncronas?** Revisa la referencia de
+6. **¿Vas a integrar el front-end con llamadas asíncronas?** Revisa la referencia de
    [endpoints.md](endpoints.md) para conocer parámetros, respuestas y requisitos de autenticación.
 
 ## Tabla de contenidos
@@ -25,6 +26,7 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 | [manual_tecnico.md](manual_tecnico.md) | Panorama completo de arquitectura, flujos de negocio, servicios externos y prácticas recomendadas. |
 | [arquitectura.md](arquitectura.md) | Visión por capas del sistema, flujos de datos e integraciones clave. |
 | [estructura.md](estructura.md) | Resumen de directorios, archivos clave y esquema de la base de datos. |
+| [guia_rapida.md](guia_rapida.md) | Introducción express para arrancar el proyecto, validar flujo mínimo y ubicar archivos clave. |
 | [instalacion.md](instalacion.md) | Pasos detallados para preparar un entorno local de desarrollo o pruebas. |
 | [desarrollo.md](desarrollo.md) | Guía práctica para contribuir, ejecutar y desplegar en local. |
 | [uso.md](uso.md) | Guía paso a paso para operar la aplicación desde la interfaz web. |

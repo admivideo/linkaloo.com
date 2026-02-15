@@ -9,6 +9,7 @@ HTML, CSS y JavaScript sin frameworks.
 - [Características principales](#características-principales)
 - [Requisitos previos](#requisitos-previos)
 - [Instalación rápida](#instalación-rápida)
+- [Guía rápida](#guía-rápida)
 - [Configuración](#configuración)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Flujo básico de uso](#flujo-básico-de-uso)
@@ -43,6 +44,15 @@ HTML, CSS y JavaScript sin frameworks.
    [Configuración](#configuración)).
 4. Instala las dependencias opcionales de desarrollo: `npm install`.
 5. Inicia un servidor PHP en la raíz del proyecto: `php -S localhost:8000`.
+
+## Guía rápida
+
+Si quieres una versión corta para arrancar y ubicarte en el código, revisa
+[docs/guia_rapida.md](docs/guia_rapida.md). Incluye:
+
+- arranque local en 5 minutos,
+- flujo funcional mínimo para validar que todo funciona,
+- mapa de archivos esenciales para empezar a desarrollar.
 
 ## Configuración
 
@@ -91,6 +101,7 @@ Los estilos y patrones de arquitectura principales se describen en el
 ## Documentación ampliada
 
 - [docs/README.md](docs/README.md) – índice general de la documentación.
+- [docs/guia_rapida.md](docs/guia_rapida.md) – puesta en marcha express y mapa de archivos clave.
 - [docs/instalacion.md](docs/instalacion.md) – instalación paso a paso con capturas y comandos.
 - [docs/uso.md](docs/uso.md) – guía práctica para personas usuarias finales.
 - [docs/documentacion_general.md](docs/documentacion_general.md) – resumen ejecutivo del funcionamiento y
