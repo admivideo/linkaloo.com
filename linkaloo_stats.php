@@ -66,29 +66,29 @@ function formatDate(?string $value): string
 }
 
 /** @return array{label:string,color:string,sort:int} */
-function accessRecencyStatus(?string $value): array
+function lastSavedLinkStatus(?string $value): array
 {
     if (!$value) {
-        return ['label' => 'Sin acceso', 'color' => '#6b7280', 'sort' => 9999];
+        return ['label' => 'Azul (sin links guardados)', 'color' => '#3b82f6', 'sort' => 9999];
     }
 
     try {
-        $lastAccess = new DateTimeImmutable($value);
+        $lastSavedLink = new DateTimeImmutable($value);
         $now = new DateTimeImmutable('now');
-        $daysSinceLastAccess = (int) floor(($now->getTimestamp() - $lastAccess->getTimestamp()) / 86400);
-        $daysSinceLastAccess = max(0, $daysSinceLastAccess);
+        $daysSinceLastSavedLink = (int) floor(($now->getTimestamp() - $lastSavedLink->getTimestamp()) / 86400);
+        $daysSinceLastSavedLink = max(0, $daysSinceLastSavedLink);
 
-        if ($daysSinceLastAccess <= 3) {
-            return ['label' => 'Verde (0-3 días)', 'color' => '#22c55e', 'sort' => $daysSinceLastAccess];
+        if ($daysSinceLastSavedLink <= 3) {
+            return ['label' => 'Verde (0-3 días)', 'color' => '#22c55e', 'sort' => $daysSinceLastSavedLink];
         }
 
-        if ($daysSinceLastAccess <= 7) {
-            return ['label' => 'Naranja (4-7 días)', 'color' => '#f59e0b', 'sort' => $daysSinceLastAccess];
+        if ($daysSinceLastSavedLink <= 7) {
+            return ['label' => 'Naranja (4-7 días)', 'color' => '#f59e0b', 'sort' => $daysSinceLastSavedLink];
         }
 
-        return ['label' => 'Rojo (+8 días)', 'color' => '#ef4444', 'sort' => $daysSinceLastAccess];
+        return ['label' => 'Rojo (+8 días)', 'color' => '#ef4444', 'sort' => $daysSinceLastSavedLink];
     } catch (Exception $e) {
-        return ['label' => 'Sin acceso', 'color' => '#6b7280', 'sort' => 9999];
+        return ['label' => 'Azul (sin links guardados)', 'color' => '#3b82f6', 'sort' => 9999];
     }
 }
 
@@ -208,7 +208,7 @@ $tableHeaders = [
     ['key' => 'id', 'label' => 'ID'],
     ['key' => 'fecha_creacion', 'label' => 'Registro'],
     ['key' => 'fecha_ultimo_acceso', 'label' => 'Último acceso'],
-    ['key' => 'estado_acceso', 'label' => 'Estado acceso'],
+    ['key' => 'estado_ultimo_link', 'label' => 'Estado último link'],
     ['key' => 'cantidad_categorias', 'label' => 'Categorías'],
     ['key' => 'cantidad_favolinks_guardados', 'label' => 'Favolinks'],
     ['key' => 'fecha_primer_favolink', 'label' => 'Primer favolink'],
@@ -307,12 +307,12 @@ $tableHeaders = [
                         </thead>
                         <tbody id="stats-body">
                         <?php foreach ($statsRows as $row): ?>
-                            <?php $accessStatus = accessRecencyStatus($row['fecha_ultimo_acceso'] ?? null); ?>
+                            <?php $savedLinkStatus = lastSavedLinkStatus($row['fecha_ultimo_favolink'] ?? null); ?>
                             <tr>
                                 <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
                                 <td data-label="Registro" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
                                 <td data-label="Último acceso" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_acceso'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_acceso'] ?? null) ?></td>
-                                <td data-label="Estado acceso" data-sort="<?= (int) $accessStatus['sort'] ?>"><span class="access-status"><span class="access-status-dot" style="--status-color: <?= htmlspecialchars($accessStatus['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($accessStatus['label'], ENT_QUOTES, 'UTF-8') ?></span></td>
+                                <td data-label="Estado último link" data-sort="<?= (int) $savedLinkStatus['sort'] ?>"><span class="access-status"><span class="access-status-dot" style="--status-color: <?= htmlspecialchars($savedLinkStatus['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($savedLinkStatus['label'], ENT_QUOTES, 'UTF-8') ?></span></td>
                                 <td data-label="Categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
                                 <td data-label="Favolinks" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
                                 <td data-label="Primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
@@ -351,7 +351,7 @@ $tableHeaders = [
         id: 0,
         fecha_creacion: 1,
         fecha_ultimo_acceso: 2,
-        estado_acceso: 3,
+        estado_ultimo_link: 3,
         cantidad_categorias: 4,
         cantidad_favolinks_guardados: 5,
         fecha_primer_favolink: 6,
