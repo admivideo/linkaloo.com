@@ -86,6 +86,7 @@ if ($user) {
     session_regenerate_id(true);
     $_SESSION['user_id']   = $userId;
     $_SESSION['user_name'] = $userName;
+    linkalooTouchLastAccess($pdo, $userId);
     linkalooIssueRememberMeToken($pdo, $userId);
     $redirect = $encodedShared ? 'agregar_favolink.php?shared=' . $encodedShared : 'panel.php';
     header('Location: ' . $redirect);
@@ -99,6 +100,7 @@ if ($user) {
     session_regenerate_id(true);
     $_SESSION['user_id']   = $userId;
     $_SESSION['user_name'] = $userName;
+    linkalooTouchLastAccess($pdo, $userId);
     linkalooIssueRememberMeToken($pdo, $userId);
     $redirect = 'seleccion_tableros.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
     header('Location: ' . $redirect);

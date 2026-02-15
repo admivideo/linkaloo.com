@@ -42,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 session_regenerate_id(true);
                 $_SESSION['user_id'] = $userId;
                 $_SESSION['user_name'] = $nombre;
+                linkalooTouchLastAccess($pdo, $userId);
                 linkalooIssueRememberMeToken($pdo, $userId);
                 $redirect = 'seleccion_tableros.php' . ($encodedShared ? '?shared=' . $encodedShared : '');
                 header('Location: ' . $redirect);
