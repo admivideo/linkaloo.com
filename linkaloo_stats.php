@@ -178,7 +178,7 @@ $tableHeaders = [
     ['key' => 'id', 'label' => 'ID'],
     ['key' => 'fecha_creacion', 'label' => 'Registro'],
     ['key' => 'cantidad_categorias', 'label' => 'Categorías'],
-    ['key' => 'cantidad_favolinks_guardados', 'label' => 'Favolinks guardados'],
+    ['key' => 'cantidad_favolinks_guardados', 'label' => 'Favolinks'],
     ['key' => 'fecha_primer_favolink', 'label' => 'Primer favolink'],
     ['key' => 'fecha_ultimo_favolink', 'label' => 'Último favolink'],
 ];
@@ -276,7 +276,7 @@ $tableHeaders = [
                                 <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
                                 <td data-label="Registro" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
                                 <td data-label="Categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
-                                <td data-label="Favolinks guardados" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
+                                <td data-label="Favolinks" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
                                 <td data-label="Primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
                                 <td data-label="Último favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
                             </tr>
