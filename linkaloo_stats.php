@@ -176,11 +176,11 @@ $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . 
 
 $tableHeaders = [
     ['key' => 'id', 'label' => 'ID'],
-    ['key' => 'fecha_creacion', 'label' => 'Fecha de creación'],
-    ['key' => 'cantidad_categorias', 'label' => 'Cantidad de categorías'],
-    ['key' => 'cantidad_favolinks_guardados', 'label' => 'Cantidad de favolinks guardados'],
-    ['key' => 'fecha_primer_favolink', 'label' => 'Fecha del primer favolink'],
-    ['key' => 'fecha_ultimo_favolink', 'label' => 'Fecha del último favolink'],
+    ['key' => 'fecha_creacion', 'label' => 'Registro'],
+    ['key' => 'cantidad_categorias', 'label' => 'Categorías'],
+    ['key' => 'cantidad_favolinks_guardados', 'label' => 'Favolinks guardados'],
+    ['key' => 'fecha_primer_favolink', 'label' => 'Primer favolink'],
+    ['key' => 'fecha_ultimo_favolink', 'label' => 'Último favolink'],
 ];
 ?>
 <!DOCTYPE html>
@@ -250,7 +250,7 @@ $tableHeaders = [
             <article class="summary-card">
                 <p class="summary-title"><?= htmlspecialchars($card['title'], ENT_QUOTES, 'UTF-8') ?></p>
                 <p class="summary-value"><?= (int) $card['usuarios'] ?></p>
-                <p class="summary-meta">Links del segmento: <?= (int) $card['links'] ?></p>
+                <p class="summary-meta">Links: <?= (int) $card['links'] ?></p>
                 <p class="summary-meta">% del total links: <?= number_format((float) $card['pct'], 2, ',', '.') ?>%</p>
             </article>
         <?php endforeach; ?>
