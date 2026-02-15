@@ -95,9 +95,11 @@ foreach ($segments as $segment) {
 }
 
 $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'fecha_creacion', 'registrado_en']);
+$lastAccessColumn = pickColumn($pdo, 'usuarios', ['ultimo_acceso', 'last_access', 'ultimo_login', 'last_login_at']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
 
 $userDateSelect = $userCreatedColumn ? "u.`{$userCreatedColumn}`" : 'NULL';
+$lastAccessSelect = $lastAccessColumn ? "u.`{$lastAccessColumn}`" : 'NULL';
 $linkMinMaxSelect = $linkCreatedColumn
     ? "MIN(`{$linkCreatedColumn}`) AS fecha_primer_favolink, MAX(`{$linkCreatedColumn}`) AS fecha_ultimo_favolink"
     : 'NULL AS fecha_primer_favolink, NULL AS fecha_ultimo_favolink';
@@ -106,6 +108,7 @@ $statsSql = "
     SELECT
         u.id,
         {$userDateSelect} AS fecha_creacion,
+        {$lastAccessSelect} AS fecha_ultimo_acceso,
         COALESCE(c.total, 0) AS cantidad_categorias,
         COALESCE(l.total, 0) AS cantidad_favolinks_guardados,
         l.fecha_primer_favolink,
@@ -177,6 +180,7 @@ $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . 
 $tableHeaders = [
     ['key' => 'id', 'label' => 'ID'],
     ['key' => 'fecha_creacion', 'label' => 'Registro'],
+    ['key' => 'fecha_ultimo_acceso', 'label' => 'Último acceso'],
     ['key' => 'cantidad_categorias', 'label' => 'Categorías'],
     ['key' => 'cantidad_favolinks_guardados', 'label' => 'Favolinks'],
     ['key' => 'fecha_primer_favolink', 'label' => 'Primer favolink'],
@@ -275,6 +279,7 @@ $tableHeaders = [
                             <tr>
                                 <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
                                 <td data-label="Registro" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
+                                <td data-label="Último acceso" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_acceso'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_acceso'] ?? null) ?></td>
                                 <td data-label="Categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
                                 <td data-label="Favolinks" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
                                 <td data-label="Primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
@@ -312,10 +317,11 @@ $tableHeaders = [
     const keyIndex = {
         id: 0,
         fecha_creacion: 1,
-        cantidad_categorias: 2,
-        cantidad_favolinks_guardados: 3,
-        fecha_primer_favolink: 4,
-        fecha_ultimo_favolink: 5
+        fecha_ultimo_acceso: 2,
+        cantidad_categorias: 3,
+        cantidad_favolinks_guardados: 4,
+        fecha_primer_favolink: 5,
+        fecha_ultimo_favolink: 6
     };
 
     function valueFor(cellText, cellSort) {
