@@ -56,7 +56,7 @@ function formatDate(?string $value): string
 requireStatsAuth();
 
 $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'fecha_creacion', 'registrado_en']);
-$userLastAccessColumn = pickColumn($pdo, 'usuarios', ['ultimo_acceso', 'last_access', 'ultimo_login', 'last_login']);
+$userLastAccessColumn = pickColumn($pdo, 'usuarios', ['ultimo_acceso', 'last_access', 'last_login', 'ultimo_login']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
 
 $userDateSelect = $userCreatedColumn ? "u.`{$userCreatedColumn}`" : 'NULL';
@@ -77,7 +77,7 @@ $sql = "
     SELECT
         u.id,
         {$userDateSelect} AS fecha_creacion,
-        {$userLastAccessSelect} AS fecha_ultimo_acceso,
+        {$userLastAccessSelect} AS ultimo_acceso,
         COUNT(DISTINCT c.id) AS cantidad_categorias,
         COUNT(l.id) AS cantidad_favolinks_guardados,
         {$firstFavolinkSelect} AS fecha_primer_favolink,
@@ -229,7 +229,7 @@ $statsRows = $stmt->fetchAll();
                     <tr>
                         <td data-label="ID"><?= (int) $row['id'] ?></td>
                         <td data-label="Fecha de creación"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
-                        <td data-label="Último acceso"><?= formatDate($row['fecha_ultimo_acceso'] ?? null) ?></td>
+                        <td data-label="Último acceso"><?= formatDate($row['ultimo_acceso'] ?? null) ?></td>
                         <td data-label="Cantidad de categorías"><?= (int) $row['cantidad_categorias'] ?></td>
                         <td data-label="Cantidad de favolinks guardados"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
                         <td data-label="Fecha del primer favolink"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
