@@ -8,13 +8,13 @@ const STATS_PASS = 'Fwc63GJuMKXybyBKAkepQPgj7p*-';
 function statsSegments(): array
 {
     return [
-        ['key' => 'usuarios_sin_links', 'title' => 'Usuarios con 0 links guardados', 'legend' => '0 links', 'color' => '#6b7280', 'min' => 0, 'max' => 0],
-        ['key' => 'usuarios_1_3', 'title' => 'Usuarios con 1-3 favolinks guardados', 'legend' => '1-3', 'color' => '#22c55e', 'min' => 1, 'max' => 3],
-        ['key' => 'usuarios_4_10', 'title' => 'Usuarios con 4-10 favolinks guardados', 'legend' => '4-10', 'color' => '#3b82f6', 'min' => 4, 'max' => 10],
-        ['key' => 'usuarios_11_25', 'title' => 'Usuarios con 11-25 favolinks guardados', 'legend' => '11-25', 'color' => '#a855f7', 'min' => 11, 'max' => 25],
-        ['key' => 'usuarios_26_50', 'title' => 'Usuarios con 26-50 favolinks guardados', 'legend' => '26-50', 'color' => '#f59e0b', 'min' => 26, 'max' => 50],
-        ['key' => 'usuarios_51_100', 'title' => 'Usuarios con 51-100 favolinks guardados', 'legend' => '51-100', 'color' => '#ef4444', 'min' => 51, 'max' => 100],
-        ['key' => 'usuarios_mas_100', 'title' => 'Usuarios con +100 favolinks guardados', 'legend' => '+100', 'color' => '#14b8a6', 'min' => 101, 'max' => null],
+        ['key' => 'usuarios_sin_links', 'title' => 'Users con 0 links', 'legend' => '0 links', 'color' => '#6b7280', 'min' => 0, 'max' => 0],
+        ['key' => 'usuarios_1_3', 'title' => 'Users con 1-3 favolinks', 'legend' => '1-3', 'color' => '#22c55e', 'min' => 1, 'max' => 3],
+        ['key' => 'usuarios_4_10', 'title' => 'Users con 4-10 favolinks', 'legend' => '4-10', 'color' => '#3b82f6', 'min' => 4, 'max' => 10],
+        ['key' => 'usuarios_11_25', 'title' => 'Users con 11-25 favolinks', 'legend' => '11-25', 'color' => '#a855f7', 'min' => 11, 'max' => 25],
+        ['key' => 'usuarios_26_50', 'title' => 'Users con 26-50 favolinks', 'legend' => '26-50', 'color' => '#f59e0b', 'min' => 26, 'max' => 50],
+        ['key' => 'usuarios_51_100', 'title' => 'Users con 51-100 favolinks', 'legend' => '51-100', 'color' => '#ef4444', 'min' => 51, 'max' => 100],
+        ['key' => 'usuarios_mas_100', 'title' => 'Users con +100 favolinks', 'legend' => '+100', 'color' => '#14b8a6', 'min' => 101, 'max' => null],
     ];
 }
 
@@ -274,11 +274,11 @@ $tableHeaders = [
                         <?php foreach ($statsRows as $row): ?>
                             <tr>
                                 <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
-                                <td data-label="Fecha de creación" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
-                                <td data-label="Cantidad de categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
-                                <td data-label="Cantidad de favolinks guardados" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
-                                <td data-label="Fecha del primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
-                                <td data-label="Fecha del último favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
+                                <td data-label="Registro" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
+                                <td data-label="Categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
+                                <td data-label="Favolinks guardados" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
+                                <td data-label="Primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
+                                <td data-label="Último favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
