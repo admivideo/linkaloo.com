@@ -1,97 +1,56 @@
 <?php
-require 'config.php';
-require 'favicon_utils.php';
-require_once 'image_utils.php';
-require_once 'session.php';
-require_once 'device.php';
-
-$token = $_GET['token'] ?? '';
-if(!$token){
-    http_response_code(404);
-    exit('Tablero no disponible');
-}
-
-$stmt = $pdo->prepare('SELECT c.id, c.nombre, c.nota, (SELECT l2.imagen FROM links l2 WHERE l2.categoria_id = c.id ORDER BY l2.id LIMIT 1) AS imagen FROM categorias c WHERE share_token = ?');
-$stmt->execute([$token]);
-$board = $stmt->fetch(PDO::FETCH_ASSOC);
-if(!$board){
-    http_response_code(404);
-    exit('Tablero no disponible');
-}
-
-$isMobile = isMobile();
-$totalStmt = $pdo->prepare('SELECT COUNT(*) FROM links WHERE categoria_id = ?');
-$totalStmt->execute([$board['id']]);
-$totalLinks = (int)$totalStmt->fetchColumn();
-$linksQuery = 'SELECT url, titulo, descripcion, imagen FROM links WHERE categoria_id = ? ORDER BY id DESC';
-if(!$isMobile){
-    $linksQuery .= ' LIMIT 500';
-}
-$linksStmt = $pdo->prepare($linksQuery);
-$linksStmt->execute([$board['id']]);
-$links = $linksStmt->fetchAll();
-$loadedLinks = count($links);
-$descLimit = $isMobile ? 50 : 150;
-
-$baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
-$shareUrl = $baseUrl . '/tablero_publico.php?token=' . $token;
-$shareImg = $board['imagen'] ?? '';
-if (!empty($shareImg) && !preg_match('#^https?://#', $shareImg)) {
-    $shareImg = $baseUrl . '/' . ltrim($shareImg, '/');
-}
-
-include 'header.php';
+$token = isset($_GET['token']) ? trim($_GET['token']) : '';
+$encodedToken = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
+$playStoreUrl = "https://play.google.com/store/apps/details?id=com.linka2025.linkaloo";
+$deepLink = "linkaloo://tablero?token=" . urlencode($token);
+$intentLink = "intent://tablero?token=" . urlencode($token) .
+    "#Intent;scheme=linkaloo;package=com.linka2025.linkaloo;end";
 ?>
-<div class="board-detail">
-    <div class="board-detail-info">
-        <div class="detail-header">
-            <h2><?= htmlspecialchars($board['nombre']) ?></h2>
-            <button type="button" class="share-board" data-url="<?= htmlspecialchars($shareUrl) ?>" data-title="<?= htmlspecialchars($board['nombre']) ?>" <?= !empty($shareImg) ? 'data-image="' . htmlspecialchars($shareImg) . '"' : '' ?> aria-label="Compartir"><i data-feather="share-2"></i></button>
-        </div>
-        <?php if(!empty($board['nota'])): ?>
-        <p><?= htmlspecialchars($board['nota']) ?></p>
-        <?php endif; ?>
-    </div>
-</div>
-<?php if(!empty($links)): ?>
-<div class="link-cards board-links" data-mode="public" data-token="<?= htmlspecialchars($token, ENT_QUOTES) ?>" data-total="<?= $totalLinks ?>" data-loaded="<?= $loadedLinks ?>">
-<?php foreach($links as $link): ?>
-    <?php
-        $domain = parse_url($link['url'], PHP_URL_HOST);
-        $favicon = $domain ? getLocalFavicon($domain) : '';
-        $imgSrc = !empty($link['imagen']) ? $link['imagen'] : $favicon;
-        $isDefault = empty($link['imagen']);
-        $isLocalFavicon = str_starts_with($imgSrc, '/local_favicons/');
-        $title = $link['titulo'] ?: $link['url'];
-        if (mb_strlen($title) > 50) {
-            $title = mb_substr($title, 0, 47) . '...';
-        }
-        $desc = $link['descripcion'] ?? '';
-        if (mb_strlen($desc) > $descLimit) {
-            $desc = mb_substr($desc, 0, $descLimit - 3) . '...';
-        }
-    ?>
-    <div class="card">
-        <div class="card-image <?= $isDefault ? 'no-image' : '' ?> <?= $isLocalFavicon ? 'local-favicon' : '' ?>">
-            <a href="<?= htmlspecialchars($link['url']) ?>" target="_blank" rel="noopener noreferrer">
-                <img src="<?= htmlspecialchars($imgSrc) ?>" alt="" loading="lazy">
-            </a>
-            <button class="share-btn" data-url="<?= htmlspecialchars($link['url']) ?>" aria-label="Compartir"><i data-feather="share-2"></i></button>
-        </div>
-        <div class="card-body">
-            <div class="card-title">
-                <h4><img src="<?= htmlspecialchars($favicon) ?>" width="18" height="18" alt="" loading="lazy"><?= htmlspecialchars($title) ?></h4>
-            </div>
-            <?php if(!empty($desc)): ?>
-            <p><?= htmlspecialchars($desc) ?></p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tablero compartido - Linkaloo</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f6f8fb; color: #1c1c1c; margin: 0; }
+        .container { max-width: 520px; margin: 0 auto; padding: 32px 20px 40px; text-align: center; }
+        .card { background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+        h1 { font-size: 22px; margin: 0 0 12px; }
+        p { font-size: 15px; line-height: 1.5; color: #4a4a4a; }
+        .btn { display: inline-block; margin: 10px 6px 0; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .btn-primary { background: #1da1f2; color: #fff; }
+        .btn-secondary { background: #f1f3f5; color: #1c1c1c; }
+        .token { font-size: 12px; color: #888; margin-top: 16px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Abrir tablero en Linkaloo</h1>
+            <p>Este tablero está listo para abrirse en la app. Si no la tienes instalada, puedes descargarla desde Google Play.</p>
+            <a class="btn btn-primary" href="<?php echo $intentLink; ?>">Abrir en Linkaloo</a>
+            <a class="btn btn-secondary" href="<?php echo $playStoreUrl; ?>">Instalar Linkaloo</a>
+            <?php if (!empty($encodedToken)) : ?>
+                <div class="token">Token: <?php echo $encodedToken; ?></div>
             <?php endif; ?>
         </div>
     </div>
-<?php endforeach; ?>
-</div>
-<?php else: ?>
-<p>No hay links en este tablero.</p>
-<?php endif; ?>
-</div>
+    <script>
+        (function () {
+            var token = "<?php echo addslashes($token); ?>";
+            if (!token) {
+                return;
+            }
+            var deepLink = "<?php echo $deepLink; ?>";
+            try {
+                setTimeout(function () {
+                    window.location.href = deepLink;
+                }, 100);
+            } catch (e) {
+                // ignore
+            }
+        })();
+    </script>
 </body>
 </html>
