@@ -45,18 +45,32 @@ $deepLink = "linkaloo://tablero?token=" . urlencode($token);
             var openButton = document.getElementById("openLinkaloo");
             var fallbackTimer = null;
 
+            function clearFallback() {
+                if (fallbackTimer) {
+                    clearTimeout(fallbackTimer);
+                    fallbackTimer = null;
+                }
+            }
+
             function tryOpenApp() {
                 if (!deepLink) {
                     return;
                 }
-                var start = Date.now();
                 window.location.href = deepLink;
                 fallbackTimer = setTimeout(function () {
-                    if (Date.now() - start < 2000) {
+                    if (!document.hidden && document.visibilityState === "visible") {
                         window.location.href = storeLink;
                     }
-                }, 1400);
+                }, 1600);
             }
+
+            document.addEventListener("visibilitychange", function () {
+                if (document.hidden) {
+                    clearFallback();
+                }
+            });
+
+            window.addEventListener("pagehide", clearFallback);
 
             if (openButton) {
                 openButton.addEventListener("click", function (event) {
