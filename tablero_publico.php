@@ -59,15 +59,29 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tablero compartido - Linkaloo</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f6f8fb; color: #1c1c1c; margin: 0; }
-        .container { max-width: 520px; margin: 0 auto; padding: 32px 20px 40px; text-align: center; }
-        .card { background: #ffffff; border-radius: 12px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-        h1 { font-size: 22px; margin: 0 0 12px; }
-        p { font-size: 15px; line-height: 1.5; color: #4a4a4a; }
-        .btn { display: inline-block; margin: 10px 6px 0; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 600; }
-        .btn-primary { background: #1da1f2; color: #fff; }
-        .btn-secondary { background: #f1f3f5; color: #1c1c1c; }
+        :root {
+            --linkaloo-blue: #1da1f2;
+            --bg-light: #f6f8fb;
+            --text-primary: #1c1c1c;
+            --text-secondary: #4a4a4a;
+            --card-border: #e6e9ef;
+        }
+        body { font-family: Arial, sans-serif; background: var(--bg-light); color: var(--text-primary); margin: 0; }
+        .container { max-width: 560px; margin: 0 auto; padding: 24px 16px 40px; text-align: center; }
+        .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+        h1 { font-size: 22px; margin: 0 0 12px; color: var(--text-primary); }
+        p { font-size: 15px; line-height: 1.5; color: var(--text-secondary); }
+        .btn { display: inline-block; margin: 10px 6px 0; padding: 12px 18px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+        .btn-primary { background: var(--linkaloo-blue); color: #fff; }
+        .btn-secondary { background: #f1f3f5; color: var(--text-primary); }
         .token { font-size: 12px; color: #888; margin-top: 16px; word-break: break-all; }
+        .links-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 18px; }
+        .link-card { text-align: left; background: #fff; border: 1px solid var(--card-border); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
+        .link-image { width: 100%; height: 180px; object-fit: cover; display: block; background: #eef2f6; }
+        .link-body { padding: 12px 14px 14px; }
+        .link-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+        .link-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 8px; }
+        .link-url { font-size: 12px; color: var(--linkaloo-blue); word-break: break-all; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -80,32 +94,32 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
                 <?php endif; ?>
 
                 <?php if (!empty($links)) : ?>
-                    <?php foreach ($links as $link) : ?>
-                        <div style="text-align:left;margin:16px 0;padding:12px;border:1px solid #e6e9ef;border-radius:10px;">
-                            <?php if (!empty($link['imagen'])) : ?>
-                                <?php
-                                    $img = $link['imagen'];
-                                    if (strpos($img, 'http://') !== 0 && strpos($img, 'https://') !== 0) {
-                                        $img = 'https://linkaloo.com' . $img;
-                                    }
-                                ?>
-                                <img src="<?php echo htmlspecialchars($img, ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width:100%;height:auto;border-radius:8px;margin-bottom:8px;">
-                            <?php endif; ?>
-                            <div style="font-weight:700;"><?php echo htmlspecialchars($link['titulo'] ?? 'Sin título', ENT_QUOTES, 'UTF-8'); ?></div>
-                            <?php if (!empty($link['descripcion'])) : ?>
-                                <div style="font-size:13px;color:#4a4a4a;margin-top:4px;">
-                                    <?php echo htmlspecialchars($link['descripcion'], ENT_QUOTES, 'UTF-8'); ?>
+                    <div class="links-grid">
+                        <?php foreach ($links as $link) : ?>
+                            <div class="link-card">
+                                <?php if (!empty($link['imagen'])) : ?>
+                                    <?php
+                                        $img = $link['imagen'];
+                                        if (strpos($img, 'http://') !== 0 && strpos($img, 'https://') !== 0) {
+                                            $img = 'https://linkaloo.com' . $img;
+                                        }
+                                    ?>
+                                    <img class="link-image" src="<?php echo htmlspecialchars($img, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                                <?php endif; ?>
+                                <div class="link-body">
+                                    <div class="link-title"><?php echo htmlspecialchars($link['titulo'] ?? 'Sin título', ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php if (!empty($link['descripcion'])) : ?>
+                                        <div class="link-desc"><?php echo htmlspecialchars($link['descripcion'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($link['url'])) : ?>
+                                        <a class="link-url" href="<?php echo htmlspecialchars($link['url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
+                                            <?php echo htmlspecialchars($link['url'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
-                            <?php endif; ?>
-                            <?php if (!empty($link['url'])) : ?>
-                                <div style="margin-top:6px;">
-                                    <a href="<?php echo htmlspecialchars($link['url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">
-                                        <?php echo htmlspecialchars($link['url'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </a>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 <?php else : ?>
                     <p>No hay enlaces disponibles en este tablero.</p>
                 <?php endif; ?>
