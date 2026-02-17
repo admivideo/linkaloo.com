@@ -708,7 +708,7 @@ function getLinksByToken($pdo, $input) {
             throw new Exception('share_token es requerido');
         }
 
-        $stmt = $pdo->prepare("SELECT id, usuario_id, nombre, creado_en, modificado_en, share_token, nota FROM categorias WHERE LOWER(TRIM(share_token)) = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT c.id, c.usuario_id, c.nombre, c.creado_en, c.modificado_en, c.share_token, c.nota, u.nombre AS shared_by FROM categorias c JOIN usuarios u ON u.id = c.usuario_id WHERE LOWER(TRIM(c.share_token)) = ? LIMIT 1");
         $stmt->execute([$shareTokenLower]);
         $categoria = $stmt->fetch();
 
@@ -747,7 +747,8 @@ function getLinksByToken($pdo, $input) {
                 'creado_en' => $categoria['creado_en'],
                 'modificado_en' => $categoria['modificado_en'],
                 'share_token' => $categoria['share_token'],
-                'nota' => $categoria['nota']
+                'nota' => $categoria['nota'],
+                'shared_by' => $categoria['shared_by'] ?? null
             ],
             'total_links' => count($linksMapped),
             'links' => $linksMapped
