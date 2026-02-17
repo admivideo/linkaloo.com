@@ -1,12 +1,17 @@
 <?php
 $configLoaded = false;
+$docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') : '';
 $configCandidates = [
+    $docRoot ? $docRoot . '/api/config.php' : null,
     __DIR__ . '/config.php',
     __DIR__ . '/api/config.php',
     __DIR__ . '/../api/config.php'
 ];
 
 foreach ($configCandidates as $candidate) {
+    if (empty($candidate)) {
+        continue;
+    }
     if (file_exists($candidate)) {
         require_once $candidate;
         $configLoaded = true;
@@ -15,6 +20,8 @@ foreach ($configCandidates as $candidate) {
 }
 
 $token = isset($_GET['token']) ? trim($_GET['token']) : '';
+$token = preg_replace('/\s+/', '', $token);
+$tokenLower = strtolower($token);
 $encodedToken = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
 $isInApp = !empty($_GET['in_app']) && $_GET['in_app'] !== '0';
 
@@ -29,8 +36,8 @@ $links = [];
 if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseConnection')) {
     try {
         $pdo = getDatabaseConnection();
-        $stmt = $pdo->prepare("SELECT id, nombre, nota FROM categorias WHERE share_token = ? LIMIT 1");
-        $stmt->execute([$token]);
+        $stmt = $pdo->prepare("SELECT id, nombre, nota FROM categorias WHERE LOWER(TRIM(share_token)) = ? LIMIT 1");
+        $stmt->execute([$tokenLower]);
         $categoria = $stmt->fetch();
 
         if ($categoria) {
@@ -76,7 +83,13 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
                     <?php foreach ($links as $link) : ?>
                         <div style="text-align:left;margin:16px 0;padding:12px;border:1px solid #e6e9ef;border-radius:10px;">
                             <?php if (!empty($link['imagen'])) : ?>
-                                <img src="<?php echo htmlspecialchars($link['imagen'], ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width:100%;height:auto;border-radius:8px;margin-bottom:8px;">
+                                <?php
+                                    $img = $link['imagen'];
+                                    if (strpos($img, 'http://') !== 0 && strpos($img, 'https://') !== 0) {
+                                        $img = 'https://linkaloo.com' . $img;
+                                    }
+                                ?>
+                                <img src="<?php echo htmlspecialchars($img, ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width:100%;height:auto;border-radius:8px;margin-bottom:8px;">
                             <?php endif; ?>
                             <div style="font-weight:700;"><?php echo htmlspecialchars($link['titulo'] ?? 'Sin título', ENT_QUOTES, 'UTF-8'); ?></div>
                             <?php if (!empty($link['descripcion'])) : ?>
