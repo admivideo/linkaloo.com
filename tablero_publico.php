@@ -1,5 +1,18 @@
 <?php
-require_once __DIR__ . '/config.php';
+$configLoaded = false;
+$configCandidates = [
+    __DIR__ . '/config.php',
+    __DIR__ . '/api/config.php',
+    __DIR__ . '/../api/config.php'
+];
+
+foreach ($configCandidates as $candidate) {
+    if (file_exists($candidate)) {
+        require_once $candidate;
+        $configLoaded = true;
+        break;
+    }
+}
 
 $token = isset($_GET['token']) ? trim($_GET['token']) : '';
 $encodedToken = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
@@ -13,7 +26,7 @@ $intentLink = "intent://tablero?token=" . urlencode($token) .
 $categoria = null;
 $links = [];
 
-if ($isInApp && !empty($token)) {
+if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseConnection')) {
     try {
         $pdo = getDatabaseConnection();
         $stmt = $pdo->prepare("SELECT id, nombre, nota FROM categorias WHERE share_token = ? LIMIT 1");
