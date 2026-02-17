@@ -61,27 +61,36 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
     <style>
         :root {
             --linkaloo-blue: #1da1f2;
-            --bg-light: #f6f8fb;
-            --text-primary: #1c1c1c;
-            --text-secondary: #4a4a4a;
-            --card-border: #e6e9ef;
+            --bg-light: #f5f7fb;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --card-border: #e2e8f0;
         }
-        body { font-family: Arial, sans-serif; background: var(--bg-light); color: var(--text-primary); margin: 0; }
-        .container { max-width: 560px; margin: 0 auto; padding: 24px 16px 40px; text-align: center; }
+        body {
+            font-family: "Roboto", "Rambla", "Segoe UI", Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-primary);
+            margin: 0;
+        }
+        .container { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; text-align: center; }
         .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-        h1 { font-size: 22px; margin: 0 0 12px; color: var(--text-primary); }
-        p { font-size: 15px; line-height: 1.5; color: var(--text-secondary); }
+        h1 { font-size: 22px; margin: 0 0 12px; color: var(--text-primary); font-weight: 700; }
+        p { font-size: 15px; line-height: 1.55; color: var(--text-secondary); }
         .btn { display: inline-block; margin: 10px 6px 0; padding: 12px 18px; border-radius: 10px; text-decoration: none; font-weight: 600; }
         .btn-primary { background: var(--linkaloo-blue); color: #fff; }
         .btn-secondary { background: #f1f3f5; color: var(--text-primary); }
         .token { font-size: 12px; color: #888; margin-top: 16px; word-break: break-all; }
-        .links-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 18px; }
+        .links-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
         .link-card { text-align: left; background: #fff; border: 1px solid var(--card-border); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
         .link-image { width: 100%; height: 180px; object-fit: cover; display: block; background: #eef2f6; }
         .link-body { padding: 12px 14px 14px; }
-        .link-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
-        .link-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 8px; }
+        .link-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+        .link-desc { font-size: 12.5px; color: var(--text-secondary); margin: 0 0 8px; }
         .link-url { font-size: 12px; color: var(--linkaloo-blue); word-break: break-all; text-decoration: none; }
+        @media (max-width: 720px) {
+            .links-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .link-image { height: 160px; }
+        }
     </style>
 </head>
 <body>
