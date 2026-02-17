@@ -32,9 +32,6 @@ $intentLink = "intent://tablero?token=" . urlencode($token) .
 
 $categoria = null;
 $links = [];
-$ogTitle = "Tablero compartido - Linkaloo";
-$ogDescription = "Abre este tablero en Linkaloo";
-$ogImage = "https://linkaloo.com/icon_linkaloo_512.png";
 
 if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseConnection')) {
     try {
@@ -49,24 +46,6 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
             );
             $linksStmt->execute([$categoria['id']]);
             $links = $linksStmt->fetchAll();
-
-            $ogTitle = "Tablero " . $categoria['nombre'] . " compartido por " . ($categoria['shared_by'] ?? "Linkaloo");
-            if (!empty($categoria['nota'])) {
-                $ogDescription = $categoria['nota'];
-            }
-
-            if (!empty($links)) {
-                foreach ($links as $link) {
-                    if (!empty($link['imagen'])) {
-                        $img = $link['imagen'];
-                        if (strpos($img, 'http://') !== 0 && strpos($img, 'https://') !== 0) {
-                            $img = 'https://linkaloo.com' . $img;
-                        }
-                        $ogImage = $img;
-                        break;
-                    }
-                }
-            }
         }
     } catch (Exception $e) {
         $categoria = null;
@@ -79,11 +58,6 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tablero compartido - Linkaloo</title>
-    <meta property="og:title" content="<?php echo htmlspecialchars($ogTitle, ENT_QUOTES, 'UTF-8'); ?>" />
-    <meta property="og:description" content="<?php echo htmlspecialchars($ogDescription, ENT_QUOTES, 'UTF-8'); ?>" />
-    <meta property="og:image" content="<?php echo htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8'); ?>" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="<?php echo htmlspecialchars('https://linkaloo.com/tablero_publico.php?token=' . urlencode($token), ENT_QUOTES, 'UTF-8'); ?>" />
     <style>
         :root {
             --linkaloo-blue: #1da1f2;
