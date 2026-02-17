@@ -3,6 +3,8 @@ $token = isset($_GET['token']) ? trim($_GET['token']) : '';
 $encodedToken = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
 $playStoreUrl = "https://play.google.com/store/apps/details?id=com.linka2025.linkaloo";
 $deepLink = "linkaloo://tablero?token=" . urlencode($token);
+$intentLink = "intent://tablero?token=" . urlencode($token) .
+    "#Intent;scheme=linkaloo;package=com.linka2025.linkaloo;end";
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -27,7 +29,7 @@ $deepLink = "linkaloo://tablero?token=" . urlencode($token);
         <div class="card">
             <h1>Abrir tablero en Linkaloo</h1>
             <p>Este tablero está listo para abrirse en la app. Si no la tienes instalada, puedes descargarla desde Google Play.</p>
-            <a class="btn btn-primary" id="openLinkaloo" href="<?php echo $deepLink; ?>">Abrir en Linkaloo</a>
+            <a class="btn btn-primary" id="openLinkaloo" href="<?php echo $intentLink; ?>">Abrir en Linkaloo</a>
             <a class="btn btn-secondary" href="<?php echo $playStoreUrl; ?>">Instalar Linkaloo</a>
             <?php if (!empty($encodedToken)) : ?>
                 <div class="token">Token: <?php echo $encodedToken; ?></div>
@@ -40,44 +42,7 @@ $deepLink = "linkaloo://tablero?token=" . urlencode($token);
             if (!token) {
                 return;
             }
-            var deepLink = "<?php echo $deepLink; ?>";
-            var storeLink = "<?php echo $playStoreUrl; ?>";
-            var openButton = document.getElementById("openLinkaloo");
-            var fallbackTimer = null;
-
-            function clearFallback() {
-                if (fallbackTimer) {
-                    clearTimeout(fallbackTimer);
-                    fallbackTimer = null;
-                }
-            }
-
-            function tryOpenApp() {
-                if (!deepLink) {
-                    return;
-                }
-                window.location.href = deepLink;
-                fallbackTimer = setTimeout(function () {
-                    if (!document.hidden && document.visibilityState === "visible") {
-                        window.location.href = storeLink;
-                    }
-                }, 1600);
-            }
-
-            document.addEventListener("visibilitychange", function () {
-                if (document.hidden) {
-                    clearFallback();
-                }
-            });
-
-            window.addEventListener("pagehide", clearFallback);
-
-            if (openButton) {
-                openButton.addEventListener("click", function (event) {
-                    event.preventDefault();
-                    tryOpenApp();
-                });
-            }
+            // No auto-redirect. The "Abrir en Linkaloo" button uses intent://
         })();
     </script>
 </body>
