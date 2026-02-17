@@ -16,7 +16,7 @@ foreach ($configCandidates as $candidate) {
 
 $token = isset($_GET['token']) ? trim($_GET['token']) : '';
 $encodedToken = htmlspecialchars($token, ENT_QUOTES, 'UTF-8');
-$isInApp = isset($_GET['in_app']) && $_GET['in_app'] === '1';
+$isInApp = !empty($_GET['in_app']) && $_GET['in_app'] !== '0';
 
 $playStoreUrl = "https://play.google.com/store/apps/details?id=com.linka2025.linkaloo";
 $deepLink = "linkaloo://tablero?token=" . urlencode($token);
@@ -95,6 +95,12 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
                     <?php endforeach; ?>
                 <?php else : ?>
                     <p>No hay enlaces disponibles en este tablero.</p>
+                <?php endif; ?>
+            <?php elseif ($isInApp && !$categoria) : ?>
+                <h1>No se pudo cargar el tablero</h1>
+                <p>El enlace no es válido o el tablero ya no está disponible.</p>
+                <?php if (!empty($encodedToken)) : ?>
+                    <div class="token">Token: <?php echo $encodedToken; ?></div>
                 <?php endif; ?>
             <?php else : ?>
                 <h1>Abrir tablero en Linkaloo</h1>
