@@ -93,7 +93,7 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
             --card-border: #e2e8f0;
         }
         body {
-            font-family: "Roboto", "Rambla", "Segoe UI", Arial, sans-serif;
+            font-family: "Rambla", "Roboto", "Segoe UI", Arial, sans-serif;
             background: var(--bg-light);
             color: var(--text-primary);
             margin: 0;
@@ -168,7 +168,7 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
                     <div class="token">Token: <?php echo $encodedToken; ?></div>
                 <?php endif; ?>
             <?php else : ?>
-                <img class="logo-linkaloo" src="https://linkaloo.com/icon_linkaloo_512.png" alt="Linkaloo">
+                <img class="logo-linkaloo" src="https://linkaloo.com/img/logo_linkaloo_blue.png" alt="Linkaloo">
                 <h1>Abrir el tablero en Linkaloo</h1>
                 <p>Este tablero está listo para abrirse en Linkaloo.</p>
                 <a class="btn btn-primary" id="openLinkaloo" href="<?php echo $intentLink; ?>">Abrir en Linkaloo</a>
