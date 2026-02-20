@@ -85,6 +85,7 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
     <meta property="og:type" content="website" />
     <meta property="og:url" content="<?php echo htmlspecialchars('https://linkaloo.com/tablero_publico.php?token=' . urlencode($token), ENT_QUOTES, 'UTF-8'); ?>" />
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rambla:wght@400;700&display=swap');
         :root {
             --linkaloo-blue: #1da1f2;
             --bg-light: #f5f7fb;
@@ -106,7 +107,7 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
         .btn-primary { background: var(--linkaloo-blue); color: #fff; }
         .btn-secondary { background: #f1f3f5; color: var(--text-primary); }
         .token { font-size: 12px; color: #888; margin-top: 16px; word-break: break-all; }
-        .logo-linkaloo { width: 64px; height: 64px; margin: 0 auto 12px; display: block; }
+        .logo-linkaloo { width: 180px; height: auto; max-width: 100%; margin: 0 auto 12px; display: block; }
         .play-badge { display: inline-block; margin-top: 10px; }
         .play-badge img { height: 54px; width: auto; display: block; }
         .links-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
