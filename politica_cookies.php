@@ -25,42 +25,70 @@
 
         <section class="info-section">
             <h2>3. Lista de cookies y finalidades</h2>
-            <p>Estas son cookies habituales en linkaloo y en servicios de terceros que pueden activarse según tu configuración. Revisamos esta tabla periódicamente para mantenerla actualizada.</p>
+            <p>Estas son las cookies que usa actualmente linkaloo o que podrían activarse según la categoría de consentimiento que selecciones. Incluimos nombre, finalidad, proveedor, duración y si son de terceros.</p>
             <table class="legal-table">
                 <thead>
                     <tr>
-                        <th>Nombre de cookie</th>
-                        <th>Proveedor</th>
+                        <th>Nombre</th>
                         <th>Finalidad</th>
-                        <th>Tipo</th>
+                        <th>Proveedor</th>
                         <th>Duración</th>
+                        <th>Tercero</th>
+                        <th>Categoría</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>_session_id</td>
+                        <td>PHPSESSID</td>
+                        <td>Identificar la sesión del usuario para mantener login, seguridad y navegación interna.</td>
                         <td>linkaloo.com</td>
-                        <td>Mantener sesión iniciada y asegurar el funcionamiento básico de la cuenta.</td>
-                        <td>Técnica (necesaria)</td>
                         <td>Sesión</td>
+                        <td>No</td>
+                        <td>Estrictamente necesaria</td>
                     </tr>
                     <tr>
-                        <td>_ga</td>
-                        <td>google.com</td>
-                        <td>Recopilar datos agregados de navegación para analítica y mejora del servicio.</td>
-                        <td>Analítica (previo consentimiento)</td>
-                        <td>2 años</td>
+                        <td>linkaloo_remember</td>
+                        <td>Recordar la autenticación del usuario cuando activa la opción “recordarme”.</td>
+                        <td>linkaloo.com</td>
+                        <td>30 días</td>
+                        <td>No</td>
+                        <td>Estrictamente necesaria</td>
+                    </tr>
+                    <tr>
+                        <td>linkaloo_cookie_consent</td>
+                        <td>Guardar las preferencias de consentimiento para no volver a mostrar el banner en cada visita.</td>
+                        <td>linkaloo.com</td>
+                        <td>12 meses</td>
+                        <td>No</td>
+                        <td>Estrictamente necesaria</td>
+                    </tr>
+                    <tr>
+                        <td>_ga*</td>
+                        <td>Medición agregada de uso del sitio y análisis estadístico de navegación.</td>
+                        <td>Google LLC</td>
+                        <td>Hasta 2 años</td>
+                        <td>Sí</td>
+                        <td>Analítica (solo con consentimiento)</td>
                     </tr>
                     <tr>
                         <td>_gid</td>
-                        <td>google.com</td>
-                        <td>Distinguir sesiones de uso con fines estadísticos.</td>
-                        <td>Analítica (previo consentimiento)</td>
+                        <td>Distinguir sesiones de navegación para estadísticas de uso.</td>
+                        <td>Google LLC</td>
                         <td>24 horas</td>
+                        <td>Sí</td>
+                        <td>Analítica (solo con consentimiento)</td>
+                    </tr>
+                    <tr>
+                        <td>_fbp / fr</td>
+                        <td>Medir rendimiento de campañas y personalización publicitaria en plataformas sociales.</td>
+                        <td>Meta Platforms, Inc.</td>
+                        <td>Hasta 3 meses</td>
+                        <td>Sí</td>
+                        <td>Marketing (solo con consentimiento)</td>
                     </tr>
                 </tbody>
             </table>
-            <p><em>Nota:</em> la lista puede cambiar si incorporamos nuevas funcionalidades o proveedores externos.</p>
+            <p><em>Nota:</em> si añadimos nuevos proveedores o cookies, actualizaremos esta política y te volveremos a solicitar consentimiento cuando sea necesario.</p>
         </section>
 
         <section class="info-section">
@@ -74,8 +102,14 @@
 
         <section class="info-section">
             <h2>5. ¿Cómo puedes gestionar o retirar el consentimiento?</h2>
-            <p>Puedes configurar tus preferencias en cualquier momento mediante el panel de configuración de cookies (disponible en el banner o en la sección “Configurar cookies”) y también desde las opciones de tu navegador para bloquear, eliminar o restringir cookies.</p>
+            <p>Registramos tu elección de consentimiento en localStorage y en una cookie técnica de preferencia para poder demostrar la trazabilidad del consentimiento y respetar tu decisión en visitas posteriores. Puedes configurar, retirar o modificar tus preferencias en cualquier momento desde el botón “Configurar cookies” del sitio o desde el banner inicial.</p>
         </section>
+
+        <div class="info-note">
+            <strong>Panel de consentimiento</strong>
+            <span>Haz clic para revisar o cambiar ahora tus elecciones por categoría.</span>
+            <button type="button" class="cookie-btn cookie-btn-primary open-cookie-preferences">Configurar cookies</button>
+        </div>
 
         <section class="info-section">
             <h2>6. Transferencias internacionales</h2>

@@ -49,6 +49,7 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
                 <ul class="settings-submenu">
                     <li><a href="/cookies.php">Cookies</a></li>
                     <li><a href="/politica_cookies.php">Política de cookies</a></li>
+                    <li><button type="button" class="open-cookie-preferences">Configurar cookies</button></li>
                     <li><a href="/condiciones_servicio.php">Condiciones de servicio</a></li>
                     <li><a href="/politica_privacidad.php">Política de privacidad</a></li>
                     <li><a href="/quienes_somos.php">Quiénes somos</a></li>
@@ -57,4 +58,5 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
         </ul>
     </nav>
 </header>
+<?php include "cookie_consent.php"; ?>
 <div class="content">
