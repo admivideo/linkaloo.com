@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const consentRoot = document.getElementById('cookie-consent-root');
+  const isCpanelView = /\/cpanel\.php$/.test(window.location.pathname);
+  const consentRoot = isCpanelView ? document.getElementById('cookie-consent-root') : null;
   const consentModal = consentRoot ? consentRoot.querySelector('[data-cookie-modal]') : null;
   const categoryInputs = consentRoot ? consentRoot.querySelectorAll('[data-cookie-category]') : [];
 
