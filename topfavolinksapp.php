@@ -1,17 +1,14 @@
 <?php
-if (!defined('TOPFAVOLINKS_EMBED')) {
-    $query = $_SERVER['QUERY_STRING'] ?? '';
-    $target = '/top_favolinks.php' . ($query !== '' ? '?' . $query : '');
-    header('Location: ' . $target, true, 302);
-    exit;
-}
-
 require 'config.php';
 require 'favicon_utils.php';
 require_once 'session.php';
 require_once 'device.php';
 
-$wrapLayout = !defined('TOPFAVOLINKS_EMBED');
+// Evitar caché persistente, pero permitir que el navegador recargue al volver atrás
+header('Cache-Control: no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+$cssVersion = filemtime(__DIR__ . '/assets/style.css');
+$jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 
 $descLimit = isMobile() ? 50 : 150;
 $selectedCat = isset($_GET['cat']) ? trim($_GET['cat']) : '';
@@ -52,11 +49,24 @@ $maxAdsPerCat = [];
 foreach ($catCounts as $cat => $cnt) {
     $maxAdsPerCat[$cat] = intdiv($cnt, 6);
 }
-
-if ($wrapLayout) {
-    include 'header_top_favolinks.php';
-}
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/img/favicon.png" type="image/png">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rambla:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/style.css?v=<?= $cssVersion ?>">
+    <script src="https://unpkg.com/feather-icons" defer></script>
+    <script src="/assets/main.js?v=<?= $jsVersion ?>" defer></script>
+    <title>linkaloo</title>
+</head>
+<body>
+<div class="content">
 <h2 style="margin: 5px 0; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; color: #1DA1F2;">
     <img src="https://linkaloo.com/img/I_TopFavolinks.png" alt="Top Favolinks" width="24" height="24" loading="lazy">
     <span>Top Favolinks</span>
@@ -64,9 +74,9 @@ if ($wrapLayout) {
 <div class="board-nav">
     <button type="button" class="board-scroll left" aria-label="Anterior"><i data-feather="chevron-left"></i></button>
     <div class="board-slider">
-        <a href="ontop.php" class="board-btn<?= $selectedCat === '' ? ' active' : '' ?>" data-cat="all">Todo</a>
+        <a href="topfavolinksapp.php" class="board-btn<?= $selectedCat === '' ? ' active' : '' ?>" data-cat="all">Todo</a>
         <?php foreach ($topCategories as $cat): ?>
-            <a href="ontop.php?cat=<?= urlencode($cat) ?>" class="board-btn<?= $cat === $selectedCat ? ' active' : '' ?>" data-cat="<?= htmlspecialchars($cat) ?>">
+            <a href="topfavolinksapp.php?cat=<?= urlencode($cat) ?>" class="board-btn<?= $cat === $selectedCat ? ' active' : '' ?>" data-cat="<?= htmlspecialchars($cat) ?>">
                 <?= htmlspecialchars($cat) ?>
             </a>
         <?php endforeach; ?>
@@ -147,9 +157,6 @@ foreach ($links as $link):
     endforeach;
 ?>
 </div>
-
-<?php if ($wrapLayout): ?>
 </div>
 </body>
 </html>
-<?php endif; ?>

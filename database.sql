@@ -4,7 +4,8 @@ CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    pass_hash VARCHAR(255) NOT NULL
+    pass_hash VARCHAR(255) NOT NULL,
+    ultimo_acceso DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE categorias (

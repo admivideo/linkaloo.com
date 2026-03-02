@@ -184,6 +184,46 @@ if (!function_exists('linkalooClearRememberMeToken')) {
     }
 }
 
+
+if (!function_exists('linkalooHasColumn')) {
+    function linkalooHasColumn(PDO $pdo, string $table, string $column): bool
+    {
+        static $cache = [];
+        $key = strtolower($table . '.' . $column);
+
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+
+        try {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+            $stmt->execute([$table, $column]);
+            $cache[$key] = ((int) $stmt->fetchColumn()) > 0;
+        } catch (Throwable $exception) {
+            error_log('Error checking column existence: ' . $exception->getMessage());
+            $cache[$key] = false;
+        }
+
+        return $cache[$key];
+    }
+}
+
+if (!function_exists('linkalooTouchLastAccess')) {
+    function linkalooTouchLastAccess(PDO $pdo, int $userId): void
+    {
+        if ($userId <= 0 || !linkalooHasColumn($pdo, 'usuarios', 'ultimo_acceso')) {
+            return;
+        }
+
+        try {
+            $stmt = $pdo->prepare('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = ?');
+            $stmt->execute([$userId]);
+        } catch (Throwable $exception) {
+            error_log('Error updating last access: ' . $exception->getMessage());
+        }
+    }
+}
+
 if (!function_exists('linkalooAttemptAutoLogin')) {
     function linkalooAttemptAutoLogin(PDO $pdo): void
     {
@@ -249,6 +289,7 @@ if (!function_exists('linkalooAttemptAutoLogin')) {
         $_SESSION['user_id']   = (int) $user['id'];
         $_SESSION['user_name'] = $user['nombre'];
 
+        linkalooTouchLastAccess($pdo, (int) $user['id']);
         linkalooIssueRememberMeToken($pdo, (int) $user['id']);
     }
 }
@@ -259,5 +300,9 @@ if (empty($_SESSION['user_id']) && !empty($_COOKIE[LINKALOO_REMEMBER_COOKIE_NAME
     }
 
     linkalooAttemptAutoLogin($pdo);
+}
+
+if (!empty($_SESSION['user_id']) && isset($pdo) && ($pdo instanceof PDO)) {
+    linkalooTouchLastAccess($pdo, (int) $_SESSION['user_id']);
 }
 ?>

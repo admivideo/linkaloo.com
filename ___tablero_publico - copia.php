@@ -32,9 +32,6 @@ $intentLink = "intent://tablero?token=" . urlencode($token) .
 
 $categoria = null;
 $links = [];
-$ogTitle = "Tablero compartido - Linkaloo";
-$ogDescription = "Abre este tablero en Linkaloo";
-$ogImage = "https://linkaloo.com/icon_linkaloo_512.png";
 
 if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseConnection')) {
     try {
@@ -49,24 +46,6 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
             );
             $linksStmt->execute([$categoria['id']]);
             $links = $linksStmt->fetchAll();
-
-            $ogTitle = "Tablero " . $categoria['nombre'] . " compartido por " . ($categoria['shared_by'] ?? "Linkaloo");
-            if (!empty($categoria['nota'])) {
-                $ogDescription = $categoria['nota'];
-            }
-
-            if (!empty($links)) {
-                foreach ($links as $link) {
-                    if (!empty($link['imagen'])) {
-                        $img = $link['imagen'];
-                        if (strpos($img, 'http://') !== 0 && strpos($img, 'https://') !== 0) {
-                            $img = 'https://linkaloo.com' . $img;
-                        }
-                        $ogImage = $img;
-                        break;
-                    }
-                }
-            }
         }
     } catch (Exception $e) {
         $categoria = null;
@@ -79,13 +58,7 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tablero compartido - Linkaloo</title>
-    <meta property="og:title" content="<?php echo htmlspecialchars($ogTitle, ENT_QUOTES, 'UTF-8'); ?>" />
-    <meta property="og:description" content="<?php echo htmlspecialchars($ogDescription, ENT_QUOTES, 'UTF-8'); ?>" />
-    <meta property="og:image" content="<?php echo htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8'); ?>" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="<?php echo htmlspecialchars('https://linkaloo.com/tablero_publico.php?token=' . urlencode($token), ENT_QUOTES, 'UTF-8'); ?>" />
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rambla:wght@400;700&display=swap');
         :root {
             --linkaloo-blue: #1da1f2;
             --bg-light: #f5f7fb;
@@ -94,7 +67,7 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
             --card-border: #e2e8f0;
         }
         body {
-            font-family: "Rambla", "Roboto", "Segoe UI", Arial, sans-serif;
+            font-family: "Roboto", "Rambla", "Segoe UI", Arial, sans-serif;
             background: var(--bg-light);
             color: var(--text-primary);
             margin: 0;
@@ -107,9 +80,6 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
         .btn-primary { background: var(--linkaloo-blue); color: #fff; }
         .btn-secondary { background: #f1f3f5; color: var(--text-primary); }
         .token { font-size: 12px; color: #888; margin-top: 16px; word-break: break-all; }
-        .logo-linkaloo { width: 180px; height: auto; max-width: 100%; margin: 0 auto 12px; display: block; }
-        .play-badge { display: inline-block; margin-top: 10px; }
-        .play-badge img { height: 54px; width: auto; display: block; }
         .links-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
         .link-card { text-align: left; background: #fff; border: 1px solid var(--card-border); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06); }
         .link-image { width: 100%; height: 180px; object-fit: cover; display: block; background: #eef2f6; }
@@ -169,14 +139,10 @@ if ($isInApp && !empty($token) && $configLoaded && function_exists('getDatabaseC
                     <div class="token">Token: <?php echo $encodedToken; ?></div>
                 <?php endif; ?>
             <?php else : ?>
-                <img class="logo-linkaloo" src="https://linkaloo.com/img/logo_linkaloo_blue.png" alt="Linkaloo">
-                <h1>Abrir el tablero en Linkaloo</h1>
-                <p>Este tablero está listo para abrirse en Linkaloo.</p>
+                <h1>Abrir tablero en Linkaloo</h1>
+                <p>Este tablero está listo para abrirse en la app. Si no la tienes instalada, puedes descargarla desde Google Play.</p>
                 <a class="btn btn-primary" id="openLinkaloo" href="<?php echo $intentLink; ?>">Abrir en Linkaloo</a>
-                <p>Si no tienes instalada la app, puedes descargarla fácilmente desde Google Play.</p>
-                <a class="play-badge" href="<?php echo $playStoreUrl; ?>" target="_blank" rel="noopener noreferrer">
-                    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png" alt="Disponible en Google Play">
-                </a>
+                <a class="btn btn-secondary" href="<?php echo $playStoreUrl; ?>">Instalar Linkaloo</a>
                 <?php if (!empty($encodedToken)) : ?>
                     <div class="token">Token: <?php echo $encodedToken; ?></div>
                 <?php endif; ?>

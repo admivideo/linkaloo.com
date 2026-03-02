@@ -267,7 +267,7 @@ try {
         'check_user', 'create_user', 'get_categories', 'update_category',
         'create_category', 'delete_category', 'debug_table_structure',
         'test_connection', 'get_links', 'check_duplicate_link',
-        'get_links_paginated', 'get_links_by_token', 'create_link', 'update_link', 'delete_link',
+        'get_links_paginated', 'create_link', 'update_link', 'delete_link',
         'get_url_metadata', 'debug_links', 'upload_image', 'get_top_favolinks'
     ];
     error_log("=== VALIDACIÓN DE ACCIÓN ===");
@@ -317,10 +317,6 @@ try {
             
         case 'get_links':
             getLinks($pdo, $input);
-            break;
-            
-        case 'get_links_by_token':
-            getLinksByToken($pdo, $input);
             break;
             
         case 'check_duplicate_link':
@@ -694,69 +690,6 @@ function getLinks($pdo, $input) {
             'error' => 'Error interno del servidor: ' . $e->getMessage(),
             'file' => basename($e->getFile()),
             'line' => $e->getLine()
-        ], JSON_UNESCAPED_UNICODE);
-    }
-}
-
-function getLinksByToken($pdo, $input) {
-    try {
-        $shareToken = isset($input['share_token']) ? trim($input['share_token']) : '';
-        $shareToken = preg_replace('/\s+/', '', $shareToken);
-        $shareTokenLower = strtolower($shareToken);
-
-        if (empty($shareTokenLower)) {
-            throw new Exception('share_token es requerido');
-        }
-
-        $stmt = $pdo->prepare("SELECT c.id, c.usuario_id, c.nombre, c.creado_en, c.modificado_en, c.share_token, c.nota, u.nombre AS shared_by FROM categorias c JOIN usuarios u ON u.id = c.usuario_id WHERE LOWER(TRIM(c.share_token)) = ? LIMIT 1");
-        $stmt->execute([$shareTokenLower]);
-        $categoria = $stmt->fetch();
-
-        if (!$categoria) {
-            throw new Exception('Tablero no encontrado');
-        }
-
-        $stmt = $pdo->prepare("SELECT * FROM links WHERE categoria_id = ? ORDER BY creado_en DESC");
-        $stmt->execute([$categoria['id']]);
-        $links = $stmt->fetchAll();
-
-        $linksMapped = array_map(function($link) {
-            return [
-                'id' => (int)($link['id'] ?? 0),
-                'usuario_id' => (int)($link['usuario_id'] ?? 0),
-                'categoria_id' => (int)($link['categoria_id'] ?? 0),
-                'url' => $link['url'] ?? '',
-                'url_canonica' => isset($link['url_canonica']) ? $link['url_canonica'] : null,
-                'titulo' => isset($link['titulo']) ? $link['titulo'] : null,
-                'descripcion' => isset($link['descripcion']) ? $link['descripcion'] : null,
-                'imagen' => isset($link['imagen']) ? $link['imagen'] : null,
-                'favicon' => isset($link['favicon']) ? $link['favicon'] : null,
-                'creado_en' => isset($link['creado_en']) ? $link['creado_en'] : null,
-                'actualizado_en' => isset($link['actualizado_en']) ? $link['actualizado_en'] : null,
-                'nota_link' => isset($link['nota_link']) ? $link['nota_link'] : null,
-                'hash_url' => isset($link['hash_url']) ? $link['hash_url'] : null
-            ];
-        }, $links);
-
-        echo json_encode([
-            'success' => true,
-            'categoria' => [
-                'id' => (int)$categoria['id'],
-                'usuario_id' => (int)$categoria['usuario_id'],
-                'nombre' => $categoria['nombre'],
-                'creado_en' => $categoria['creado_en'],
-                'modificado_en' => $categoria['modificado_en'],
-                'share_token' => $categoria['share_token'],
-                'nota' => $categoria['nota'],
-                'shared_by' => $categoria['shared_by'] ?? null
-            ],
-            'total_links' => count($linksMapped),
-            'links' => $linksMapped
-        ], JSON_UNESCAPED_UNICODE);
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'error' => $e->getMessage()
         ], JSON_UNESCAPED_UNICODE);
     }
 }
