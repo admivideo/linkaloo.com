@@ -322,7 +322,7 @@ if (isset($_GET['export_welcome_csv'])) {
 
     foreach ($welcomeUsers as $user) {
         $row = [
-            (string) ((int) ($user['id'] ?? 0)),
+            $escapeCsv((string) ((int) ($user['id'] ?? 0))),
             $escapeCsv((string) ($user['nombre'] ?? '')),
             $escapeCsv((string) ($user['email'] ?? '')),
             $escapeCsv((string) ($user['creado_en'] ?? '')),
