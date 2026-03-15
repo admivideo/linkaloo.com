@@ -122,8 +122,6 @@ foreach ($segments as $segment) {
 }
 
 $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'fecha_creacion', 'registrado_en']);
-$userUpdatedColumn = pickColumn($pdo, 'usuarios', ['actualizado_en', 'updated_at', 'fecha_actualizacion', 'modificado_en']);
-$userNameColumn = pickColumn($pdo, 'usuarios', ['nombre', 'name', 'username']);
 $userEmailColumn = pickColumn($pdo, 'usuarios', ['email', 'correo', 'mail']);
 $lastAccessColumn = pickColumn($pdo, 'usuarios', ['ultimo_acceso', 'last_access', 'ultimo_login', 'last_login_at']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
@@ -318,10 +316,8 @@ if (
     }
 
     $csvIdSelect = 'u.id';
-    $csvNameSelect = $userNameColumn ? "u.`{$userNameColumn}`" : "''";
     $csvEmailSelect = $userEmailColumn ? "u.`{$userEmailColumn}`" : "''";
     $csvCreatedSelect = "u.`{$userCreatedColumn}`";
-    $csvUpdatedSelect = $userUpdatedColumn ? "u.`{$userUpdatedColumn}`" : 'NULL';
 
     if (isset($_GET['export_reactivate_csv'])) {
         $registrationDateCondition = 'DATE(' . $csvCreatedSelect . ') < DATE_SUB(CURDATE(), INTERVAL 14 DAY)';
@@ -340,14 +336,11 @@ if (
     $welcomeUsersSql = "
         SELECT
             {$csvIdSelect} AS id,
-            {$csvNameSelect} AS nombre,
-            {$csvEmailSelect} AS email,
-            {$csvCreatedSelect} AS creado_en,
-            {$csvUpdatedSelect} AS actualizado_en
+            {$csvEmailSelect} AS email
         FROM usuarios u
         LEFT JOIN links l ON l.usuario_id = u.id
         WHERE {$registrationDateCondition}
-        GROUP BY u.id, nombre, email, creado_en, actualizado_en
+        GROUP BY u.id, email
         HAVING COUNT(l.id) = 0
         ORDER BY u.id ASC
     ";
@@ -379,15 +372,12 @@ if (
     }
 
     fwrite($output, "\xEF\xBB\xBF");
-    writePlainCsvRow($output, ['id', 'nombre', 'email', 'creado_en', 'actualizado_en']);
+    writePlainCsvRow($output, ['id', 'email']);
 
     foreach ($welcomeUsers as $user) {
         $row = [
             (string) ((int) ($user['id'] ?? 0)),
-            (string) ($user['nombre'] ?? ''),
             (string) ($user['email'] ?? ''),
-            (string) ($user['creado_en'] ?? ''),
-            (string) ($user['actualizado_en'] ?? ''),
         ];
 
         writePlainCsvRow($output, $row);
