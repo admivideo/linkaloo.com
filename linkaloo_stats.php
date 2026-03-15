@@ -156,6 +156,10 @@ $statsSql = "
 
 $statsRows = $pdo->query($statsSql)->fetchAll();
 
+$itemsPerPage = 500;
+$requestedPage = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT);
+$currentPage = is_int($requestedPage) && $requestedPage > 0 ? $requestedPage : 1;
+
 $totalLinks = 0;
 $accessStatusSummary = [
     'green' => ['color' => '#22c55e', 'days_range' => '0-3 días', 'usuarios' => 0],
@@ -180,6 +184,10 @@ foreach ($statsRows as &$row) {
 unset($row);
 
 $totalUsuarios = count($statsRows);
+$totalPages = max(1, (int) ceil($totalUsuarios / $itemsPerPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $itemsPerPage;
+$paginatedStatsRows = array_slice($statsRows, $offset, $itemsPerPage);
 
 $segmentoPorcentajeLinks = [];
 $chartParts = [];
@@ -227,6 +235,36 @@ $tableHeaders = [
     ['key' => 'fecha_primer_favolink', 'label' => 'Primer favolink'],
     ['key' => 'fecha_ultimo_favolink', 'label' => 'Último favolink'],
 ];
+
+/** @return array<int, int|string> */
+function paginationItems(int $currentPage, int $totalPages): array
+{
+    if ($totalPages <= 7) {
+        return range(1, $totalPages);
+    }
+
+    $pages = [1];
+    $windowStart = max(2, $currentPage - 1);
+    $windowEnd = min($totalPages - 1, $currentPage + 1);
+
+    if ($windowStart > 2) {
+        $pages[] = '...';
+    }
+
+    for ($page = $windowStart; $page <= $windowEnd; $page++) {
+        $pages[] = $page;
+    }
+
+    if ($windowEnd < $totalPages - 1) {
+        $pages[] = '...';
+    }
+
+    $pages[] = $totalPages;
+
+    return $pages;
+}
+
+$pagination = paginationItems($currentPage, $totalPages);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -288,6 +326,17 @@ $tableHeaders = [
 
         .empty { padding: 1rem; }
 
+        .pagination-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.75rem 0.85rem; border-bottom: 1px solid #e2edff; }
+        .pagination-info { margin: 0; font-size: 0.86rem; color: #42689d; }
+        .pagination-nav { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0.35rem; }
+        .pagination-link,
+        .pagination-current,
+        .pagination-ellipsis { min-width: 34px; height: 34px; display: inline-flex; justify-content: center; align-items: center; border-radius: 8px; border: 1px solid #d9e8ff; font-size: 0.84rem; }
+        .pagination-link { text-decoration: none; color: #0f4a98; background: #fff; }
+        .pagination-link:hover { background: #ecf4ff; }
+        .pagination-current { color: #ffffff; border-color: #1f6ad4; background: #1f6ad4; font-weight: 700; }
+        .pagination-ellipsis { border-color: transparent; color: #6b89b7; background: transparent; }
+
         @media (max-width: 980px) {
             .layout-grid { grid-template-columns: 1fr; }
             .sidebar { position: static; }
@@ -325,6 +374,30 @@ $tableHeaders = [
                 <?php if (!$statsRows): ?>
                     <div class="empty">No hay datos para mostrar.</div>
                 <?php else: ?>
+                    <div class="pagination-bar">
+                        <p class="pagination-info">
+                            Mostrando <?= $offset + 1 ?>-<?= $offset + count($paginatedStatsRows) ?> de <?= $totalUsuarios ?> usuarios (página <?= $currentPage ?> de <?= $totalPages ?>)
+                        </p>
+                        <nav class="pagination-nav" aria-label="Paginación de usuarios">
+                            <?php if ($currentPage > 1): ?>
+                                <a class="pagination-link" href="?page=<?= $currentPage - 1 ?>" aria-label="Página anterior">‹</a>
+                            <?php endif; ?>
+
+                            <?php foreach ($pagination as $pageItem): ?>
+                                <?php if ($pageItem === '...'): ?>
+                                    <span class="pagination-ellipsis" aria-hidden="true">…</span>
+                                <?php elseif ((int) $pageItem === $currentPage): ?>
+                                    <span class="pagination-current" aria-current="page"><?= (int) $pageItem ?></span>
+                                <?php else: ?>
+                                    <a class="pagination-link" href="?page=<?= (int) $pageItem ?>"><?= (int) $pageItem ?></a>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a class="pagination-link" href="?page=<?= $currentPage + 1 ?>" aria-label="Página siguiente">›</a>
+                            <?php endif; ?>
+                        </nav>
+                    </div>
                     <table>
                         <thead>
                             <tr>
@@ -334,7 +407,7 @@ $tableHeaders = [
                             </tr>
                         </thead>
                         <tbody id="stats-body">
-                        <?php foreach ($statsRows as $row): ?>
+                        <?php foreach ($paginatedStatsRows as $row): ?>
                             <?php $savedLinkStatus = $row['estado_ultimo_link']; ?>
                             <tr>
                                 <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
