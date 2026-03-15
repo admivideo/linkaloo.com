@@ -235,25 +235,35 @@ $tableHeaders = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linkaloo estadísticas</title>
     <style>
-        :root { color-scheme: dark; }
+        :root { color-scheme: light; }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, sans-serif; background: #0f1224; color: #eff3ff; }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
+            color: #173b74;
+        }
         .wrapper { width: min(1200px, 100% - 2rem); margin: 1.5rem auto; }
         h1 { margin: 0 0 1rem; font-size: clamp(1.2rem, 2.5vw, 1.8rem); }
 
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; margin: 0 0 1rem; }
-        .summary-card, .sidebar, .table-container { border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 12px; background: rgba(255, 255, 255, 0.05); }
+        .summary-card, .sidebar, .table-container {
+            border: 1px solid #d9e8ff;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 12px 28px rgba(39, 95, 180, 0.08);
+        }
         .summary-card { padding: 0.75rem; }
-        .summary-title { margin: 0; font-size: 0.83rem; color: #c8d1ff; }
-        .summary-value { margin: 0.25rem 0 0; font-size: 1.35rem; font-weight: 700; }
-        .summary-meta { margin: 0.3rem 0 0; font-size: 0.85rem; color: #d9e0ff; line-height: 1.35; }
+        .summary-title { margin: 0; font-size: 0.83rem; color: #5585c5; }
+        .summary-value { margin: 0.25rem 0 0; font-size: 1.35rem; font-weight: 700; color: #10428a; }
+        .summary-meta { margin: 0.3rem 0 0; font-size: 0.85rem; color: #4c6998; line-height: 1.35; }
 
         .layout-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 860px; }
-        thead { background: rgba(255, 255, 255, 0.12); }
-        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.92rem; }
-        tbody tr:hover { background: rgba(255, 255, 255, 0.06); }
+        thead { background: #ecf4ff; }
+        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #e2edff; font-size: 0.92rem; }
+        tbody tr:hover { background: #f2f8ff; }
 
         th button.sort-btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; width: 100%; }
         th button.sort-btn::after { content: '↕'; font-size: 0.75rem; opacity: 0.7; }
@@ -261,17 +271,17 @@ $tableHeaders = [
         th button.sort-btn[data-order="desc"]::after { content: '↓'; opacity: 1; }
 
         .sidebar { padding: 1rem; position: sticky; top: 1rem; }
-        .sidebar h2 { margin: 0 0 0.8rem; font-size: 1rem; }
+        .sidebar h2 { margin: 0 0 0.8rem; font-size: 1rem; color: #0f4a98; }
         .sidebar section + section { margin-top: 1rem; }
-        .pie-chart { width: min(220px, 100%); aspect-ratio: 1/1; border-radius: 50%; margin: 0 auto 1rem; background: var(--pie-background); border: 1px solid rgba(255,255,255,0.2); }
+        .pie-chart { width: min(220px, 100%); aspect-ratio: 1/1; border-radius: 50%; margin: 0 auto 1rem; background: var(--pie-background); border: 1px solid #d9e8ff; }
         .legend { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.35rem; }
         .legend li { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.87rem; }
         .legend-label { display: inline-flex; align-items: center; gap: 0.4rem; }
         .legend-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dot-color); }
-        .status-summary-box { border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 0.8rem; background: rgba(15, 18, 36, 0.45); }
+        .status-summary-box { border: 1px solid #d9e8ff; border-radius: 10px; padding: 0.8rem; background: #f7fbff; }
         .status-summary-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.45rem; }
         .status-summary-list li { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.87rem; }
-        .status-summary-meta { color: #cdd6ff; }
+        .status-summary-meta { color: #42689d; }
 
         .access-status { display: inline-flex; align-items: center; justify-content: center; width: 100%; }
         .access-status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--status-color); flex-shrink: 0; }
@@ -284,13 +294,13 @@ $tableHeaders = [
         }
 
         @media (max-width: 760px) {
-            .table-container { border: none; background: transparent; }
+            .table-container { border: none; background: transparent; box-shadow: none; }
             table, thead, tbody, tr, th, td { display: block; }
             thead { display: none; }
             table { min-width: 0; }
-            tr { margin-bottom: 0.9rem; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 12px; background: rgba(255, 255, 255, 0.05); padding: 0.4rem 0; }
+            tr { margin-bottom: 0.9rem; border: 1px solid #d9e8ff; border-radius: 12px; background: #ffffff; padding: 0.4rem 0; }
             td { border: none; padding: 0.55rem 0.85rem; display: flex; justify-content: space-between; gap: 0.75rem; }
-            td::before { content: attr(data-label); font-weight: 700; color: #95a4ff; }
+            td::before { content: attr(data-label); font-weight: 700; color: #4f7fbe; }
         }
     </style>
 </head>
