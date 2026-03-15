@@ -301,7 +301,7 @@ function writePlainCsvRow($output, array $row): void
 
 $pagination = paginationItems($currentPage, $totalPages);
 
-if (isset($_GET['export_welcome_csv']) || isset($_GET['export_d3_csv'])) {
+if (isset($_GET['export_welcome_csv']) || isset($_GET['export_d3_csv']) || isset($_GET['export_d7_csv'])) {
     if (!$userCreatedColumn) {
         header('HTTP/1.1 500 Internal Server Error');
         header('Content-Type: text/plain; charset=UTF-8');
@@ -315,9 +315,13 @@ if (isset($_GET['export_welcome_csv']) || isset($_GET['export_d3_csv'])) {
     $csvCreatedSelect = "u.`{$userCreatedColumn}`";
     $csvUpdatedSelect = $userUpdatedColumn ? "u.`{$userUpdatedColumn}`" : 'NULL';
 
-    $registrationDateCondition = isset($_GET['export_d3_csv'])
-        ? 'DATE(' . $csvCreatedSelect . ') = DATE_SUB(CURDATE(), INTERVAL 3 DAY)'
-        : 'DATE(' . $csvCreatedSelect . ') = CURDATE()';
+    if (isset($_GET['export_d7_csv'])) {
+        $registrationDateCondition = 'DATE(' . $csvCreatedSelect . ') BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND DATE_SUB(CURDATE(), INTERVAL 3 DAY)';
+    } elseif (isset($_GET['export_d3_csv'])) {
+        $registrationDateCondition = 'DATE(' . $csvCreatedSelect . ') = DATE_SUB(CURDATE(), INTERVAL 3 DAY)';
+    } else {
+        $registrationDateCondition = 'DATE(' . $csvCreatedSelect . ') = CURDATE()';
+    }
 
     $welcomeUsersSql = "
         SELECT
@@ -336,9 +340,11 @@ if (isset($_GET['export_welcome_csv']) || isset($_GET['export_d3_csv'])) {
 
     $welcomeUsers = $pdo->query($welcomeUsersSql)->fetchAll(PDO::FETCH_ASSOC);
 
+    $isD7Export = isset($_GET['export_d7_csv']);
     $isD3Export = isset($_GET['export_d3_csv']);
-    $targetDate = new DateTimeImmutable($isD3Export ? 'today -3 days' : 'today');
-    $filename = ($isD3Export ? 'D3_' : 'D0_') . $targetDate->format('Y-m-d') . '.csv';
+    $targetDate = new DateTimeImmutable($isD7Export ? 'today -7 days' : ($isD3Export ? 'today -3 days' : 'today'));
+    $filenamePrefix = $isD7Export ? 'D7_' : ($isD3Export ? 'D3_' : 'D1_');
+    $filename = $filenamePrefix . $targetDate->format('Y-m-d') . '.csv';
 
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -477,8 +483,9 @@ if (isset($_GET['export_welcome_csv']) || isset($_GET['export_d3_csv'])) {
 <div class="wrapper">
     <div class="header-row">
         <h1>Estadísticas de usuarios de Linkaloo</h1>
-        <a class="welcome-export-btn" href="?export_welcome_csv=1">Descargar CSV usuarios D0 (sin favolinks)</a>
+        <a class="welcome-export-btn" href="?export_welcome_csv=1">Descargar CSV usuarios D1 (sin favolinks)</a>
         <a class="welcome-export-btn" href="?export_d3_csv=1">Descargar CSV usuarios D3 (sin favolinks)</a>
+        <a class="welcome-export-btn" href="?export_d7_csv=1">Descargar CSV usuarios D7 (sin favolinks)</a>
     </div>
 
     <div class="summary-grid">
