@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const sentinel = document.createElement('div');
       sentinel.className = 'load-more-sentinel';
       boardLazyContainer.appendChild(sentinel);
-      const limit = mode === 'public' ? 50 : 100;
+      const limit = 500;
       const catId = boardLazyContainer.dataset.cat;
       const token = boardLazyContainer.dataset.token;
       let loadingMore = false;
