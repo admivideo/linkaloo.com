@@ -122,6 +122,9 @@ foreach ($segments as $segment) {
 }
 
 $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'fecha_creacion', 'registrado_en']);
+$userUpdatedColumn = pickColumn($pdo, 'usuarios', ['actualizado_en', 'updated_at', 'fecha_actualizacion', 'modificado_en']);
+$userNameColumn = pickColumn($pdo, 'usuarios', ['nombre', 'name', 'username']);
+$userEmailColumn = pickColumn($pdo, 'usuarios', ['email', 'correo', 'mail']);
 $lastAccessColumn = pickColumn($pdo, 'usuarios', ['ultimo_acceso', 'last_access', 'ultimo_login', 'last_login_at']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
 
@@ -265,6 +268,67 @@ function paginationItems(int $currentPage, int $totalPages): array
 }
 
 $pagination = paginationItems($currentPage, $totalPages);
+
+if (isset($_GET['export_welcome_csv'])) {
+    if (!$userCreatedColumn) {
+        header('HTTP/1.1 500 Internal Server Error');
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo 'No se pudo exportar el CSV: no se detectó la columna de fecha de creación de usuarios.';
+        exit;
+    }
+
+    $csvIdSelect = 'u.id';
+    $csvNameSelect = $userNameColumn ? "u.`{$userNameColumn}`" : "''";
+    $csvEmailSelect = $userEmailColumn ? "u.`{$userEmailColumn}`" : "''";
+    $csvCreatedSelect = "u.`{$userCreatedColumn}`";
+    $csvUpdatedSelect = $userUpdatedColumn ? "u.`{$userUpdatedColumn}`" : 'NULL';
+
+    $welcomeUsersSql = "
+        SELECT
+            {$csvIdSelect} AS id,
+            {$csvNameSelect} AS nombre,
+            {$csvEmailSelect} AS email,
+            {$csvCreatedSelect} AS creado_en,
+            {$csvUpdatedSelect} AS actualizado_en
+        FROM usuarios u
+        LEFT JOIN links l ON l.usuario_id = u.id
+        WHERE DATE({$csvCreatedSelect}) = CURDATE()
+        GROUP BY u.id, nombre, email, creado_en, actualizado_en
+        HAVING COUNT(l.id) = 0
+        ORDER BY u.id ASC
+    ";
+
+    $welcomeUsers = $pdo->query($welcomeUsersSql)->fetchAll(PDO::FETCH_ASSOC);
+
+    $todayForFile = (new DateTimeImmutable('today'))->format('Y-m-d');
+    $filename = 'D0_' . $todayForFile . '.csv';
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+    $output = fopen('php://output', 'wb');
+    if ($output === false) {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo 'No se pudo generar el archivo CSV.';
+        exit;
+    }
+
+    fwrite($output, "\xEF\xBB\xBF");
+    fputcsv($output, ['id', 'nombre', 'email', 'creado_en', 'actualizado_en']);
+
+    foreach ($welcomeUsers as $user) {
+        fputcsv($output, [
+            (int) ($user['id'] ?? 0),
+            (string) ($user['nombre'] ?? ''),
+            (string) ($user['email'] ?? ''),
+            (string) ($user['creado_en'] ?? ''),
+            (string) ($user['actualizado_en'] ?? ''),
+        ]);
+    }
+
+    fclose($output);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -283,6 +347,23 @@ $pagination = paginationItems($currentPage, $totalPages);
         }
         .wrapper { width: min(1200px, 100% - 2rem); margin: 1.5rem auto; }
         h1 { margin: 0 0 1rem; font-size: clamp(1.2rem, 2.5vw, 1.8rem); }
+        .header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+        .header-row h1 { margin: 0; }
+        .welcome-export-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #1f6ad4;
+            border-radius: 9px;
+            background: #1f6ad4;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.58rem 0.9rem;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .welcome-export-btn:hover { background: #1453af; transform: translateY(-1px); }
 
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; margin: 0 0 1rem; }
         .summary-card, .sidebar, .table-container {
@@ -355,7 +436,10 @@ $pagination = paginationItems($currentPage, $totalPages);
 </head>
 <body>
 <div class="wrapper">
-    <h1>Estadísticas de usuarios de Linkaloo</h1>
+    <div class="header-row">
+        <h1>Estadísticas de usuarios de Linkaloo</h1>
+        <a class="welcome-export-btn" href="?export_welcome_csv=1">Descargar CSV usuarios D0 (sin favolinks)</a>
+    </div>
 
     <div class="summary-grid">
         <?php foreach ($summaryCards as $card): ?>
