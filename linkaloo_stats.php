@@ -267,6 +267,33 @@ function paginationItems(int $currentPage, int $totalPages): array
     return $pages;
 }
 
+/**
+ * Devuelve un valor plano para exportación sin comillas de encapsulado.
+ */
+function sanitizePlainExportValue(mixed $value): string
+{
+    $text = (string) ($value ?? '');
+
+    // Evita saltos de línea/tabs que rompen el formato del archivo.
+    $text = str_replace(["\r", "\n", "\t"], ' ', $text);
+
+    // Si el valor viene con comillas envolventes, las quita.
+    if (strlen($text) >= 2 && $text[0] === '"' && substr($text, -1) === '"') {
+        $text = substr($text, 1, -1);
+    }
+
+    return trim($text);
+}
+
+/**
+ * Escribe una fila CSV sin usar encapsulado por comillas.
+ */
+function writePlainCsvRow($output, array $row): void
+{
+    $cleanValues = array_map(static fn($value): string => sanitizePlainExportValue($value), $row);
+    fwrite($output, implode(',', $cleanValues) . "\n");
+}
+
 $pagination = paginationItems($currentPage, $totalPages);
 
 if (isset($_GET['export_welcome_csv'])) {
@@ -314,7 +341,7 @@ if (isset($_GET['export_welcome_csv'])) {
     }
 
     fwrite($output, "\xEF\xBB\xBF");
-    fputcsv($output, ['id', 'nombre', 'email', 'creado_en', 'actualizado_en']);
+    writePlainCsvRow($output, ['id', 'nombre', 'email', 'creado_en', 'actualizado_en']);
 
     foreach ($welcomeUsers as $user) {
         $row = [
@@ -325,7 +352,7 @@ if (isset($_GET['export_welcome_csv'])) {
             (string) ($user['actualizado_en'] ?? ''),
         ];
 
-        fputcsv($output, $row);
+        writePlainCsvRow($output, $row);
     }
 
     fclose($output);
