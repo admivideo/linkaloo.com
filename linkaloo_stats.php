@@ -274,6 +274,11 @@ function sanitizePlainExportValue(mixed $value): string
 {
     $text = (string) ($value ?? '');
 
+    // Fuerza UTF-8 para evitar caracteres inválidos en la exportación.
+    if ($text !== '' && !mb_check_encoding($text, 'UTF-8')) {
+        $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8, ISO-8859-1, WINDOWS-1252');
+    }
+
     // Evita saltos de línea/tabs que rompen el formato del archivo.
     $text = str_replace(["\r", "\n", "\t"], ' ', $text);
 
