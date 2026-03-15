@@ -316,14 +316,20 @@ if (isset($_GET['export_welcome_csv'])) {
     fwrite($output, "\xEF\xBB\xBF");
     fputcsv($output, ['id', 'nombre', 'email', 'creado_en', 'actualizado_en']);
 
+    $escapeCsv = static function (string $value): string {
+        return '"' . str_replace('"', '""', $value) . '"';
+    };
+
     foreach ($welcomeUsers as $user) {
-        fputcsv($output, [
-            (int) ($user['id'] ?? 0),
-            (string) ($user['nombre'] ?? ''),
-            (string) ($user['email'] ?? ''),
-            (string) ($user['creado_en'] ?? ''),
-            (string) ($user['actualizado_en'] ?? ''),
-        ]);
+        $row = [
+            (string) ((int) ($user['id'] ?? 0)),
+            $escapeCsv((string) ($user['nombre'] ?? '')),
+            $escapeCsv((string) ($user['email'] ?? '')),
+            $escapeCsv((string) ($user['creado_en'] ?? '')),
+            $escapeCsv((string) ($user['actualizado_en'] ?? '')),
+        ];
+
+        fwrite($output, implode(',', $row) . "\n");
     }
 
     fclose($output);
