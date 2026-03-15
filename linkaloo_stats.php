@@ -316,7 +316,7 @@ if (isset($_GET['export_welcome_csv']) || isset($_GET['export_d3_csv'])) {
     $csvUpdatedSelect = $userUpdatedColumn ? "u.`{$userUpdatedColumn}`" : 'NULL';
 
     $registrationDateCondition = isset($_GET['export_d3_csv'])
-        ? 'DATE(' . $csvCreatedSelect . ') BETWEEN DATE_SUB(CURDATE(), INTERVAL 3 DAY) AND DATE_SUB(CURDATE(), INTERVAL 2 DAY)'
+        ? 'DATE(' . $csvCreatedSelect . ') = DATE_SUB(CURDATE(), INTERVAL 3 DAY)'
         : 'DATE(' . $csvCreatedSelect . ') = CURDATE()';
 
     $welcomeUsersSql = "
