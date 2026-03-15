@@ -308,6 +308,7 @@ if (
     || isset($_GET['export_d3_csv'])
     || isset($_GET['export_d7_csv'])
     || isset($_GET['export_d14_csv'])
+    || isset($_GET['export_reactivate_csv'])
 ) {
     if (!$userCreatedColumn) {
         header('HTTP/1.1 500 Internal Server Error');
@@ -322,7 +323,9 @@ if (
     $csvCreatedSelect = "u.`{$userCreatedColumn}`";
     $csvUpdatedSelect = $userUpdatedColumn ? "u.`{$userUpdatedColumn}`" : 'NULL';
 
-    if (isset($_GET['export_d14_csv'])) {
+    if (isset($_GET['export_reactivate_csv'])) {
+        $registrationDateCondition = 'DATE(' . $csvCreatedSelect . ') < DATE_SUB(CURDATE(), INTERVAL 14 DAY)';
+    } elseif (isset($_GET['export_d14_csv'])) {
         $registrationDateCondition = 'DATE(' . $csvCreatedSelect . ') BETWEEN DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND DATE_SUB(CURDATE(), INTERVAL 8 DAY)';
     } elseif (isset($_GET['export_d7_csv'])) {
         $registrationDateCondition = 'DATE(' . $csvCreatedSelect . ') BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND DATE_SUB(CURDATE(), INTERVAL 3 DAY)';
@@ -351,12 +354,18 @@ if (
 
     $welcomeUsers = $pdo->query($welcomeUsersSql)->fetchAll(PDO::FETCH_ASSOC);
 
+    $isReactivationExport = isset($_GET['export_reactivate_csv']);
     $isD14Export = isset($_GET['export_d14_csv']);
     $isD7Export = isset($_GET['export_d7_csv']);
     $isD3Export = isset($_GET['export_d3_csv']);
     $isD1Export = isset($_GET['export_d1_csv']);
-    $targetDate = new DateTimeImmutable($isD14Export ? 'today -14 days' : ($isD7Export ? 'today -7 days' : ($isD3Export ? 'today -3 days' : ($isD1Export ? 'today -1 day' : 'today'))));
-    $filenamePrefix = $isD14Export ? 'D14_' : ($isD7Export ? 'D7_' : ($isD3Export ? 'D3_' : ($isD1Export ? 'D1_' : 'D0_')));
+    $targetDate = new DateTimeImmutable($isReactivationExport
+        ? 'today -14 days'
+        : ($isD14Export ? 'today -14 days' : ($isD7Export ? 'today -7 days' : ($isD3Export ? 'today -3 days' : ($isD1Export ? 'today -1 day' : 'today'))))
+    );
+    $filenamePrefix = $isReactivationExport
+        ? 'REACTIVAR_'
+        : ($isD14Export ? 'D14_' : ($isD7Export ? 'D7_' : ($isD3Export ? 'D3_' : ($isD1Export ? 'D1_' : 'D0_'))));
     $filename = $filenamePrefix . $targetDate->format('Y-m-d') . '.csv';
 
     header('Content-Type: text/csv; charset=UTF-8');
@@ -501,6 +510,7 @@ if (
         <a class="welcome-export-btn" href="?export_d3_csv=1" aria-label="Descargar CSV de usuarios D3 (sin favolinks)">⬇️ D3</a>
         <a class="welcome-export-btn" href="?export_d7_csv=1" aria-label="Descargar CSV de usuarios D7 (sin favolinks)">⬇️ D7</a>
         <a class="welcome-export-btn" href="?export_d14_csv=1" aria-label="Descargar CSV de usuarios D14 (registrados entre hace 8 y 14 días, sin favolinks)">⬇️ D14</a>
+        <a class="welcome-export-btn" href="?export_reactivate_csv=1" aria-label="Descargar CSV de reactivación (usuarios con más de 14 días y sin favolinks)">🔁 Reactivar</a>
     </div>
 
     <div class="summary-grid">
