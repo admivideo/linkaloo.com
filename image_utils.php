@@ -42,23 +42,43 @@ function saveImageFromUrl($url, $userId){
                 imagedestroy($img);
                 $final = $resized;
             }
-            imageresolution($final, 75, 75);
+            if(function_exists('imageresolution')){
+                imageresolution($final, 75, 75);
+            }
+
+            $saved = false;
             switch($ext){
                 case 'png':
-                    imagepng($final, $fullPath);
+                    if(function_exists('imagepng')){
+                        $saved = imagepng($final, $fullPath);
+                    }
                     break;
                 case 'gif':
-                    imagegif($final, $fullPath);
+                    if(function_exists('imagegif')){
+                        $saved = imagegif($final, $fullPath);
+                    }
                     break;
                 case 'webp':
-                    imagewebp($final, $fullPath);
+                    if(function_exists('imagewebp')){
+                        $saved = imagewebp($final, $fullPath);
+                    }
                     break;
                 case 'bmp':
-                    imagebmp($final, $fullPath);
+                    if(function_exists('imagebmp')){
+                        $saved = imagebmp($final, $fullPath);
+                    }
                     break;
                 default:
-                    imagejpeg($final, $fullPath, 85);
+                    if(function_exists('imagejpeg')){
+                        $saved = imagejpeg($final, $fullPath, 85);
+                    }
                     break;
+            }
+
+            if(!$saved && function_exists('imagejpeg')){
+                $fullPath = preg_replace('/\.[^.]+$/', '.jpg', $fullPath);
+                $filename = preg_replace('/\.[^.]+$/', '.jpg', $filename);
+                imagejpeg($final, $fullPath, 85);
             }
             imagedestroy($final);
         } else {
