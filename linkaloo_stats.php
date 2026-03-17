@@ -714,7 +714,7 @@ if (
                         <?php endforeach; ?>
                     </ul>
                 </section>
-
+<!--
                 <section class="status-summary-box">
                     <h2>Usuarios por hora (actualización de perfil)</h2>
                     <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
@@ -739,6 +739,7 @@ if (
                         </tbody>
                     </table>
                 </section>
+-->				
             </aside>
         </div>
     </section>
