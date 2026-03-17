@@ -421,6 +421,36 @@ if (
         h1 { margin: 0 0 1rem; font-size: clamp(1.2rem, 2.5vw, 1.8rem); }
         .header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
         .header-row h1 { margin: 0; }
+        .top-menu {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin: 0 0 1rem;
+            padding: 0.7rem;
+            border: 1px solid #d9e8ff;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 12px 28px rgba(39, 95, 180, 0.08);
+        }
+        .menu-btn {
+            border: 1px solid #c8ddff;
+            border-radius: 999px;
+            background: #f3f8ff;
+            color: #1253a7;
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 0.45rem 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .menu-btn:hover { background: #e9f3ff; }
+        .menu-btn.is-active {
+            background: #1f6ad4;
+            border-color: #1f6ad4;
+            color: #ffffff;
+        }
+        .stats-section { display: none; }
+        .stats-section.is-active { display: block; }
         .welcome-export-btn {
             display: inline-flex;
             align-items: center;
@@ -481,7 +511,7 @@ if (
         .bar-value { font-size: 0.75rem; color: #244f8f; font-weight: 700; }
         .bar-label { font-size: 0.72rem; color: #42689d; text-align: center; line-height: 1.2; }
 
-        .layout-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; }
+        .resumen-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 860px; }
         thead { background: #ecf4ff; }
@@ -522,8 +552,18 @@ if (
         .pagination-current { color: #ffffff; border-color: #1f6ad4; background: #1f6ad4; font-weight: 700; }
         .pagination-ellipsis { border-color: transparent; color: #6b89b7; background: transparent; }
 
+        .export-card {
+            border: 1px solid #d9e8ff;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 12px 28px rgba(39, 95, 180, 0.08);
+            padding: 1rem;
+        }
+        .export-card h2 { margin: 0 0 0.75rem; color: #0f4a98; }
+        .export-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
         @media (max-width: 980px) {
-            .layout-grid { grid-template-columns: 1fr; }
+            .resumen-layout { grid-template-columns: 1fr; }
             .sidebar { position: static; }
         }
 
@@ -542,42 +582,73 @@ if (
 <div class="wrapper">
     <div class="header-row">
         <h1>Estadísticas de usuarios de Linkaloo</h1>
-        <a class="welcome-export-btn" href="?export_d0_csv=1" aria-label="Descargar CSV de usuarios D0 (sin favolinks)">⬇️ D0</a>
-        <a class="welcome-export-btn" href="?export_d1_csv=1" aria-label="Descargar CSV de usuarios D1 (sin favolinks)">⬇️ D1</a>
-        <a class="welcome-export-btn" href="?export_d3_csv=1" aria-label="Descargar CSV de usuarios D3 (sin favolinks)">⬇️ D3</a>
-        <a class="welcome-export-btn" href="?export_d7_csv=1" aria-label="Descargar CSV de usuarios D7 (sin favolinks)">⬇️ D7</a>
-        <a class="welcome-export-btn" href="?export_d14_csv=1" aria-label="Descargar CSV de usuarios D14 (registrados entre hace 8 y 14 días, sin favolinks)">⬇️ D14</a>
-        <a class="welcome-export-btn" href="?export_reactivate_csv=1" aria-label="Descargar CSV de reactivación (usuarios con más de 14 días y sin favolinks)">🔁 Reactivar</a>
     </div>
 
-    <div class="summary-grid">
-        <?php foreach ($summaryCards as $card): ?>
-            <article class="summary-card">
-                <p class="summary-title"><?= htmlspecialchars($card['title'], ENT_QUOTES, 'UTF-8') ?></p>
-                <p class="summary-value"><?= (int) $card['usuarios'] ?></p>
-                <p class="summary-meta">Links: <?= (int) $card['links'] ?></p>
-                <p class="summary-meta">% del total links: <?= number_format((float) $card['pct'], 2, ',', '.') ?>%</p>
-            </article>
-        <?php endforeach; ?>
-    </div>
+    <nav class="top-menu" aria-label="Secciones de estadísticas">
+        <button class="menu-btn is-active" type="button" data-section="resumen">Resumen</button>
+        <button class="menu-btn" type="button" data-section="usuarios">Usuarios</button>
+        <button class="menu-btn" type="button" data-section="exportar">Exportar</button>
+    </nav>
 
-    <article class="bar-chart-card summary-card">
-        <p class="summary-title">Gráfico de barras verticales (% del total de usuarios)</p>
-        <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con usuarios y porcentaje del total de usuarios por segmento">
-            <?php foreach ($barChartRows as $bar): ?>
-                <?php $barHeight = max(2.0, (float) $bar['pct_users']); ?>
-                <div class="bar-item">
-                    <strong class="bar-value"><?= (int) $bar['usuarios'] ?> · <?= number_format((float) $bar['pct_users'], 2, ',', '.') ?>%</strong>
-                    <div class="bar-track">
-                        <div class="bar-fill" style="--bar-color: <?= htmlspecialchars((string) $bar['color'], ENT_QUOTES, 'UTF-8') ?>; height: <?= number_format($barHeight, 2, '.', '') ?>%;" title="<?= htmlspecialchars((string) $bar['title'], ENT_QUOTES, 'UTF-8') ?>"></div>
-                    </div>
-                    <span class="bar-label"><?= htmlspecialchars((string) $bar['short_label'], ENT_QUOTES, 'UTF-8') ?></span>
-                </div>
+    <section id="section-resumen" class="stats-section is-active">
+        <div class="summary-grid">
+            <?php foreach ($summaryCards as $card): ?>
+                <article class="summary-card">
+                    <p class="summary-title"><?= htmlspecialchars($card['title'], ENT_QUOTES, 'UTF-8') ?></p>
+                    <p class="summary-value"><?= (int) $card['usuarios'] ?></p>
+                    <p class="summary-meta">Links: <?= (int) $card['links'] ?></p>
+                    <p class="summary-meta">% del total links: <?= number_format((float) $card['pct'], 2, ',', '.') ?>%</p>
+                </article>
             <?php endforeach; ?>
         </div>
-    </article>
 
-    <div class="layout-grid">
+        <div class="resumen-layout">
+            <article class="bar-chart-card summary-card">
+                <p class="summary-title">Gráfico de barras verticales (% del total de usuarios)</p>
+                <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con usuarios y porcentaje del total de usuarios por segmento">
+                    <?php foreach ($barChartRows as $bar): ?>
+                        <?php $barHeight = max(2.0, (float) $bar['pct_users']); ?>
+                        <div class="bar-item">
+                            <strong class="bar-value"><?= (int) $bar['usuarios'] ?> · <?= number_format((float) $bar['pct_users'], 2, ',', '.') ?>%</strong>
+                            <div class="bar-track">
+                                <div class="bar-fill" style="--bar-color: <?= htmlspecialchars((string) $bar['color'], ENT_QUOTES, 'UTF-8') ?>; height: <?= number_format($barHeight, 2, '.', '') ?>%;" title="<?= htmlspecialchars((string) $bar['title'], ENT_QUOTES, 'UTF-8') ?>"></div>
+                            </div>
+                            <span class="bar-label"><?= htmlspecialchars((string) $bar['short_label'], ENT_QUOTES, 'UTF-8') ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </article>
+
+            <aside class="sidebar">
+                <section>
+                    <h2>Distribución de links por segmento</h2>
+                    <div class="pie-chart" style="--pie-background: <?= htmlspecialchars($pieBackground, ENT_QUOTES, 'UTF-8') ?>;"></div>
+                    <ul class="legend">
+                        <?php foreach ($legendRows as $legend): ?>
+                            <li>
+                                <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($legend['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($legend['label'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <strong><?= number_format((float) $legend['pct'], 2, ',', '.') ?>%</strong>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </section>
+
+                <section class="status-summary-box">
+                    <h2>Resumen de colores (último link)</h2>
+                    <ul class="status-summary-list">
+                        <?php foreach ($accessStatusSummary as $status): ?>
+                            <li>
+                                <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($status['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><span class="status-summary-meta"><?= htmlspecialchars($status['days_range'], ENT_QUOTES, 'UTF-8') ?></span></span>
+                                <strong><?= (int) $status['usuarios'] ?> usuarios</strong>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </section>
+            </aside>
+        </div>
+    </section>
+
+    <section id="section-usuarios" class="stats-section">
         <div class="list-column">
             <div class="table-container">
                 <?php if (!$statsRows): ?>
@@ -634,36 +705,55 @@ if (
                 <?php endif; ?>
             </div>
         </div>
+    </section>
 
-        <aside class="sidebar">
-            <section>
-                <h2>Distribución de links por segmento</h2>
-                <div class="pie-chart" style="--pie-background: <?= htmlspecialchars($pieBackground, ENT_QUOTES, 'UTF-8') ?>;"></div>
-                <ul class="legend">
-                    <?php foreach ($legendRows as $legend): ?>
-                        <li>
-                            <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($legend['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><?= htmlspecialchars($legend['label'], ENT_QUOTES, 'UTF-8') ?></span>
-                            <strong><?= number_format((float) $legend['pct'], 2, ',', '.') ?>%</strong>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </section>
-
-            <section class="status-summary-box">
-                <h2>Resumen de colores (último link)</h2>
-                <ul class="status-summary-list">
-                    <?php foreach ($accessStatusSummary as $status): ?>
-                        <li>
-                            <span class="legend-label"><span class="legend-dot" style="--dot-color: <?= htmlspecialchars($status['color'], ENT_QUOTES, 'UTF-8') ?>;"></span><span class="status-summary-meta"><?= htmlspecialchars($status['days_range'], ENT_QUOTES, 'UTF-8') ?></span></span>
-                            <strong><?= (int) $status['usuarios'] ?> usuarios</strong>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </section>
-        </aside>
-    </div>
+    <section id="section-exportar" class="stats-section">
+        <article class="export-card">
+            <h2>Exportar listados</h2>
+            <div class="export-grid">
+                <a class="welcome-export-btn" href="?export_d0_csv=1" aria-label="Descargar CSV de usuarios D0 (sin favolinks)">⬇️ D0</a>
+                <a class="welcome-export-btn" href="?export_d1_csv=1" aria-label="Descargar CSV de usuarios D1 (sin favolinks)">⬇️ D1</a>
+                <a class="welcome-export-btn" href="?export_d3_csv=1" aria-label="Descargar CSV de usuarios D3 (sin favolinks)">⬇️ D3</a>
+                <a class="welcome-export-btn" href="?export_d7_csv=1" aria-label="Descargar CSV de usuarios D7 (sin favolinks)">⬇️ D7</a>
+                <a class="welcome-export-btn" href="?export_d14_csv=1" aria-label="Descargar CSV de usuarios D14 (registrados entre hace 8 y 14 días, sin favolinks)">⬇️ D14</a>
+                <a class="welcome-export-btn" href="?export_reactivate_csv=1" aria-label="Descargar CSV de reactivación (usuarios con más de 14 días y sin favolinks)">🔁 Reactivar</a>
+            </div>
+        </article>
+    </section>
 </div>
 <script>
+(function () {
+    const menuButtons = document.querySelectorAll('.menu-btn');
+    const sections = document.querySelectorAll('.stats-section');
+    if (!menuButtons.length || !sections.length) {
+        return;
+    }
+
+    function activateSection(sectionId, updateHash = true) {
+        menuButtons.forEach((button) => {
+            button.classList.toggle('is-active', button.dataset.section === sectionId);
+        });
+        sections.forEach((section) => {
+            section.classList.toggle('is-active', section.id === `section-${sectionId}`);
+        });
+        if (updateHash) {
+            window.location.hash = sectionId;
+        }
+    }
+
+    menuButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            activateSection(button.dataset.section);
+        });
+    });
+
+    const hashSection = window.location.hash.replace('#', '');
+    const validHash = Array.from(menuButtons).some((button) => button.dataset.section === hashSection);
+    if (validHash) {
+        activateSection(hashSection, false);
+    }
+})();
+
 (function () {
     const tbody = document.getElementById('stats-body');
     const buttons = document.querySelectorAll('.sort-btn');
