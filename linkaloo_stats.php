@@ -194,7 +194,7 @@ $segmentoPorcentajeLinks = [];
 $chartParts = [];
 $legendRows = [];
 $summaryCards = [
-    ['title' => 'Total usuarios', 'usuarios' => $totalUsuarios, 'links' => $totalLinks, 'pct' => 100.0],
+    ['title' => 'Total usuarios', 'usuarios' => $totalUsuarios, 'links' => $totalLinks, 'pct' => 100.0, 'color' => '#1d4ed8', 'short_label' => 'Total'],
 ];
 
 $acumulado = 0.0;
@@ -221,8 +221,12 @@ foreach ($segments as $segment) {
         'usuarios' => $resumen[$key]['usuarios'],
         'links' => $links,
         'pct' => $pct,
+        'color' => $segmentColors[$key],
+        'short_label' => $segmentLegends[$key],
     ];
 }
+
+$barChartRows = $summaryCards;
 
 $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . ')' : 'conic-gradient(#6b7280 0% 100%)';
 
@@ -434,6 +438,38 @@ if (
         .summary-value { margin: 0.25rem 0 0; font-size: 1.35rem; font-weight: 700; color: #10428a; }
         .summary-meta { margin: 0.3rem 0 0; font-size: 0.85rem; color: #4c6998; line-height: 1.35; }
 
+        .bar-chart-card { margin: 0 0 1rem; }
+        .bar-chart {
+            height: 260px;
+            border: 1px solid #d9e8ff;
+            border-radius: 12px;
+            background: linear-gradient(to top, #f8fbff 0%, #ffffff 100%);
+            padding: 0.8rem 0.7rem 0.55rem;
+            display: grid;
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+            align-items: end;
+            gap: 0.45rem;
+        }
+        .bar-item { display: grid; gap: 0.35rem; justify-items: center; }
+        .bar-track {
+            width: 100%;
+            height: 180px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0 0.1rem;
+            background: repeating-linear-gradient(to top, #ebf3ff 0 1px, transparent 1px 22%);
+            border-radius: 8px;
+        }
+        .bar-fill {
+            width: 100%;
+            min-height: 2px;
+            border-radius: 8px 8px 4px 4px;
+            background: var(--bar-color);
+        }
+        .bar-value { font-size: 0.75rem; color: #244f8f; font-weight: 700; }
+        .bar-label { font-size: 0.72rem; color: #42689d; text-align: center; line-height: 1.2; }
+
         .layout-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 860px; }
@@ -513,6 +549,22 @@ if (
             </article>
         <?php endforeach; ?>
     </div>
+
+    <article class="bar-chart-card summary-card">
+        <p class="summary-title">Gráfico de barras verticales (% del total de links)</p>
+        <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con el porcentaje del total de links por segmento de usuarios">
+            <?php foreach ($barChartRows as $bar): ?>
+                <?php $barHeight = max(2.0, (float) $bar['pct']); ?>
+                <div class="bar-item">
+                    <strong class="bar-value"><?= number_format((float) $bar['pct'], 2, ',', '.') ?>%</strong>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="--bar-color: <?= htmlspecialchars((string) $bar['color'], ENT_QUOTES, 'UTF-8') ?>; height: <?= number_format($barHeight, 2, '.', '') ?>%;" title="<?= htmlspecialchars((string) $bar['title'], ENT_QUOTES, 'UTF-8') ?>"></div>
+                    </div>
+                    <span class="bar-label"><?= htmlspecialchars((string) $bar['short_label'], ENT_QUOTES, 'UTF-8') ?></span>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </article>
 
     <div class="layout-grid">
         <div class="list-column">
