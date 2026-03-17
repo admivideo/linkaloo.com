@@ -18,6 +18,8 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
    [configuracion.md](configuracion.md) para conocer las variables de entorno y consejos de despliegue.
 6. **¿Vas a integrar el front-end con llamadas asíncronas?** Revisa la referencia de
    [endpoints.md](endpoints.md) para conocer parámetros, respuestas y requisitos de autenticación.
+7. **¿Vas a operar analítica interna y cohortes de onboarding/reactivación?** Consulta
+   [linkaloo_stats.md](linkaloo_stats.md) para entender seguridad, métricas y exportaciones CSV.
 
 ## Tabla de contenidos
 
@@ -34,6 +36,7 @@ instrucciones para usuarios finales y la referencia de los endpoints disponibles
 | [resumen_ejecutivo.md](resumen_ejecutivo.md) | Resumen rápido para stakeholders: propósito, flujo principal y tareas de operación. |
 | [configuracion.md](configuracion.md) | Variables de entorno recomendadas, requisitos de OAuth/reCAPTCHA y tareas de mantenimiento. |
 | [endpoints.md](endpoints.md) | Referencia de los scripts PHP que exponen respuestas JSON o sirven contenido público. |
+| [linkaloo_stats.md](linkaloo_stats.md) | Guía específica de `linkaloo_stats.php`: acceso, cálculo de métricas, tabla y exportaciones por cohortes. |
 | [progreso.md](progreso.md) | Resumen del estado actual del proyecto, funcionalidades cubiertas y próximos pasos sugeridos. |
 | [faq.md](faq.md) | Preguntas frecuentes de instalación, operación y resolución de dudas comunes. |
 
