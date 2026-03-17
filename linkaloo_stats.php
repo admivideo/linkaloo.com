@@ -649,15 +649,15 @@ if (
         .heatmap-wrap { margin-top: 1rem; }
         .heatmap-table { width: 100%; border-collapse: collapse; border-spacing: 0; }
         .heatmap-table th, .heatmap-table td { border: none; padding: 0.35rem; font-size: 0.76rem; text-align: center; }
-        .heatmap-table tbody td { padding: 0; }
+        .heatmap-table tbody td { padding: 0; width: 36px; height: 24px; }
         .heatmap-table thead th { color: #2b5fa8; font-weight: 700; }
         .heatmap-table tbody th { color: #42689d; text-align: right; white-space: nowrap; }
         .heatmap-cell {
-            width: 36px;
-            height: 24px;
+            width: 100%;
+            height: 100%;
             border-radius: 0;
             border: none;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
