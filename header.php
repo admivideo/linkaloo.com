@@ -24,12 +24,12 @@ $jsVersion  = filemtime(__DIR__ . '/assets/main.js');
 <body>
 <header class="top-menu">
     <div class="logo"><a href="/panel.php"><img src="/img/linkaloo_white.png" alt="linkaloo"><!-- Logo file already on server --></a></div>
-    <nav>
+    <nav class="main-nav">
         <?php if(isset($_SESSION['user_id']) && isset($categorias)): ?>
             <a href="/agregar_favolink.php" class="add-link-btn add-mobile" aria-label="Añadir"><i data-feather="plus"></i></a>
         <?php endif; ?>
-        <button class="menu-toggle" aria-label="Menú"><span></span><span></span><span></span></button>
-        <ul class="menu">
+        <button type="button" class="menu-toggle" aria-label="Menú" aria-expanded="false" aria-controls="primary-menu"><span></span><span></span><span></span></button>
+        <ul id="primary-menu" class="menu">
             <?php if(isset($_SESSION['user_id'])): ?>
                 <?php if(isset($categorias)): ?>
                     <li class="add-menu">

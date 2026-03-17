@@ -119,7 +119,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const menu = document.querySelector('.top-menu ul');
   if (toggle && menu) {
     toggle.addEventListener('click', () => {
-      menu.classList.toggle('show');
+      const isOpen = menu.classList.toggle('show');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!menu.classList.contains('show')) return;
+      if (event.target.closest('.main-nav')) return;
+      menu.classList.remove('show');
+      toggle.setAttribute('aria-expanded', 'false');
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 600) {
+        menu.classList.remove('show');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 
