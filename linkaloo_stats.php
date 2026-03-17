@@ -193,6 +193,7 @@ $paginatedStatsRows = array_slice($statsRows, $offset, $itemsPerPage);
 $segmentoPorcentajeLinks = [];
 $chartParts = [];
 $legendRows = [];
+$barChartRows = [];
 $summaryCards = [
     ['title' => 'Total usuarios', 'usuarios' => $totalUsuarios, 'links' => $totalLinks, 'pct' => 100.0, 'color' => '#1d4ed8', 'short_label' => 'Total'],
 ];
@@ -216,17 +217,27 @@ foreach ($segments as $segment) {
         'pct' => $pct,
     ];
 
+    $segmentUsers = $resumen[$key]['usuarios'];
+    $segmentUsersPct = $totalUsuarios > 0 ? round(($segmentUsers / $totalUsuarios) * 100, 2) : 0.0;
+
     $summaryCards[] = [
         'title' => $segmentTitles[$key],
-        'usuarios' => $resumen[$key]['usuarios'],
+        'usuarios' => $segmentUsers,
         'links' => $links,
         'pct' => $pct,
         'color' => $segmentColors[$key],
         'short_label' => $segmentLegends[$key],
     ];
+
+    $barChartRows[] = [
+        'title' => $segmentTitles[$key],
+        'usuarios' => $segmentUsers,
+        'pct_users' => $segmentUsersPct,
+        'color' => $segmentColors[$key],
+        'short_label' => $segmentLegends[$key],
+    ];
 }
 
-$barChartRows = $summaryCards;
 
 $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . ')' : 'conic-gradient(#6b7280 0% 100%)';
 
@@ -551,12 +562,12 @@ if (
     </div>
 
     <article class="bar-chart-card summary-card">
-        <p class="summary-title">Gráfico de barras verticales (% del total de links)</p>
-        <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con el porcentaje del total de links por segmento de usuarios">
+        <p class="summary-title">Gráfico de barras verticales (% del total de usuarios)</p>
+        <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con usuarios y porcentaje del total de usuarios por segmento">
             <?php foreach ($barChartRows as $bar): ?>
-                <?php $barHeight = max(2.0, (float) $bar['pct']); ?>
+                <?php $barHeight = max(2.0, (float) $bar['pct_users']); ?>
                 <div class="bar-item">
-                    <strong class="bar-value"><?= number_format((float) $bar['pct'], 2, ',', '.') ?>%</strong>
+                    <strong class="bar-value"><?= (int) $bar['usuarios'] ?> · <?= number_format((float) $bar['pct_users'], 2, ',', '.') ?>%</strong>
                     <div class="bar-track">
                         <div class="bar-fill" style="--bar-color: <?= htmlspecialchars((string) $bar['color'], ENT_QUOTES, 'UTF-8') ?>; height: <?= number_format($barHeight, 2, '.', '') ?>%;" title="<?= htmlspecialchars((string) $bar['title'], ENT_QUOTES, 'UTF-8') ?>"></div>
                     </div>
