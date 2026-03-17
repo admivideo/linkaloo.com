@@ -65,6 +65,19 @@ function formatDate(?string $value): string
     }
 }
 
+function extractHour(?string $value): ?int
+{
+    if (!$value) {
+        return null;
+    }
+
+    try {
+        return (int) (new DateTimeImmutable($value))->format('G');
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
 /** @return array{key:string,color:string,sort:int,days_range:string} */
 function lastSavedLinkStatus(?string $value): array
 {
@@ -168,6 +181,11 @@ $accessStatusSummary = [
     'red' => ['color' => '#ef4444', 'days_range' => '+8 días', 'usuarios' => 0],
     'blue' => ['color' => '#3b82f6', 'days_range' => 'Sin links guardados', 'usuarios' => 0],
 ];
+$hourlyUsageRows = [];
+for ($hour = 0; $hour < 24; $hour++) {
+    $hourlyUsageRows[$hour] = ['hour' => sprintf('%02d:00', $hour), 'usuarios' => 0];
+}
+
 foreach ($statsRows as &$row) {
     $linksGuardados = (int) ($row['cantidad_favolinks_guardados'] ?? 0);
     $totalLinks += $linksGuardados;
@@ -180,6 +198,11 @@ foreach ($statsRows as &$row) {
     $row['estado_ultimo_link'] = $savedLinkStatus;
     if (isset($accessStatusSummary[$savedLinkStatus['key']])) {
         $accessStatusSummary[$savedLinkStatus['key']]['usuarios']++;
+    }
+
+    $accessHour = extractHour($row['fecha_ultimo_acceso'] ?? null);
+    if ($accessHour !== null && isset($hourlyUsageRows[$accessHour])) {
+        $hourlyUsageRows[$accessHour]['usuarios']++;
     }
 }
 unset($row);
@@ -535,6 +558,9 @@ if (
         .status-summary-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.45rem; }
         .status-summary-list li { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.87rem; }
         .status-summary-meta { color: #42689d; }
+        .hourly-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+        .hourly-table th, .hourly-table td { padding: 0.42rem 0.5rem; border-bottom: 1px solid #e2edff; font-size: 0.84rem; text-align: left; }
+        .hourly-table th:last-child, .hourly-table td:last-child { text-align: right; }
 
         .access-status { display: inline-flex; align-items: center; justify-content: center; width: 100%; }
         .access-status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--status-color); flex-shrink: 0; }
@@ -643,6 +669,26 @@ if (
                             </li>
                         <?php endforeach; ?>
                     </ul>
+                </section>
+
+                <section class="status-summary-box">
+                    <h2>Usuarios por hora de conexión</h2>
+                    <table class="hourly-table" aria-label="Listado de usuarios por hora de conexión">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Usuarios</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($hourlyUsageRows as $hourlyRow): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($hourlyRow['hour'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= (int) $hourlyRow['usuarios'] ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </section>
             </aside>
         </div>
