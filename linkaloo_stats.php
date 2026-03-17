@@ -191,7 +191,6 @@ $offset = ($currentPage - 1) * $itemsPerPage;
 $paginatedStatsRows = array_slice($statsRows, $offset, $itemsPerPage);
 
 $segmentoPorcentajeLinks = [];
-$segmentoPorcentajeUsuarios = [];
 $chartParts = [];
 $legendRows = [];
 $summaryCards = [
@@ -202,11 +201,8 @@ $acumulado = 0.0;
 foreach ($segments as $segment) {
     $key = $segment['key'];
     $links = $resumen[$key]['links'];
-    $usuariosSegmento = $resumen[$key]['usuarios'];
     $pct = $totalLinks > 0 ? round(($links / $totalLinks) * 100, 2) : 0.0;
-    $pctUsuarios = $totalUsuarios > 0 ? round(($usuariosSegmento / $totalUsuarios) * 100, 2) : 0.0;
     $segmentoPorcentajeLinks[$key] = $pct;
-    $segmentoPorcentajeUsuarios[$key] = $pctUsuarios;
 
     if ($pct > 0) {
         $inicio = $acumulado;
@@ -222,26 +218,15 @@ foreach ($segments as $segment) {
 
     $summaryCards[] = [
         'title' => $segmentTitles[$key],
-        'usuarios' => $usuariosSegmento,
+        'usuarios' => $resumen[$key]['usuarios'],
         'links' => $links,
         'pct' => $pct,
-        'pct_usuarios' => $pctUsuarios,
         'color' => $segmentColors[$key],
         'short_label' => $segmentLegends[$key],
     ];
 }
 
-$barChartRows = [];
-foreach ($segments as $segment) {
-    $key = $segment['key'];
-    $barChartRows[] = [
-        'title' => $segmentTitles[$key],
-        'short_label' => $segmentLegends[$key],
-        'usuarios' => $resumen[$key]['usuarios'],
-        'pct_usuarios' => $segmentoPorcentajeUsuarios[$key],
-        'color' => $segmentColors[$key],
-    ];
-}
+$barChartRows = $summaryCards;
 
 $pieBackground = $chartParts ? 'conic-gradient(' . implode(', ', $chartParts) . ')' : 'conic-gradient(#6b7280 0% 100%)';
 
@@ -561,20 +546,17 @@ if (
                 <p class="summary-value"><?= (int) $card['usuarios'] ?></p>
                 <p class="summary-meta">Links: <?= (int) $card['links'] ?></p>
                 <p class="summary-meta">% del total links: <?= number_format((float) $card['pct'], 2, ',', '.') ?>%</p>
-                <?php if (isset($card['pct_usuarios'])): ?>
-                    <p class="summary-meta">% del total usuarios: <?= number_format((float) $card['pct_usuarios'], 2, ',', '.') ?>%</p>
-                <?php endif; ?>
             </article>
         <?php endforeach; ?>
     </div>
 
     <article class="bar-chart-card summary-card">
-        <p class="summary-title">Gráfico de barras verticales (% de usuarios por segmento)</p>
-        <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con usuarios y porcentaje de usuarios por segmento">
+        <p class="summary-title">Gráfico de barras verticales (% del total de links)</p>
+        <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con el porcentaje del total de links por segmento de usuarios">
             <?php foreach ($barChartRows as $bar): ?>
-                <?php $barHeight = max(2.0, (float) $bar['pct_usuarios']); ?>
+                <?php $barHeight = max(2.0, (float) $bar['pct']); ?>
                 <div class="bar-item">
-                    <strong class="bar-value"><?= (int) $bar['usuarios'] ?> usuarios · <?= number_format((float) $bar['pct_usuarios'], 2, ',', '.') ?>%</strong>
+                    <strong class="bar-value"><?= number_format((float) $bar['pct'], 2, ',', '.') ?>%</strong>
                     <div class="bar-track">
                         <div class="bar-fill" style="--bar-color: <?= htmlspecialchars((string) $bar['color'], ENT_QUOTES, 'UTF-8') ?>; height: <?= number_format($barHeight, 2, '.', '') ?>%;" title="<?= htmlspecialchars((string) $bar['title'], ENT_QUOTES, 'UTF-8') ?>"></div>
                     </div>
