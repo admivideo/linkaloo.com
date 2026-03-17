@@ -220,6 +220,14 @@ foreach ($weekdayLabels as $weekdayNumber => $weekdayLabel) {
     $weekdayUsageRows[$weekdayNumber] = ['dia' => $weekdayLabel, 'usuarios' => 0, 'porcentaje' => 0.0];
 }
 
+$activityHeatmap = [];
+for ($hour = 0; $hour < 24; $hour++) {
+    $activityHeatmap[$hour] = [];
+    for ($weekdayNumber = 1; $weekdayNumber <= 7; $weekdayNumber++) {
+        $activityHeatmap[$hour][$weekdayNumber] = 0;
+    }
+}
+
 foreach ($statsRows as &$row) {
     $linksGuardados = (int) ($row['cantidad_favolinks_guardados'] ?? 0);
     $totalLinks += $linksGuardados;
@@ -243,8 +251,21 @@ foreach ($statsRows as &$row) {
     if ($accessWeekday !== null && isset($weekdayUsageRows[$accessWeekday])) {
         $weekdayUsageRows[$accessWeekday]['usuarios']++;
     }
+
+    if ($accessHour !== null && $accessWeekday !== null && isset($activityHeatmap[$accessHour][$accessWeekday])) {
+        $activityHeatmap[$accessHour][$accessWeekday]++;
+    }
 }
 unset($row);
+
+$maxHeatmapValue = 0;
+foreach ($activityHeatmap as $hourRows) {
+    foreach ($hourRows as $activityCount) {
+        if ($activityCount > $maxHeatmapValue) {
+            $maxHeatmapValue = $activityCount;
+        }
+    }
+}
 
 $totalUsuariosConActualizacion = array_reduce(
     $hourlyUsageRows,
@@ -625,6 +646,27 @@ if (
         .hourly-table th, .hourly-table td { padding: 0.42rem 0.5rem; border-bottom: 1px solid #e2edff; font-size: 0.84rem; text-align: left; }
         .hourly-table th:last-child, .hourly-table td:last-child { text-align: right; }
 
+        .heatmap-wrap { margin-top: 1rem; }
+        .heatmap-table { width: 100%; border-collapse: separate; border-spacing: 0.28rem; }
+        .heatmap-table th, .heatmap-table td { border: none; padding: 0.35rem; font-size: 0.76rem; text-align: center; }
+        .heatmap-table thead th { color: #2b5fa8; font-weight: 700; }
+        .heatmap-table tbody th { color: #42689d; text-align: right; white-space: nowrap; }
+        .heatmap-cell {
+            width: 36px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid rgba(16, 66, 138, 0.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #0f2f60;
+            background: linear-gradient(90deg, #2563eb 0%, #ef4444 100%);
+            opacity: calc(0.2 + (var(--heat-intensity) * 0.8));
+        }
+        .heatmap-legend { display: flex; align-items: center; gap: 0.45rem; margin-top: 0.6rem; color: #42689d; font-size: 0.8rem; }
+        .heatmap-legend-gradient { width: 130px; height: 10px; border-radius: 999px; background: linear-gradient(90deg, #2563eb 0%, #ef4444 100%); border: 1px solid #d9e8ff; }
+
         .access-status { display: inline-flex; align-items: center; justify-content: center; width: 100%; }
         .access-status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--status-color); flex-shrink: 0; }
 
@@ -730,6 +772,7 @@ if (
                         </tbody>
                     </table>
                 </section>
+
                 <section class="status-summary-box" style="margin-top:1rem;">
                     <h2>Usuarios por día de la semana (actualización de perfil)</h2>
                     <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
@@ -753,6 +796,47 @@ if (
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+
+                    <div class="heatmap-wrap">
+                        <h2>Mapa de calor de actividad (día x hora)</h2>
+                        <table class="heatmap-table" aria-label="Mapa de calor de actividad de usuarios por día de la semana y hora">
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <?php foreach ($weekdayLabels as $weekdayLabel): ?>
+                                        <th><?= htmlspecialchars($weekdayLabel, ENT_QUOTES, 'UTF-8') ?></th>
+                                    <?php endforeach; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                    <tr>
+                                        <th><?= sprintf('%02d:00', $hour) ?></th>
+                                        <?php for ($weekdayNumber = 1; $weekdayNumber <= 7; $weekdayNumber++): ?>
+                                            <?php
+                                                $activityCount = (int) ($activityHeatmap[$hour][$weekdayNumber] ?? 0);
+                                                $intensity = $maxHeatmapValue > 0 ? $activityCount / $maxHeatmapValue : 0;
+                                            ?>
+                                            <td>
+                                                <span
+                                                    class="heatmap-cell"
+                                                    style="--heat-intensity: <?= number_format((float) $intensity, 4, '.', '') ?>;"
+                                                    title="<?= htmlspecialchars($weekdayLabels[$weekdayNumber], ENT_QUOTES, 'UTF-8') ?> <?= sprintf('%02d:00', $hour) ?> - <?= $activityCount ?> usuarios"
+                                                >
+                                                    <?= $activityCount ?>
+                                                </span>
+                                            </td>
+                                        <?php endfor; ?>
+                                    </tr>
+                                <?php endfor; ?>
+                            </tbody>
+                        </table>
+                        <div class="heatmap-legend" aria-hidden="true">
+                            <span>Menor actividad</span>
+                            <span class="heatmap-legend-gradient"></span>
+                            <span>Mayor actividad</span>
+                        </div>
+                    </div>
                 </section>
             </article>
 
