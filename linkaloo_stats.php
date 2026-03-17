@@ -647,9 +647,10 @@ if (
         .hourly-table th:last-child, .hourly-table td:last-child { text-align: right; }
 
         .heatmap-wrap { margin-top: 1rem; }
-        .heatmap-table { width: 100%; border-collapse: collapse; border-spacing: 0; }
+        .heatmap-table { width: 100%; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
+        .heatmap-table col { width: 12.5%; }
         .heatmap-table th, .heatmap-table td { border: none; padding: 0.35rem; font-size: 0.76rem; text-align: center; }
-        .heatmap-table tbody td { padding: 0; width: 36px; height: 24px; }
+        .heatmap-table tbody td { padding: 0; height: 24px; }
         .heatmap-table thead th { color: #2b5fa8; font-weight: 700; }
         .heatmap-table tbody th { color: #42689d; text-align: right; white-space: nowrap; }
         .heatmap-cell {
@@ -800,6 +801,9 @@ if (
                     <div class="heatmap-wrap">
                         <h2>Mapa de calor de actividad (día x hora)</h2>
                         <table class="heatmap-table" aria-label="Mapa de calor de actividad de usuarios por día de la semana y hora">
+                            <colgroup>
+                                <col span="8">
+                            </colgroup>
                             <thead>
                                 <tr>
                                     <th>Hora</th>
