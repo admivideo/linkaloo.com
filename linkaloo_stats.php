@@ -516,11 +516,12 @@ if (
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linkaloo estadísticas</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rambla:wght@400;700&display=swap');
         :root { color-scheme: light; }
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Rambla', Arial, sans-serif;
             background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
             color: #173b74;
         }
