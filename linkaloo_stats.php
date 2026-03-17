@@ -715,7 +715,30 @@ if (
                     </ul>
                 </section>
 
-
+                <section class="status-summary-box">
+                    <h2>Usuarios por hora (actualización de perfil)</h2>
+                    <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
+                        Base: <code>usuarios.<?= htmlspecialchars((string) ($userUpdatedColumn ?? 'sin_columna_detectada'), ENT_QUOTES, 'UTF-8') ?></code>
+                    </p>
+                    <table class="hourly-table" aria-label="Listado de usuarios por hora usando actualizado_en">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Usuarios</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($hourlyUsageRows as $hourlyRow): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($hourlyRow['hour'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= (int) $hourlyRow['usuarios'] ?></td>
+                                    <td><?= number_format((float) $hourlyRow['porcentaje'], 2, ',', '.') ?>%</td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </section>
             </aside>
         </div>
     </section>
