@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const toggle = document.querySelector('.menu-toggle');
-  const menu = document.querySelector('.top-menu ul');
+  const menu = document.querySelector('.top-menu .menu');
   if (toggle && menu) {
     toggle.addEventListener('click', () => {
       const isOpen = menu.classList.toggle('show');
