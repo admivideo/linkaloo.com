@@ -1,28 +1,24 @@
-# Análisis horario de usuarios (PHP + JS)
+# Análisis horario de usuarios
 
-Pantalla/script: `scripts/analisis_horario_usuarios.php`.
+Script disponible: `scripts/analisis_horario_usuarios.py`.
 
 ## Qué calcula
 
 - **Conexión por hora (aprox.)**: distribución de `usuarios.ultimo_acceso` por hora.
 - **Actividad por hora**: media diaria de usuarios activos por hora usando `links.creado_en`.
 
-## Qué muestra
-
-- Top 3 franjas horarias con mayor actividad media.
-- Tabla completa de las 24 horas.
-- Gráfico de barras verticales en **HTML5 Canvas + JavaScript**:
-  - Eje X: horas.
-  - Eje Y: media de usuarios por hora.
-
-## Ejecutar en local
+## Ejecutar
 
 ```bash
-php -S 0.0.0.0:8080
+python scripts/analisis_horario_usuarios.py \
+  --password 'TU_PASSWORD' \
+  --output-csv docs/analysis/actividad_horaria.csv \
+  --output-png docs/analysis/actividad_horaria_barras.png
 ```
 
-Luego abrir:
+## Salidas
 
-- `http://localhost:8080/scripts/analisis_horario_usuarios.php`
+- `docs/analysis/actividad_horaria.csv`
+- `docs/analysis/actividad_horaria_barras.png`
 
-> Nota: este script crea su propia conexión PDO a MySQL con variables de entorno opcionales (`LINKALOO_DB_HOST`, `LINKALOO_DB_NAME`, `LINKALOO_DB_USER`, `LINKALOO_DB_PASS`).
+> Nota: en este entorno de ejecución no hubo conectividad hacia el host MySQL remoto, por lo que no se pudieron generar resultados reales automáticamente.
