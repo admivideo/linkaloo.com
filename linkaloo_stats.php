@@ -556,7 +556,7 @@ if (
 
         .resumen-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; }
         .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        table { width: 100%; border-collapse: collapse;}
         thead { background: #ecf4ff; }
         th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #e2edff; font-size: 0.92rem; }
         tbody tr:hover { background: #f2f8ff; }
