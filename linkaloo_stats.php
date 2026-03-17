@@ -137,11 +137,13 @@ foreach ($segments as $segment) {
 $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'fecha_creacion', 'registrado_en']);
 $userEmailColumn = pickColumn($pdo, 'usuarios', ['email', 'correo', 'mail']);
 $lastAccessColumn = pickColumn($pdo, 'usuarios', ['ultimo_acceso', 'last_access', 'ultimo_login', 'last_login_at']);
+$userUpdatedColumn = pickColumn($pdo, 'usuarios', ['actualizado_en', 'updated_at', 'modificado_en', 'ultimo_acceso']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
 $linkUpdatedColumn = pickColumn($pdo, 'links', ['actualizado_en', 'updated_at', 'fecha_actualizacion']);
 
 $userDateSelect = $userCreatedColumn ? "u.`{$userCreatedColumn}`" : 'NULL';
 $lastAccessSelect = $lastAccessColumn ? "u.`{$lastAccessColumn}`" : 'NULL';
+$userUpdatedSelect = $userUpdatedColumn ? "u.`{$userUpdatedColumn}`" : 'NULL';
 $linkMinMaxSelect = $linkCreatedColumn
     ? "MIN(`{$linkCreatedColumn}`) AS fecha_primer_favolink, MAX(`{$linkCreatedColumn}`) AS fecha_ultimo_favolink"
     : 'NULL AS fecha_primer_favolink, NULL AS fecha_ultimo_favolink';
@@ -154,6 +156,7 @@ $statsSql = "
         u.id,
         {$userDateSelect} AS fecha_creacion,
         {$lastAccessSelect} AS fecha_ultimo_acceso,
+        {$userUpdatedSelect} AS fecha_actualizacion_usuario,
         COALESCE(c.total, 0) AS cantidad_categorias,
         COALESCE(l.total, 0) AS cantidad_favolinks_guardados,
         l.fecha_primer_favolink,
@@ -188,7 +191,7 @@ $accessStatusSummary = [
 ];
 $hourlyUsageRows = [];
 for ($hour = 0; $hour < 24; $hour++) {
-    $hourlyUsageRows[$hour] = ['hour' => sprintf('%02d:00', $hour), 'usuarios' => 0];
+    $hourlyUsageRows[$hour] = ['hour' => sprintf('%02d:00', $hour), 'usuarios' => 0, 'porcentaje' => 0.0];
 }
 
 foreach ($statsRows as &$row) {
@@ -205,12 +208,24 @@ foreach ($statsRows as &$row) {
         $accessStatusSummary[$savedLinkStatus['key']]['usuarios']++;
     }
 
-    $accessHour = extractHour($row['fecha_ultima_actualizacion_favolink'] ?? null);
+    $accessHour = extractHour($row['fecha_actualizacion_usuario'] ?? null);
     if ($accessHour !== null && isset($hourlyUsageRows[$accessHour])) {
         $hourlyUsageRows[$accessHour]['usuarios']++;
     }
 }
 unset($row);
+
+$totalUsuariosConActualizacion = array_reduce(
+    $hourlyUsageRows,
+    static fn (int $carry, array $item): int => $carry + (int) $item['usuarios'],
+    0
+);
+foreach ($hourlyUsageRows as &$hourlyRow) {
+    $hourlyRow['porcentaje'] = $totalUsuariosConActualizacion > 0
+        ? round(((int) $hourlyRow['usuarios'] / $totalUsuariosConActualizacion) * 100, 2)
+        : 0.0;
+}
+unset($hourlyRow);
 
 $totalUsuarios = count($statsRows);
 $totalPages = max(1, (int) ceil($totalUsuarios / $itemsPerPage));
@@ -677,12 +692,16 @@ if (
                 </section>
 
                 <section class="status-summary-box">
-                    <h2>Usuarios por hora de conexión</h2>
-                    <table class="hourly-table" aria-label="Listado de usuarios por hora de conexión">
+                    <h2>Usuarios por hora (actualización de perfil)</h2>
+                    <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
+                        Base: <code>usuarios.<?= htmlspecialchars((string) ($userUpdatedColumn ?? 'sin_columna_detectada'), ENT_QUOTES, 'UTF-8') ?></code>
+                    </p>
+                    <table class="hourly-table" aria-label="Listado de usuarios por hora usando actualizado_en">
                         <thead>
                             <tr>
                                 <th>Hora</th>
                                 <th>Usuarios</th>
+                                <th>%</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -690,6 +709,7 @@ if (
                                 <tr>
                                     <td><?= htmlspecialchars($hourlyRow['hour'], ENT_QUOTES, 'UTF-8') ?></td>
                                     <td><?= (int) $hourlyRow['usuarios'] ?></td>
+                                    <td><?= number_format((float) $hourlyRow['porcentaje'], 2, ',', '.') ?>%</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
