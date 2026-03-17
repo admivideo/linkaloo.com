@@ -841,6 +841,50 @@ if (
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+
+                    <div class="heatmap-wrap">
+                        <h2>Mapa de calor de actividad (día x hora)</h2>
+                        <table class="heatmap-table" aria-label="Mapa de calor de actividad de usuarios por día de la semana y hora">
+                            <colgroup>
+                                <col span="8">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th>Hora</th>
+                                    <?php foreach ($weekdayLabels as $weekdayLabel): ?>
+                                        <th><?= htmlspecialchars($weekdayLabel, ENT_QUOTES, 'UTF-8') ?></th>
+                                    <?php endforeach; ?>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php for ($hour = 0; $hour < 24; $hour++): ?>
+                                    <tr>
+                                        <th><?= sprintf('%02d:00', $hour) ?></th>
+                                        <?php for ($weekdayNumber = 1; $weekdayNumber <= 7; $weekdayNumber++): ?>
+                                            <?php
+                                                $activityCount = (int) ($activityHeatmap[$hour][$weekdayNumber] ?? 0);
+                                                $intensity = $maxHeatmapValue > 0 ? $activityCount / $maxHeatmapValue : 0;
+                                            ?>
+                                            <td>
+                                                <span
+                                                    class="heatmap-cell"
+                                                    style="--heat-intensity: <?= number_format((float) $intensity, 4, '.', '') ?>;"
+                                                    title="<?= htmlspecialchars($weekdayLabels[$weekdayNumber], ENT_QUOTES, 'UTF-8') ?> <?= sprintf('%02d:00', $hour) ?> - <?= $activityCount ?> usuarios"
+                                                >
+                                                    <?= $activityCount ?>
+                                                </span>
+                                            </td>
+                                        <?php endfor; ?>
+                                    </tr>
+                                <?php endfor; ?>
+                            </tbody>
+                        </table>
+                        <div class="heatmap-legend" aria-hidden="true">
+                            <span>Menor actividad</span>
+                            <span class="heatmap-legend-gradient"></span>
+                            <span>Mayor actividad</span>
+                        </div>
+                    </div>
                 </section>
             </article>
 
