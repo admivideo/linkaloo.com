@@ -647,22 +647,22 @@ if (
         .hourly-table th:last-child, .hourly-table td:last-child { text-align: right; }
 
         .heatmap-wrap { margin-top: 1rem; }
-        .heatmap-table { width: 100%; border-collapse: separate; border-spacing: 0.28rem; }
+        .heatmap-table { width: 100%; border-collapse: collapse; border-spacing: 0; }
         .heatmap-table th, .heatmap-table td { border: none; padding: 0.35rem; font-size: 0.76rem; text-align: center; }
+        .heatmap-table tbody td { padding: 0; }
         .heatmap-table thead th { color: #2b5fa8; font-weight: 700; }
         .heatmap-table tbody th { color: #42689d; text-align: right; white-space: nowrap; }
         .heatmap-cell {
             width: 36px;
             height: 24px;
-            border-radius: 6px;
-            border: 1px solid rgba(16, 66, 138, 0.12);
+            border-radius: 0;
+            border: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            color: #0f2f60;
-            background: linear-gradient(90deg, #2563eb 0%, #ef4444 100%);
-            opacity: calc(0.2 + (var(--heat-intensity) * 0.8));
+            color: #ffffff;
+            background-color: hsl(calc(220 - (var(--heat-intensity) * 220)) 80% 50%);
         }
         .heatmap-legend { display: flex; align-items: center; gap: 0.45rem; margin-top: 0.6rem; color: #42689d; font-size: 0.8rem; }
         .heatmap-legend-gradient { width: 130px; height: 10px; border-radius: 999px; background: linear-gradient(90deg, #2563eb 0%, #ef4444 100%); border: 1px solid #d9e8ff; }
