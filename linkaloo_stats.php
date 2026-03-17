@@ -423,41 +423,8 @@ if (
         }
         .wrapper { width: min(1200px, 100% - 2rem); margin: 1.5rem auto; }
         h1 { margin: 0 0 1rem; font-size: clamp(1.2rem, 2.5vw, 1.8rem); }
-        .header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.8rem; }
+        .header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
         .header-row h1 { margin: 0; }
-        .top-nav {
-            position: sticky;
-            top: 0.5rem;
-            z-index: 20;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.55rem;
-            margin: 0 0 1rem;
-            padding: 0.65rem;
-            border: 1px solid #d9e8ff;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 12px 28px rgba(39, 95, 180, 0.08);
-            backdrop-filter: blur(4px);
-        }
-        .top-nav-link {
-            text-decoration: none;
-            color: #0f4a98;
-            border: 1px solid #bfd7fb;
-            border-radius: 9px;
-            background: #f0f6ff;
-            font-weight: 700;
-            font-size: 0.9rem;
-            padding: 0.52rem 0.8rem;
-        }
-        .top-nav-link:hover { background: #e4efff; }
-        .panel-section { scroll-margin-top: 6.3rem; margin-bottom: 1rem; }
-        .section-title {
-            margin: 0 0 0.7rem;
-            font-size: 1rem;
-            color: #0f4a98;
-            font-weight: 700;
-        }
         .welcome-export-btn {
             display: inline-flex;
             align-items: center;
@@ -519,7 +486,6 @@ if (
         .bar-label { font-size: 0.72rem; color: #42689d; text-align: center; line-height: 1.2; }
 
         .layout-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; align-items: start; }
-        .export-grid { display: flex; flex-wrap: wrap; gap: 0.55rem; }
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 860px; }
         thead { background: #ecf4ff; }
@@ -580,16 +546,13 @@ if (
 <div class="wrapper">
     <div class="header-row">
         <h1>Estadísticas de usuarios de Linkaloo</h1>
+        <a class="welcome-export-btn" href="?export_d0_csv=1" aria-label="Descargar CSV de usuarios D0 (sin favolinks)">⬇️ D0</a>
+        <a class="welcome-export-btn" href="?export_d1_csv=1" aria-label="Descargar CSV de usuarios D1 (sin favolinks)">⬇️ D1</a>
+        <a class="welcome-export-btn" href="?export_d3_csv=1" aria-label="Descargar CSV de usuarios D3 (sin favolinks)">⬇️ D3</a>
+        <a class="welcome-export-btn" href="?export_d7_csv=1" aria-label="Descargar CSV de usuarios D7 (sin favolinks)">⬇️ D7</a>
+        <a class="welcome-export-btn" href="?export_d14_csv=1" aria-label="Descargar CSV de usuarios D14 (registrados entre hace 8 y 14 días, sin favolinks)">⬇️ D14</a>
+        <a class="welcome-export-btn" href="?export_reactivate_csv=1" aria-label="Descargar CSV de reactivación (usuarios con más de 14 días y sin favolinks)">🔁 Reactivar</a>
     </div>
-
-    <nav class="top-nav" aria-label="Menú superior de secciones">
-        <a class="top-nav-link" href="#resumen">Resumen</a>
-        <a class="top-nav-link" href="#usuarios">Usuarios</a>
-        <a class="top-nav-link" href="#exportar">Exportar</a>
-    </nav>
-
-    <section id="resumen" class="panel-section" aria-labelledby="resumen-title">
-    <h2 id="resumen-title" class="section-title">Resumen</h2>
 
     <div class="summary-grid">
         <?php foreach ($summaryCards as $card): ?>
@@ -622,6 +585,62 @@ if (
     </article>
 
     <div class="layout-grid">
+        <div class="list-column">
+            <div class="table-container">
+                <?php if (!$statsRows): ?>
+                    <div class="empty">No hay datos para mostrar.</div>
+                <?php else: ?>
+                    <div class="pagination-bar">
+                        <p class="pagination-info">
+                            Mostrando <?= $offset + 1 ?>-<?= $offset + count($paginatedStatsRows) ?> de <?= $totalUsuarios ?> usuarios (página <?= $currentPage ?> de <?= $totalPages ?>)
+                        </p>
+                        <nav class="pagination-nav" aria-label="Paginación de usuarios">
+                            <?php if ($currentPage > 1): ?>
+                                <a class="pagination-link" href="?page=<?= $currentPage - 1 ?>" aria-label="Página anterior">‹</a>
+                            <?php endif; ?>
+
+                            <?php foreach ($pagination as $pageItem): ?>
+                                <?php if ($pageItem === '...'): ?>
+                                    <span class="pagination-ellipsis" aria-hidden="true">…</span>
+                                <?php elseif ((int) $pageItem === $currentPage): ?>
+                                    <span class="pagination-current" aria-current="page"><?= (int) $pageItem ?></span>
+                                <?php else: ?>
+                                    <a class="pagination-link" href="?page=<?= (int) $pageItem ?>"><?= (int) $pageItem ?></a>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a class="pagination-link" href="?page=<?= $currentPage + 1 ?>" aria-label="Página siguiente">›</a>
+                            <?php endif; ?>
+                        </nav>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <?php foreach ($tableHeaders as $header): ?>
+                                    <th><button type="button" class="sort-btn" data-key="<?= htmlspecialchars($header['key'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($header['label'], ENT_QUOTES, 'UTF-8') ?></button></th>
+                                <?php endforeach; ?>
+                            </tr>
+                        </thead>
+                        <tbody id="stats-body">
+                        <?php foreach ($paginatedStatsRows as $row): ?>
+                            <?php $savedLinkStatus = $row['estado_ultimo_link']; ?>
+                            <tr>
+                                <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
+                                <td data-label="Registro" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
+                                <td data-label="Último acceso" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_acceso'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_acceso'] ?? null) ?></td>
+                                <td data-label="Estado último link" data-sort="<?= (int) $savedLinkStatus['sort'] ?>"><span class="access-status"><span class="access-status-dot" style="--status-color: <?= htmlspecialchars($savedLinkStatus['color'], ENT_QUOTES, 'UTF-8') ?>;" title="<?= htmlspecialchars($savedLinkStatus['days_range'], ENT_QUOTES, 'UTF-8') ?>"></span></span></td>
+                                <td data-label="Categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
+                                <td data-label="Favolinks" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
+                                <td data-label="Primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
+                                <td data-label="Último favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
+        </div>
 
         <aside class="sidebar">
             <section>
@@ -650,78 +669,6 @@ if (
             </section>
         </aside>
     </div>
-    </section>
-
-    <section id="usuarios" class="panel-section" aria-labelledby="usuarios-title">
-        <h2 id="usuarios-title" class="section-title">Usuarios</h2>
-        <div class="table-container">
-            <?php if (!$statsRows): ?>
-                <div class="empty">No hay datos para mostrar.</div>
-            <?php else: ?>
-                <div class="pagination-bar">
-                    <p class="pagination-info">
-                        Mostrando <?= $offset + 1 ?>-<?= $offset + count($paginatedStatsRows) ?> de <?= $totalUsuarios ?> usuarios (página <?= $currentPage ?> de <?= $totalPages ?>)
-                    </p>
-                    <nav class="pagination-nav" aria-label="Paginación de usuarios">
-                        <?php if ($currentPage > 1): ?>
-                            <a class="pagination-link" href="?page=<?= $currentPage - 1 ?>" aria-label="Página anterior">‹</a>
-                        <?php endif; ?>
-
-                        <?php foreach ($pagination as $pageItem): ?>
-                            <?php if ($pageItem === '...'): ?>
-                                <span class="pagination-ellipsis" aria-hidden="true">…</span>
-                            <?php elseif ((int) $pageItem === $currentPage): ?>
-                                <span class="pagination-current" aria-current="page"><?= (int) $pageItem ?></span>
-                            <?php else: ?>
-                                <a class="pagination-link" href="?page=<?= (int) $pageItem ?>"><?= (int) $pageItem ?></a>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-
-                        <?php if ($currentPage < $totalPages): ?>
-                            <a class="pagination-link" href="?page=<?= $currentPage + 1 ?>" aria-label="Página siguiente">›</a>
-                        <?php endif; ?>
-                    </nav>
-                </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <?php foreach ($tableHeaders as $column): ?>
-                                <th><button type="button" class="sort-btn" data-key="<?= htmlspecialchars($column['key'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($column['label'], ENT_QUOTES, 'UTF-8') ?></button></th>
-                            <?php endforeach; ?>
-                        </tr>
-                    </thead>
-                    <tbody id="stats-body">
-                    <?php foreach ($paginatedStatsRows as $row): ?>
-                        <?php $savedLinkStatus = $row['estado_ultimo_link']; ?>
-                        <tr>
-                            <td data-label="ID" data-sort="<?= (int) $row['id'] ?>"><?= (int) $row['id'] ?></td>
-                            <td data-label="Registro" data-sort="<?= htmlspecialchars((string) ($row['fecha_creacion'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_creacion'] ?? null) ?></td>
-                            <td data-label="Último acceso" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_acceso'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_acceso'] ?? null) ?></td>
-                            <td data-label="Estado último link" data-sort="<?= (int) $savedLinkStatus['sort'] ?>"><span class="access-status"><span class="access-status-dot" style="--status-color: <?= htmlspecialchars($savedLinkStatus['color'], ENT_QUOTES, 'UTF-8') ?>;" title="<?= htmlspecialchars($savedLinkStatus['days_range'], ENT_QUOTES, 'UTF-8') ?>"></span></span></td>
-                            <td data-label="Categorías" data-sort="<?= (int) $row['cantidad_categorias'] ?>"><?= (int) $row['cantidad_categorias'] ?></td>
-                            <td data-label="Favolinks" data-sort="<?= (int) $row['cantidad_favolinks_guardados'] ?>"><?= (int) $row['cantidad_favolinks_guardados'] ?></td>
-                            <td data-label="Primer favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_primer_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_primer_favolink'] ?? null) ?></td>
-                            <td data-label="Último favolink" data-sort="<?= htmlspecialchars((string) ($row['fecha_ultimo_favolink'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"><?= formatDate($row['fecha_ultimo_favolink'] ?? null) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </section>
-
-    <section id="exportar" class="panel-section" aria-labelledby="exportar-title">
-        <h2 id="exportar-title" class="section-title">Exportar</h2>
-        <div class="export-grid">
-            <a class="welcome-export-btn" href="?export_d0_csv=1" aria-label="Descargar CSV de usuarios D0 (sin favolinks)">⬇️ D0</a>
-            <a class="welcome-export-btn" href="?export_d1_csv=1" aria-label="Descargar CSV de usuarios D1 (sin favolinks)">⬇️ D1</a>
-            <a class="welcome-export-btn" href="?export_d3_csv=1" aria-label="Descargar CSV de usuarios D3 (sin favolinks)">⬇️ D3</a>
-            <a class="welcome-export-btn" href="?export_d7_csv=1" aria-label="Descargar CSV de usuarios D7 (sin favolinks)">⬇️ D7</a>
-            <a class="welcome-export-btn" href="?export_d14_csv=1" aria-label="Descargar CSV de usuarios D14 (registrados entre hace 8 y 14 días, sin favolinks)">⬇️ D14</a>
-            <a class="welcome-export-btn" href="?export_reactivate_csv=1" aria-label="Descargar CSV de reactivación (usuarios con más de 14 días y sin favolinks)">🔁 Reactivar</a>
-        </div>
-    </section>
 </div>
 <script>
 (function () {
