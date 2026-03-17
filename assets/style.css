@@ -62,6 +62,13 @@ textarea {
 .add-link-btn{border-radius:50%;}
 .add-mobile{display:none;}
 @media (max-width:600px){.add-mobile{display:flex;}.top-menu .menu .add-menu{display:none;}}
+@media (max-width:450px){
+  .top-menu .main-nav {gap:4px;}
+  .top-menu nav .add-link-btn.add-mobile{width:40px;height:40px;}
+  .top-menu nav .add-link-btn.add-mobile svg{width:20px;height:20px;}
+  .menu-toggle{padding:2px;}
+  .menu-toggle span{width:20px;height:2px;margin:2px 0;}
+}
 .search-toggle{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;margin-left:5px;flex-shrink:0;}
 .search-toggle svg{width:20px;height:20px;}
 .board-scroll{background:#fff;color:#1DA1F2;border:none;border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;flex-shrink:0;}
