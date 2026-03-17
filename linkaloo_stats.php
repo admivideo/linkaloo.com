@@ -78,6 +78,19 @@ function extractHour(?string $value): ?int
     }
 }
 
+function extractWeekdayIndex(?string $value): ?int
+{
+    if (!$value) {
+        return null;
+    }
+
+    try {
+        return (int) (new DateTimeImmutable($value))->format('N');
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
 /** @return array{key:string,color:string,sort:int,days_range:string} */
 function lastSavedLinkStatus(?string $value): array
 {
@@ -193,6 +206,19 @@ $hourlyUsageRows = [];
 for ($hour = 0; $hour < 24; $hour++) {
     $hourlyUsageRows[$hour] = ['hour' => sprintf('%02d:00', $hour), 'usuarios' => 0, 'porcentaje' => 0.0];
 }
+$weekdayLabels = [
+    1 => 'Lunes',
+    2 => 'Martes',
+    3 => 'Miércoles',
+    4 => 'Jueves',
+    5 => 'Viernes',
+    6 => 'Sábado',
+    7 => 'Domingo',
+];
+$weekdayUsageRows = [];
+foreach ($weekdayLabels as $weekdayNumber => $weekdayLabel) {
+    $weekdayUsageRows[$weekdayNumber] = ['dia' => $weekdayLabel, 'usuarios' => 0, 'porcentaje' => 0.0];
+}
 
 foreach ($statsRows as &$row) {
     $linksGuardados = (int) ($row['cantidad_favolinks_guardados'] ?? 0);
@@ -212,6 +238,11 @@ foreach ($statsRows as &$row) {
     if ($accessHour !== null && isset($hourlyUsageRows[$accessHour])) {
         $hourlyUsageRows[$accessHour]['usuarios']++;
     }
+
+    $accessWeekday = extractWeekdayIndex($row['fecha_actualizacion_usuario'] ?? null);
+    if ($accessWeekday !== null && isset($weekdayUsageRows[$accessWeekday])) {
+        $weekdayUsageRows[$accessWeekday]['usuarios']++;
+    }
 }
 unset($row);
 
@@ -226,6 +257,18 @@ foreach ($hourlyUsageRows as &$hourlyRow) {
         : 0.0;
 }
 unset($hourlyRow);
+
+$totalUsuariosConActualizacionPorDia = array_reduce(
+    $weekdayUsageRows,
+    static fn (int $carry, array $item): int => $carry + (int) $item['usuarios'],
+    0
+);
+foreach ($weekdayUsageRows as &$weekdayRow) {
+    $weekdayRow['porcentaje'] = $totalUsuariosConActualizacionPorDia > 0
+        ? round(((int) $weekdayRow['usuarios'] / $totalUsuariosConActualizacionPorDia) * 100, 2)
+        : 0.0;
+}
+unset($weekdayRow);
 
 $totalUsuarios = count($statsRows);
 $totalPages = max(1, (int) ceil($totalUsuarios / $itemsPerPage));
@@ -682,6 +725,30 @@ if (
                                     <td><?= htmlspecialchars($hourlyRow['hour'], ENT_QUOTES, 'UTF-8') ?></td>
                                     <td><?= (int) $hourlyRow['usuarios'] ?></td>
                                     <td><?= number_format((float) $hourlyRow['porcentaje'], 2, ',', '.') ?>%</td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </section>
+                <section class="status-summary-box" style="margin-top:1rem;">
+                    <h2>Usuarios por día de la semana (actualización de perfil)</h2>
+                    <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
+                        Base: <code>usuarios.<?= htmlspecialchars((string) ($userUpdatedColumn ?? 'sin_columna_detectada'), ENT_QUOTES, 'UTF-8') ?></code>
+                    </p>
+                    <table class="hourly-table" aria-label="Listado de usuarios por día de la semana usando actualizado_en">
+                        <thead>
+                            <tr>
+                                <th>Día</th>
+                                <th>Usuarios</th>
+                                <th>%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($weekdayUsageRows as $weekdayRow): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($weekdayRow['dia'], ENT_QUOTES, 'UTF-8') ?></td>
+                                    <td><?= (int) $weekdayRow['usuarios'] ?></td>
+                                    <td><?= number_format((float) $weekdayRow['porcentaje'], 2, ',', '.') ?>%</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
