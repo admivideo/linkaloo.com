@@ -138,12 +138,16 @@ $userCreatedColumn = pickColumn($pdo, 'usuarios', ['creado_en', 'created_at', 'f
 $userEmailColumn = pickColumn($pdo, 'usuarios', ['email', 'correo', 'mail']);
 $lastAccessColumn = pickColumn($pdo, 'usuarios', ['ultimo_acceso', 'last_access', 'ultimo_login', 'last_login_at']);
 $linkCreatedColumn = pickColumn($pdo, 'links', ['creado_en', 'created_at', 'fecha_creacion']);
+$linkUpdatedColumn = pickColumn($pdo, 'links', ['actualizado_en', 'updated_at', 'fecha_actualizacion']);
 
 $userDateSelect = $userCreatedColumn ? "u.`{$userCreatedColumn}`" : 'NULL';
 $lastAccessSelect = $lastAccessColumn ? "u.`{$lastAccessColumn}`" : 'NULL';
 $linkMinMaxSelect = $linkCreatedColumn
     ? "MIN(`{$linkCreatedColumn}`) AS fecha_primer_favolink, MAX(`{$linkCreatedColumn}`) AS fecha_ultimo_favolink"
     : 'NULL AS fecha_primer_favolink, NULL AS fecha_ultimo_favolink';
+$linkLastUpdateSelect = $linkUpdatedColumn
+    ? "MAX(`{$linkUpdatedColumn}`) AS fecha_ultima_actualizacion_favolink"
+    : 'NULL AS fecha_ultima_actualizacion_favolink';
 
 $statsSql = "
     SELECT
@@ -153,7 +157,8 @@ $statsSql = "
         COALESCE(c.total, 0) AS cantidad_categorias,
         COALESCE(l.total, 0) AS cantidad_favolinks_guardados,
         l.fecha_primer_favolink,
-        l.fecha_ultimo_favolink
+        l.fecha_ultimo_favolink,
+        l.fecha_ultima_actualizacion_favolink
     FROM usuarios u
     LEFT JOIN (
         SELECT usuario_id, COUNT(*) AS total
@@ -161,7 +166,7 @@ $statsSql = "
         GROUP BY usuario_id
     ) c ON c.usuario_id = u.id
     LEFT JOIN (
-        SELECT usuario_id, COUNT(*) AS total, {$linkMinMaxSelect}
+        SELECT usuario_id, COUNT(*) AS total, {$linkMinMaxSelect}, {$linkLastUpdateSelect}
         FROM links
         GROUP BY usuario_id
     ) l ON l.usuario_id = u.id
@@ -200,7 +205,7 @@ foreach ($statsRows as &$row) {
         $accessStatusSummary[$savedLinkStatus['key']]['usuarios']++;
     }
 
-    $accessHour = extractHour($row['fecha_ultimo_acceso'] ?? null);
+    $accessHour = extractHour($row['fecha_ultima_actualizacion_favolink'] ?? null);
     if ($accessHour !== null && isset($hourlyUsageRows[$accessHour])) {
         $hourlyUsageRows[$accessHour]['usuarios']++;
     }
