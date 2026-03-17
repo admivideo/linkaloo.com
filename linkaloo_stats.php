@@ -841,7 +841,7 @@ if (
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-
+<!--
                     <div class="heatmap-wrap">
                         <h2>Mapa de calor de actividad (día x hora)</h2>
                         <table class="heatmap-table" aria-label="Mapa de calor de actividad de usuarios por día de la semana y hora">
@@ -885,6 +885,8 @@ if (
                             <span>Mayor actividad</span>
                         </div>
                     </div>
+					
+					-->
                 </section>
             </article>
 
