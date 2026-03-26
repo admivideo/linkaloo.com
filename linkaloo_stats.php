@@ -317,6 +317,122 @@ for ($dayOffset = 29; $dayOffset >= 0; $dayOffset--) {
     ];
 }
 
+$segmentEvolution = [];
+foreach ($dailyLinksSaved as $dayKey => $dailyData) {
+    $segmentEvolution[$dayKey] = [
+        'date' => $dayKey,
+        'label' => $dailyData['label'],
+        'segments' => array_fill_keys(array_keys($resumen), 0),
+    ];
+}
+
+$windowStartDate = array_key_first($dailyLinksSaved);
+$windowEndDate = array_key_last($dailyLinksSaved);
+$segmentEvolutionMaxUsers = 0;
+
+if ($windowStartDate !== null && $windowEndDate !== null) {
+    $linksBeforeWindowByUser = [];
+    $linksInWindowByUser = [];
+
+    if ($linkCreatedColumn) {
+        $beforeWindowSql = "
+            SELECT usuario_id, COUNT(*) AS total
+            FROM links
+            WHERE `{$linkCreatedColumn}` < :window_start
+            GROUP BY usuario_id
+        ";
+        $beforeWindowStmt = $pdo->prepare($beforeWindowSql);
+        $beforeWindowStmt->execute(['window_start' => $windowStartDate . ' 00:00:00']);
+        foreach ($beforeWindowStmt->fetchAll(PDO::FETCH_ASSOC) as $beforeWindowRow) {
+            $userId = (int) ($beforeWindowRow['usuario_id'] ?? 0);
+            $linksBeforeWindowByUser[$userId] = (int) ($beforeWindowRow['total'] ?? 0);
+        }
+
+        $inWindowSql = "
+            SELECT usuario_id, DATE(`{$linkCreatedColumn}`) AS dia, COUNT(*) AS total
+            FROM links
+            WHERE `{$linkCreatedColumn}` >= :window_start
+              AND `{$linkCreatedColumn}` < DATE_ADD(:window_end, INTERVAL 1 DAY)
+            GROUP BY usuario_id, DATE(`{$linkCreatedColumn}`)
+        ";
+        $inWindowStmt = $pdo->prepare($inWindowSql);
+        $inWindowStmt->execute([
+            'window_start' => $windowStartDate . ' 00:00:00',
+            'window_end' => $windowEndDate,
+        ]);
+        foreach ($inWindowStmt->fetchAll(PDO::FETCH_ASSOC) as $inWindowRow) {
+            $userId = (int) ($inWindowRow['usuario_id'] ?? 0);
+            $dayKey = (string) ($inWindowRow['dia'] ?? '');
+            if (!isset($segmentEvolution[$dayKey])) {
+                continue;
+            }
+            if (!isset($linksInWindowByUser[$userId])) {
+                $linksInWindowByUser[$userId] = [];
+            }
+            $linksInWindowByUser[$userId][$dayKey] = (int) ($inWindowRow['total'] ?? 0);
+        }
+    }
+
+    $dayKeys = array_keys($segmentEvolution);
+    foreach ($statsRows as $userRow) {
+        $userId = (int) ($userRow['id'] ?? 0);
+        $runningLinks = (int) ($linksBeforeWindowByUser[$userId] ?? 0);
+        $createdDateRaw = (string) ($userRow['fecha_creacion'] ?? '');
+        $userCreatedDate = null;
+        if ($createdDateRaw !== '') {
+            try {
+                $userCreatedDate = (new DateTimeImmutable($createdDateRaw))->format('Y-m-d');
+            } catch (Exception $e) {
+                $userCreatedDate = null;
+            }
+        }
+
+        foreach ($dayKeys as $dayKey) {
+            if ($userCreatedDate !== null && $dayKey < $userCreatedDate) {
+                continue;
+            }
+            $runningLinks += (int) ($linksInWindowByUser[$userId][$dayKey] ?? 0);
+            $segmentKey = segmentKeyForLinks($runningLinks, $segments);
+            $segmentEvolution[$dayKey]['segments'][$segmentKey]++;
+        }
+    }
+
+    foreach ($segmentEvolution as $segmentEvolutionRow) {
+        foreach ($segmentEvolutionRow['segments'] as $segmentUsersCount) {
+            if ($segmentUsersCount > $segmentEvolutionMaxUsers) {
+                $segmentEvolutionMaxUsers = $segmentUsersCount;
+            }
+        }
+    }
+}
+
+$segmentEvolutionChartWidth = 980;
+$segmentEvolutionChartHeight = 320;
+$segmentEvolutionPadding = ['top' => 26, 'right' => 26, 'bottom' => 46, 'left' => 52];
+$segmentEvolutionDrawableWidth = $segmentEvolutionChartWidth - $segmentEvolutionPadding['left'] - $segmentEvolutionPadding['right'];
+$segmentEvolutionDrawableHeight = $segmentEvolutionChartHeight - $segmentEvolutionPadding['top'] - $segmentEvolutionPadding['bottom'];
+$segmentEvolutionDayCount = count($segmentEvolution);
+$segmentEvolutionDivisor = max(1, $segmentEvolutionDayCount - 1);
+$segmentEvolutionLineSeries = [];
+
+if ($segmentEvolutionDayCount > 0) {
+    foreach ($segments as $segment) {
+        $segmentKey = $segment['key'];
+        $linePoints = [];
+        $index = 0;
+        foreach ($segmentEvolution as $segmentEvolutionRow) {
+            $usersCount = (int) ($segmentEvolutionRow['segments'][$segmentKey] ?? 0);
+            $x = $segmentEvolutionPadding['left'] + ($segmentEvolutionDrawableWidth * ($index / $segmentEvolutionDivisor));
+            $ratio = $segmentEvolutionMaxUsers > 0 ? ($usersCount / $segmentEvolutionMaxUsers) : 0.0;
+            $y = $segmentEvolutionPadding['top'] + $segmentEvolutionDrawableHeight - ($segmentEvolutionDrawableHeight * $ratio);
+            $linePoints[] = number_format((float) $x, 2, '.', '') . ',' . number_format((float) $y, 2, '.', '');
+            $index++;
+        }
+
+        $segmentEvolutionLineSeries[$segmentKey] = implode(' ', $linePoints);
+    }
+}
+
 if ($linkCreatedColumn) {
     $dailyLinksSql = "
         SELECT DATE(`{$linkCreatedColumn}`) AS dia, COUNT(*) AS total
@@ -715,6 +831,43 @@ if (
             font-size: 0.8rem;
             color: #42689d;
         }
+        .segment-evolution-wrap { margin-top: 1rem; }
+        .segment-evolution-chart {
+            border: 1px solid #d9e8ff;
+            border-radius: 12px;
+            background: linear-gradient(to top, #f8fbff 0%, #ffffff 100%);
+            overflow-x: auto;
+            padding: 0.45rem;
+        }
+        .segment-evolution-svg { width: 100%; min-width: 820px; height: auto; display: block; }
+        .segment-evolution-grid { stroke: #e5efff; stroke-width: 1; }
+        .segment-evolution-axis { stroke: #8cb1e3; stroke-width: 1.2; }
+        .segment-evolution-line { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+        .segment-evolution-label { fill: #4b6ea4; font-size: 11px; font-family: 'Rambla', Arial, sans-serif; }
+        .segment-evolution-meta {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            color: #42689d;
+        }
+        .segment-evolution-legend {
+            margin: 0.7rem 0 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.35rem 0.7rem;
+        }
+        .segment-evolution-legend li {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.42rem;
+            color: #365b90;
+            font-size: 0.8rem;
+        }
         .heatmap-table { width: 100%; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
         .heatmap-table col { width: 12.5%; }
         .heatmap-table th, .heatmap-table td { border: none; padding: 0.35rem; font-size: 0.76rem; text-align: center; }
@@ -842,6 +995,65 @@ if (
                         <span>Máximo diario: <?= $dailyLinksMax ?> links</span>
                         <span>Fin: <?= htmlspecialchars((string) array_key_last($dailyLinksSaved), ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
+                </div>
+
+                <div class="segment-evolution-wrap">
+                    <h2>Evolución de usuarios por segmento (últimos 30 días)</h2>
+                    <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
+                        Eje X: días · Eje Y: usuarios por segmento (acumulado diario)
+                    </p>
+                    <div class="segment-evolution-chart" role="img" aria-label="Gráfico de líneas con evolución de usuarios por segmento en los últimos 30 días">
+                        <svg class="segment-evolution-svg" viewBox="0 0 <?= $segmentEvolutionChartWidth ?> <?= $segmentEvolutionChartHeight ?>" preserveAspectRatio="none">
+                            <?php
+                                $gridSteps = [0, 0.25, 0.5, 0.75, 1];
+                                foreach ($gridSteps as $gridStep):
+                                    $gridY = $segmentEvolutionPadding['top'] + ($segmentEvolutionDrawableHeight * (1 - $gridStep));
+                                    $gridValue = (int) round($segmentEvolutionMaxUsers * $gridStep);
+                            ?>
+                                <line class="segment-evolution-grid" x1="<?= $segmentEvolutionPadding['left'] ?>" y1="<?= number_format((float) $gridY, 2, '.', '') ?>" x2="<?= $segmentEvolutionChartWidth - $segmentEvolutionPadding['right'] ?>" y2="<?= number_format((float) $gridY, 2, '.', '') ?>"></line>
+                                <text class="segment-evolution-label" x="<?= $segmentEvolutionPadding['left'] - 8 ?>" y="<?= number_format((float) ($gridY + 4), 2, '.', '') ?>" text-anchor="end"><?= $gridValue ?></text>
+                            <?php endforeach; ?>
+
+                            <line class="segment-evolution-axis" x1="<?= $segmentEvolutionPadding['left'] ?>" y1="<?= $segmentEvolutionPadding['top'] ?>" x2="<?= $segmentEvolutionPadding['left'] ?>" y2="<?= $segmentEvolutionChartHeight - $segmentEvolutionPadding['bottom'] ?>"></line>
+                            <line class="segment-evolution-axis" x1="<?= $segmentEvolutionPadding['left'] ?>" y1="<?= $segmentEvolutionChartHeight - $segmentEvolutionPadding['bottom'] ?>" x2="<?= $segmentEvolutionChartWidth - $segmentEvolutionPadding['right'] ?>" y2="<?= $segmentEvolutionChartHeight - $segmentEvolutionPadding['bottom'] ?>"></line>
+
+                            <?php
+                                $segmentEvolutionLabels = array_values($segmentEvolution);
+                                $labelPositions = [0, (int) floor(max(0, $segmentEvolutionDayCount - 1) / 2), max(0, $segmentEvolutionDayCount - 1)];
+                                $printedLabelPositions = [];
+                                foreach ($labelPositions as $labelPosition):
+                                    if (isset($printedLabelPositions[$labelPosition]) || !isset($segmentEvolutionLabels[$labelPosition])) {
+                                        continue;
+                                    }
+                                    $printedLabelPositions[$labelPosition] = true;
+                                    $labelX = $segmentEvolutionPadding['left'] + ($segmentEvolutionDrawableWidth * ($segmentEvolutionDayCount > 1 ? ($labelPosition / ($segmentEvolutionDayCount - 1)) : 0));
+                            ?>
+                                <text class="segment-evolution-label" x="<?= number_format((float) $labelX, 2, '.', '') ?>" y="<?= $segmentEvolutionChartHeight - 14 ?>" text-anchor="middle"><?= htmlspecialchars((string) $segmentEvolutionLabels[$labelPosition]['label'], ENT_QUOTES, 'UTF-8') ?></text>
+                            <?php endforeach; ?>
+
+                            <?php foreach ($segments as $segment): ?>
+                                <?php $segmentKey = $segment['key']; ?>
+                                <polyline
+                                    class="segment-evolution-line"
+                                    stroke="<?= htmlspecialchars((string) $segment['color'], ENT_QUOTES, 'UTF-8') ?>"
+                                    points="<?= htmlspecialchars((string) ($segmentEvolutionLineSeries[$segmentKey] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                                ></polyline>
+                            <?php endforeach; ?>
+                        </svg>
+                    </div>
+                    <div class="segment-evolution-meta" aria-hidden="true">
+                        <span>Inicio: <?= htmlspecialchars((string) $windowStartDate, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span>Máximo Y: <?= $segmentEvolutionMaxUsers ?> usuarios</span>
+                        <span>Fin: <?= htmlspecialchars((string) $windowEndDate, ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                    <ul class="segment-evolution-legend">
+                        <?php foreach ($segments as $segment): ?>
+                            <li>
+                                <span class="legend-dot" style="--dot-color: <?= htmlspecialchars((string) $segment['color'], ENT_QUOTES, 'UTF-8') ?>;"></span>
+                                <?= htmlspecialchars((string) $segment['title'], ENT_QUOTES, 'UTF-8') ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
 
                 <div class="heatmap-wrap">
