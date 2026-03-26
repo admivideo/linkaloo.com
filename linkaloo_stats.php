@@ -135,6 +135,10 @@ function segmentKeyForLinks(int $linksCount, array $segments): string
 requireStatsAuth();
 
 $segments = statsSegments();
+$segmentsForCharts = array_values(array_filter(
+    $segments,
+    static fn (array $segment): bool => $segment['key'] !== 'usuarios_sin_links'
+));
 $segmentTitles = [];
 $segmentColors = [];
 $segmentLegends = [];
@@ -416,7 +420,7 @@ $segmentEvolutionDivisor = max(1, $segmentEvolutionDayCount - 1);
 $segmentEvolutionLineSeries = [];
 
 if ($segmentEvolutionDayCount > 0) {
-    foreach ($segments as $segment) {
+    foreach ($segmentsForCharts as $segment) {
         $segmentKey = $segment['key'];
         $linePoints = [];
         $index = 0;
@@ -468,18 +472,6 @@ foreach ($segments as $segment) {
     $pct = $totalLinks > 0 ? round(($links / $totalLinks) * 100, 2) : 0.0;
     $segmentoPorcentajeLinks[$key] = $pct;
 
-    if ($pct > 0) {
-        $inicio = $acumulado;
-        $acumulado += $pct;
-        $chartParts[] = sprintf('%s %.2f%% %.2f%%', $segmentColors[$key], $inicio, $acumulado);
-    }
-
-    $legendRows[] = [
-        'label' => $segmentLegends[$key],
-        'color' => $segmentColors[$key],
-        'pct' => $pct,
-    ];
-
     $segmentUsers = $resumen[$key]['usuarios'];
     $segmentUsersPct = $totalUsuarios > 0 ? round(($segmentUsers / $totalUsuarios) * 100, 2) : 0.0;
 
@@ -492,12 +484,30 @@ foreach ($segments as $segment) {
         'short_label' => $segmentLegends[$key],
     ];
 
-    $barChartRows[] = [
-        'title' => $segmentTitles[$key],
-        'usuarios' => $segmentUsers,
-        'pct_users' => $segmentUsersPct,
+    if ($key !== 'usuarios_sin_links') {
+        $barChartRows[] = [
+            'title' => $segmentTitles[$key],
+            'usuarios' => $segmentUsers,
+            'pct_users' => $segmentUsersPct,
+            'color' => $segmentColors[$key],
+            'short_label' => $segmentLegends[$key],
+        ];
+    }
+}
+
+foreach ($segmentsForCharts as $segment) {
+    $key = $segment['key'];
+    $pct = $segmentoPorcentajeLinks[$key] ?? 0.0;
+    if ($pct > 0) {
+        $inicio = $acumulado;
+        $acumulado += $pct;
+        $chartParts[] = sprintf('%s %.2f%% %.2f%%', $segmentColors[$key], $inicio, $acumulado);
+    }
+
+    $legendRows[] = [
+        'label' => $segmentLegends[$key],
         'color' => $segmentColors[$key],
-        'short_label' => $segmentLegends[$key],
+        'pct' => $pct,
     ];
 }
 
@@ -1031,7 +1041,7 @@ if (
                                 <text class="segment-evolution-label" x="<?= number_format((float) $labelX, 2, '.', '') ?>" y="<?= $segmentEvolutionChartHeight - 14 ?>" text-anchor="middle"><?= htmlspecialchars((string) $segmentEvolutionLabels[$labelPosition]['label'], ENT_QUOTES, 'UTF-8') ?></text>
                             <?php endforeach; ?>
 
-                            <?php foreach ($segments as $segment): ?>
+                            <?php foreach ($segmentsForCharts as $segment): ?>
                                 <?php $segmentKey = $segment['key']; ?>
                                 <polyline
                                     class="segment-evolution-line"
@@ -1047,7 +1057,7 @@ if (
                         <span>Fin: <?= htmlspecialchars((string) $windowEndDate, ENT_QUOTES, 'UTF-8') ?></span>
                     </div>
                     <ul class="segment-evolution-legend">
-                        <?php foreach ($segments as $segment): ?>
+                        <?php foreach ($segmentsForCharts as $segment): ?>
                             <li>
                                 <span class="legend-dot" style="--dot-color: <?= htmlspecialchars((string) $segment['color'], ENT_QUOTES, 'UTF-8') ?>;"></span>
                                 <?= htmlspecialchars((string) $segment['title'], ENT_QUOTES, 'UTF-8') ?>
