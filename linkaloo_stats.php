@@ -305,6 +305,46 @@ $summaryCards = [
     ['title' => 'Total usuarios', 'usuarios' => $totalUsuarios, 'links' => $totalLinks, 'pct' => 100.0, 'color' => '#1d4ed8', 'short_label' => 'Total'],
 ];
 
+$dailyLinksSaved = [];
+$today = new DateTimeImmutable('today');
+for ($dayOffset = 29; $dayOffset >= 0; $dayOffset--) {
+    $dayDate = $today->modify("-{$dayOffset} days");
+    $dayKey = $dayDate->format('Y-m-d');
+    $dailyLinksSaved[$dayKey] = [
+        'date' => $dayKey,
+        'label' => $dayDate->format('d/m'),
+        'count' => 0,
+    ];
+}
+
+if ($linkCreatedColumn) {
+    $dailyLinksSql = "
+        SELECT DATE(`{$linkCreatedColumn}`) AS dia, COUNT(*) AS total
+        FROM links
+        WHERE `{$linkCreatedColumn}` >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+        GROUP BY DATE(`{$linkCreatedColumn}`)
+        ORDER BY dia ASC
+    ";
+    $dailyLinksRows = $pdo->query($dailyLinksSql)->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($dailyLinksRows as $dailyLinksRow) {
+        $dayKey = (string) ($dailyLinksRow['dia'] ?? '');
+        if ($dayKey !== '' && isset($dailyLinksSaved[$dayKey])) {
+            $dailyLinksSaved[$dayKey]['count'] = (int) ($dailyLinksRow['total'] ?? 0);
+        }
+    }
+}
+
+$dailyLinksMax = 0;
+$dailyLinksTotal = 0;
+foreach ($dailyLinksSaved as $dailyLinksDay) {
+    $dayCount = (int) $dailyLinksDay['count'];
+    $dailyLinksTotal += $dayCount;
+    if ($dayCount > $dailyLinksMax) {
+        $dailyLinksMax = $dayCount;
+    }
+}
+
 $acumulado = 0.0;
 foreach ($segments as $segment) {
     $key = $segment['key'];
@@ -648,6 +688,33 @@ if (
         .hourly-table th:last-child, .hourly-table td:last-child { text-align: right; }
 
         .heatmap-wrap { margin-top: 1rem; }
+        .daily-links-wrap { margin-top: 1rem; }
+        .daily-links-chart {
+            height: 210px;
+            border: 1px solid #d9e8ff;
+            border-radius: 12px;
+            background: linear-gradient(to top, #f8fbff 0%, #ffffff 100%);
+            display: grid;
+            grid-template-columns: repeat(30, minmax(0, 1fr));
+            align-items: end;
+            gap: 0.16rem;
+            padding: 0.65rem 0.4rem 0.45rem;
+        }
+        .daily-links-bar {
+            width: 100%;
+            min-height: 2px;
+            border-radius: 4px 4px 2px 2px;
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        .daily-links-meta {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            color: #42689d;
+        }
         .heatmap-table { width: 100%; border-collapse: collapse; border-spacing: 0; table-layout: fixed; }
         .heatmap-table col { width: 12.5%; }
         .heatmap-table th, .heatmap-table td { border: none; padding: 0.35rem; font-size: 0.76rem; text-align: center; }
@@ -749,6 +816,32 @@ if (
                             <span class="bar-label"><?= htmlspecialchars((string) $bar['short_label'], ENT_QUOTES, 'UTF-8') ?></span>
                         </div>
                     <?php endforeach; ?>
+                </div>
+
+                <div class="daily-links-wrap">
+                    <h2>Links guardados últimos 30 días</h2>
+                    <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
+                        Base: <code>links.<?= htmlspecialchars((string) ($linkCreatedColumn ?? 'sin_columna_detectada'), ENT_QUOTES, 'UTF-8') ?></code>
+                    </p>
+                    <div class="daily-links-chart" role="img" aria-label="Gráfico de links guardados por día durante los últimos 30 días">
+                        <?php foreach ($dailyLinksSaved as $dailyLinksDay): ?>
+                            <?php
+                                $dailyCount = (int) $dailyLinksDay['count'];
+                                $dailyHeight = $dailyLinksMax > 0 ? max(2.0, ($dailyCount / $dailyLinksMax) * 100) : 2.0;
+                            ?>
+                            <span
+                                class="daily-links-bar"
+                                style="height: <?= number_format((float) $dailyHeight, 2, '.', '') ?>%;"
+                                title="<?= htmlspecialchars((string) $dailyLinksDay['date'], ENT_QUOTES, 'UTF-8') ?>: <?= $dailyCount ?> links"
+                            ></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="daily-links-meta" aria-hidden="true">
+                        <span>Inicio: <?= htmlspecialchars((string) array_key_first($dailyLinksSaved), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span>Total periodo: <?= $dailyLinksTotal ?> links</span>
+                        <span>Máximo diario: <?= $dailyLinksMax ?> links</span>
+                        <span>Fin: <?= htmlspecialchars((string) array_key_last($dailyLinksSaved), ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
                 </div>
 
                 <div class="heatmap-wrap">
