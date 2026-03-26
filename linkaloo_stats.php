@@ -484,15 +484,13 @@ foreach ($segments as $segment) {
         'short_label' => $segmentLegends[$key],
     ];
 
-    if ($key !== 'usuarios_sin_links') {
-        $barChartRows[] = [
-            'title' => $segmentTitles[$key],
-            'usuarios' => $segmentUsers,
-            'pct_users' => $segmentUsersPct,
-            'color' => $segmentColors[$key],
-            'short_label' => $segmentLegends[$key],
-        ];
-    }
+    $barChartRows[] = [
+        'title' => $segmentTitles[$key],
+        'usuarios' => $segmentUsers,
+        'pct_users' => $segmentUsersPct,
+        'color' => $segmentColors[$key],
+        'short_label' => $segmentLegends[$key],
+    ];
 }
 
 foreach ($segmentsForCharts as $segment) {
