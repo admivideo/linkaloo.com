@@ -804,8 +804,8 @@ if (
 
         <div class="resumen-layout">
             <article class="bar-chart-card summary-card">
-                <p class="summary-title">Gráfico de barras verticales (% del total de usuarios)</p>
-                <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con usuarios y porcentaje del total de usuarios por segmento">
+                <h2>Cantidad y % de Usuarios por favolinks guardados</h2>
+                <div class="bar-chart" role="img" aria-label="Gráfico de barras verticales con cantidad y porcentaje de usuarios por favolinks guardados">
                     <?php foreach ($barChartRows as $bar): ?>
                         <?php $barHeight = max(2.0, (float) $bar['pct_users']); ?>
                         <div class="bar-item">
