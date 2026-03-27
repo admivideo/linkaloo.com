@@ -24,13 +24,12 @@ $totalStmt = $pdo->prepare('SELECT COUNT(*) FROM links WHERE categoria_id = ?');
 $totalStmt->execute([$board['id']]);
 $totalLinks = (int)$totalStmt->fetchColumn();
 $linksQuery = 'SELECT url, titulo, descripcion, imagen FROM links WHERE categoria_id = ? ORDER BY id DESC';
-if(!$isMobile){
-    $linksQuery .= ' LIMIT 500';
-}
+$linksQuery .= ' LIMIT 500';
 $linksStmt = $pdo->prepare($linksQuery);
 $linksStmt->execute([$board['id']]);
 $links = $linksStmt->fetchAll();
 $loadedLinks = count($links);
+$totalLinks = min(500, $totalLinks);
 $descLimit = $isMobile ? 50 : 150;
 
 $baseUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];

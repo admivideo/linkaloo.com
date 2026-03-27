@@ -113,14 +113,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
 $isMobile = isMobile();
 $linksQuery = 'SELECT id, url, imagen FROM links WHERE usuario_id = ? AND categoria_id = ? ORDER BY id DESC';
-if(!$isMobile){
-    $linksQuery .= ' LIMIT 500';
-}
+$linksQuery .= ' LIMIT 500';
 $linksStmt = $pdo->prepare($linksQuery);
 $linksStmt->execute([$user_id, $id]);
 $links = $linksStmt->fetchAll();
 $loadedLinks = count($links);
-$totalLinks = (int)($board['total_links'] ?? $loadedLinks);
+$totalLinks = min(500, (int)($board['total_links'] ?? $loadedLinks));
 
 $creado = $board['creado_en'] ? date('Y-m', strtotime($board['creado_en'])) : '';
 $modificado = $board['modificado_en'] ? date('Y-m', strtotime($board['modificado_en'])) : '';
