@@ -465,6 +465,68 @@ foreach ($dailyLinksSaved as $dailyLinksDay) {
     }
 }
 
+$monthlyLinksSaved = [];
+if ($linkCreatedColumn) {
+    $monthlyLinksSql = "
+        SELECT DATE_FORMAT(`{$linkCreatedColumn}`, '%Y-%m') AS mes, COUNT(*) AS total
+        FROM links
+        GROUP BY DATE_FORMAT(`{$linkCreatedColumn}`, '%Y-%m')
+        ORDER BY mes ASC
+    ";
+    $monthlyLinksRows = $pdo->query($monthlyLinksSql)->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($monthlyLinksRows as $monthlyLinksRow) {
+        $monthKey = (string) ($monthlyLinksRow['mes'] ?? '');
+        if ($monthKey === '') {
+            continue;
+        }
+        $monthDate = DateTimeImmutable::createFromFormat('Y-m', $monthKey);
+        $monthlyLinksSaved[] = [
+            'month' => $monthKey,
+            'label' => $monthDate ? $monthDate->format('m/y') : $monthKey,
+            'total' => (int) ($monthlyLinksRow['total'] ?? 0),
+        ];
+    }
+}
+
+$monthlyLinksMax = 0;
+$monthlyLinksTotal = 0;
+foreach ($monthlyLinksSaved as $monthlyLinksMonth) {
+    $monthTotal = (int) $monthlyLinksMonth['total'];
+    $monthlyLinksTotal += $monthTotal;
+    if ($monthTotal > $monthlyLinksMax) {
+        $monthlyLinksMax = $monthTotal;
+    }
+}
+
+$monthlyLinksChartWidth = 980;
+$monthlyLinksChartHeight = 320;
+$monthlyLinksPadding = ['top' => 30, 'right' => 24, 'bottom' => 56, 'left' => 56];
+$monthlyLinksDrawableWidth = $monthlyLinksChartWidth - $monthlyLinksPadding['left'] - $monthlyLinksPadding['right'];
+$monthlyLinksDrawableHeight = $monthlyLinksChartHeight - $monthlyLinksPadding['top'] - $monthlyLinksPadding['bottom'];
+$monthlyLinksCount = count($monthlyLinksSaved);
+$monthlyLinksDivisor = max(1, $monthlyLinksCount - 1);
+$monthlyLinksLinePoints = '';
+$monthlyLinksPointRows = [];
+
+if ($monthlyLinksCount > 0) {
+    $linePoints = [];
+    foreach ($monthlyLinksSaved as $monthlyIndex => $monthlyLinksMonth) {
+        $monthTotal = (int) $monthlyLinksMonth['total'];
+        $x = $monthlyLinksPadding['left'] + ($monthlyLinksDrawableWidth * ($monthlyLinksCount > 1 ? ($monthlyIndex / $monthlyLinksDivisor) : 0));
+        $ratio = $monthlyLinksMax > 0 ? ($monthTotal / $monthlyLinksMax) : 0.0;
+        $y = $monthlyLinksPadding['top'] + $monthlyLinksDrawableHeight - ($monthlyLinksDrawableHeight * $ratio);
+        $linePoints[] = number_format((float) $x, 2, '.', '') . ',' . number_format((float) $y, 2, '.', '');
+        $monthlyLinksPointRows[] = [
+            'x' => $x,
+            'y' => $y,
+            'label' => (string) ($monthlyLinksMonth['label'] ?? ''),
+            'total' => $monthTotal,
+        ];
+    }
+    $monthlyLinksLinePoints = implode(' ', $linePoints);
+}
+
 $acumulado = 0.0;
 foreach ($segments as $segment) {
     $key = $segment['key'];
@@ -839,6 +901,30 @@ if (
             font-size: 0.8rem;
             color: #42689d;
         }
+        .monthly-links-wrap { margin-top: 1rem; }
+        .monthly-links-chart {
+            border: 1px solid #d9e8ff;
+            border-radius: 12px;
+            background: linear-gradient(to top, #f8fbff 0%, #ffffff 100%);
+            overflow-x: auto;
+            padding: 0.45rem;
+        }
+        .monthly-links-svg { width: 100%; min-width: 820px; height: auto; display: block; }
+        .monthly-links-grid { stroke: #e5efff; stroke-width: 1; }
+        .monthly-links-axis { stroke: #8cb1e3; stroke-width: 1.2; }
+        .monthly-links-line { fill: none; stroke: #1d4ed8; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+        .monthly-links-point { fill: #2563eb; stroke: #ffffff; stroke-width: 1.2; }
+        .monthly-links-label { fill: #4b6ea4; font-size: 11px; font-family: 'Rambla', Arial, sans-serif; }
+        .monthly-links-total { fill: #1e3a8a; font-size: 11px; font-family: 'Rambla', Arial, sans-serif; font-weight: 700; }
+        .monthly-links-meta {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            color: #42689d;
+        }
         .segment-evolution-wrap { margin-top: 1rem; }
         .segment-evolution-chart {
             border: 1px solid #d9e8ff;
@@ -1002,6 +1088,45 @@ if (
                         <span>Total periodo: <?= $dailyLinksTotal ?> links</span>
                         <span>Máximo diario: <?= $dailyLinksMax ?> links</span>
                         <span>Fin: <?= htmlspecialchars((string) array_key_last($dailyLinksSaved), ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                </div>
+
+                <div class="monthly-links-wrap">
+                    <h2>Total de links guardados por mes</h2>
+                    <p class="section-note" style="margin:0 0 .5rem 0;color:#64748b;font-size:.85rem;">
+                        Eje X: MM/YY · Eje Y: total de links guardados (se muestra el total de cada mes)
+                    </p>
+                    <div class="monthly-links-chart" role="img" aria-label="Gráfico de líneas del total de links guardados por mes">
+                        <svg class="monthly-links-svg" viewBox="0 0 <?= $monthlyLinksChartWidth ?> <?= $monthlyLinksChartHeight ?>" preserveAspectRatio="none">
+                            <?php
+                                $monthlyGridSteps = [0, 0.25, 0.5, 0.75, 1];
+                                foreach ($monthlyGridSteps as $monthlyGridStep):
+                                    $monthlyGridY = $monthlyLinksPadding['top'] + ($monthlyLinksDrawableHeight * (1 - $monthlyGridStep));
+                                    $monthlyGridValue = (int) round($monthlyLinksMax * $monthlyGridStep);
+                            ?>
+                                <line class="monthly-links-grid" x1="<?= $monthlyLinksPadding['left'] ?>" y1="<?= number_format((float) $monthlyGridY, 2, '.', '') ?>" x2="<?= $monthlyLinksChartWidth - $monthlyLinksPadding['right'] ?>" y2="<?= number_format((float) $monthlyGridY, 2, '.', '') ?>"></line>
+                                <text class="monthly-links-label" x="<?= $monthlyLinksPadding['left'] - 8 ?>" y="<?= number_format((float) ($monthlyGridY + 4), 2, '.', '') ?>" text-anchor="end"><?= $monthlyGridValue ?></text>
+                            <?php endforeach; ?>
+
+                            <line class="monthly-links-axis" x1="<?= $monthlyLinksPadding['left'] ?>" y1="<?= $monthlyLinksPadding['top'] ?>" x2="<?= $monthlyLinksPadding['left'] ?>" y2="<?= $monthlyLinksChartHeight - $monthlyLinksPadding['bottom'] ?>"></line>
+                            <line class="monthly-links-axis" x1="<?= $monthlyLinksPadding['left'] ?>" y1="<?= $monthlyLinksChartHeight - $monthlyLinksPadding['bottom'] ?>" x2="<?= $monthlyLinksChartWidth - $monthlyLinksPadding['right'] ?>" y2="<?= $monthlyLinksChartHeight - $monthlyLinksPadding['bottom'] ?>"></line>
+
+                            <?php if ($monthlyLinksLinePoints !== ''): ?>
+                                <polyline class="monthly-links-line" points="<?= htmlspecialchars((string) $monthlyLinksLinePoints, ENT_QUOTES, 'UTF-8') ?>"></polyline>
+                            <?php endif; ?>
+
+                            <?php foreach ($monthlyLinksPointRows as $monthlyPoint): ?>
+                                <circle class="monthly-links-point" cx="<?= number_format((float) $monthlyPoint['x'], 2, '.', '') ?>" cy="<?= number_format((float) $monthlyPoint['y'], 2, '.', '') ?>" r="4"></circle>
+                                <text class="monthly-links-total" x="<?= number_format((float) $monthlyPoint['x'], 2, '.', '') ?>" y="<?= number_format((float) ($monthlyPoint['y'] - 8), 2, '.', '') ?>" text-anchor="middle"><?= (int) $monthlyPoint['total'] ?></text>
+                                <text class="monthly-links-label" x="<?= number_format((float) $monthlyPoint['x'], 2, '.', '') ?>" y="<?= $monthlyLinksChartHeight - 16 ?>" text-anchor="middle"><?= htmlspecialchars((string) $monthlyPoint['label'], ENT_QUOTES, 'UTF-8') ?></text>
+                            <?php endforeach; ?>
+                        </svg>
+                    </div>
+                    <div class="monthly-links-meta" aria-hidden="true">
+                        <span>Inicio: <?= htmlspecialchars((string) ($monthlyLinksSaved[0]['label'] ?? 'N/D'), ENT_QUOTES, 'UTF-8') ?></span>
+                        <span>Total histórico: <?= $monthlyLinksTotal ?> links</span>
+                        <span>Máximo mensual: <?= $monthlyLinksMax ?> links</span>
+                        <span>Meses: <?= $monthlyLinksCount ?></span>
                     </div>
                 </div>
 
