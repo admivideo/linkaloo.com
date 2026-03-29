@@ -1205,6 +1205,14 @@ if (
             </article>
 
             <aside class="sidebar">
+                <section class="status-summary-box">
+                    <h2>Total de favolinks guardados</h2>
+                    <p class="summary-value" style="margin: 0; font-size: 1.8rem; color: #1d4ed8;"><?= number_format((float) $totalLinks, 0, ',', '.') ?></p>
+                    <p class="status-summary-meta" style="margin: 0.35rem 0 0;">
+                        Acumulado global de links guardados por todos los usuarios.
+                    </p>
+                </section>
+
                 <section>
                     <h2>Distribución de links por segmento</h2>
                     <div class="pie-chart" style="--pie-background: <?= htmlspecialchars($pieBackground, ENT_QUOTES, 'UTF-8') ?>;"></div>
